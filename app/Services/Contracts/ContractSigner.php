@@ -48,7 +48,7 @@ final class ContractSigner
 
             $isRenewal = $contract->type === ContractType::Renewal;
             // Renewals keep the term dates set when they were offered; new agreements start at the target go-live date.
-            $goLive = $isRenewal ? $contract->starts_on->copy() : BusinessClock::today()->addDays((int) $this->settings->get('pricing', 'go_live_days'));
+            $goLive = $isRenewal ? $contract->starts_on->copy() : BusinessClock::today()->addDays((int) ($contract->go_live_days ?? $this->settings->get('pricing', 'go_live_days')));
             $now = now();
 
             $contract->forceFill([
@@ -93,6 +93,9 @@ final class ContractSigner
                 'note' => "Entered {$customer->agent_count_entered} at onboarding",
             ]);
 
+            if ($customer->quote_id) {
+                \App\Models\Quote::whereKey($customer->quote_id)->whereNull('used_at')->update(['used_at' => now(), 'customer_id' => $customer->id]);
+            }
             if ($contract->coupon_id) {
                 Coupon::whereKey($contract->coupon_id)->increment('times_used');
             }

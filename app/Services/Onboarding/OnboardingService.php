@@ -31,16 +31,17 @@ final class OnboardingService
      * @param  array<string, mixed>  $details  validated details (see DetailsRequest)
      * @param  array<string, mixed>  $tracking  source + utm
      */
-    public function start(array $details, ?Coupon $coupon, array $tracking = []): Customer
+    public function start(array $details, ?Coupon $coupon, array $tracking = [], ?\App\Models\Quote $custom = null): Customer
     {
-        return DB::transaction(function () use ($details, $coupon, $tracking) {
-            $quote = $this->quotes->quote((int) $details['agents'], $coupon);
+        return DB::transaction(function () use ($details, $coupon, $tracking, $custom) {
+            $quote = $this->quotes->quote((int) $details['agents'], $coupon, $custom);
 
             $customer = Customer::create($this->customerAttributes($details, $quote) + [
                 'status' => CustomerStatus::Draft,
                 'source' => $tracking['source'] ?? null,
                 'utm' => $tracking['utm'] ?? null,
                 'onboarding_started_at' => now(),
+                'quote_id' => $custom?->id,
             ]);
 
             $this->createDraftContract($customer, $quote);
@@ -58,7 +59,8 @@ final class OnboardingService
         }
 
         return DB::transaction(function () use ($customer, $details, $coupon, $contract) {
-            $quote = $this->quotes->quote((int) $details['agents'], $coupon);
+            $custom = $customer->quote_id ? \App\Models\Quote::find($customer->quote_id) : null;
+            $quote = $this->quotes->quote((int) $details['agents'], $custom ? null : $coupon, $custom);
             $customer->update($this->customerAttributes($details, $quote));
             $contract->update($this->snapshot($quote) + ['contract_template_id' => $this->activeTemplate()->id]);
 
@@ -118,6 +120,7 @@ final class OnboardingService
             'min_agents' => $quote->minAgents,
             'agent_count' => $quote->agentsBilled,
             'term_months' => 12,
+            'go_live_days' => $quote->goLiveDays,
             'company_legal_name' => $company['legal_name'],
             'company_dba' => $company['dba'],
             'company_address' => $company['address'],

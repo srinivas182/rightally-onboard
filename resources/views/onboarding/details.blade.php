@@ -4,12 +4,19 @@
     @push('head')<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}"></script>@endpush
 @endif
 @section('content')
-@php $v = fn (string $key, $fallback = '') => old($key, $customer?->{$key} ?? $fallback); @endphp
+@php $v = fn (string $key, $fallback = '') => old($key, $customer?->{$key} ?? ($prefill[$key] ?? $fallback)); @endphp
 <p class="step-kicker">Step 1 of 5</p>
 <h1>{{ $customer ? 'Update your details' : 'Let’s set up your brokerage on RightAlly' }}</h1>
 <p class="lead">Tell us who is signing and where your business is based. These details go on your agreement.</p>
 
 @include('partials.flash', ['hideErrorSummary' => false])
+@if ($quoteProblem ?? null)<div class="alert alert-warning">{{ $quoteProblem }}</div>@endif
+@if ($customQuote)
+    <div class="alert alert-info d-flex gap-2 align-items-start">
+        <svg class="ic mt-1" aria-hidden="true"><use href="#i-tag"/></svg>
+        <div><b>Your custom quote is applied.</b> The pricing on the right was prepared for you and is valid until {{ $customQuote->expires_at->setTimezone(\App\Support\BusinessClock::timezone())->format('F j, Y') }}.@if ($customQuote->note)<div class="small mt-1">{{ $customQuote->note }}</div>@endif</div>
+    </div>
+@endif
 
 <form method="post" action="{{ $action }}" novalidate id="detailsForm"
       data-pricing='@json($quote->forBrowser())' data-coupon-url="{{ route('onboarding.coupon') }}">
@@ -78,6 +85,7 @@
         </div>
     </fieldset>
 
+    @unless ($customQuote)
     <fieldset class="mb-4"><legend>Coupon <span class="fw-normal text-slate">(optional)</span></legend>
         <div class="input-group has-validation" style="max-width:420px">
             <input class="form-control text-uppercase @error('coupon') is-invalid @enderror" id="coupon" name="coupon" value="{{ $couponCode }}" placeholder="Enter code" aria-describedby="couponMsg" maxlength="40" autocomplete="off">
@@ -91,6 +99,7 @@
             @if ($msg){{ $msg }}@elseif ($ok){{ $quote->coupon->code }} applied{{ $fromLink ? ' from your link' : '' }}. {{ rtrim(rtrim(number_format($quote->discountPercent, 2), '0'), '.') }}% off your implementation fee.@endif
         </div>
     </fieldset>
+    @endunless
 
     @if ($turnstileSiteKey)
         <div class="mb-3">

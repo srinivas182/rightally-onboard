@@ -24,7 +24,7 @@ if (form) {
     const help = $('#agHelp');
     const couponInput = $('#coupon');
     const couponMsg = $('#couponMsg');
-    let coupon = { code: pricing.discountPercent > 0 ? couponInput.value.trim().toUpperCase() : '', percent: pricing.discountPercent };
+    let coupon = { code: pricing.discountPercent > 0 && couponInput ? couponInput.value.trim().toUpperCase() : '', percent: pricing.discountPercent };
 
     const render = () => {
         const entered = Math.max(1, parseInt(agentsInput.value, 10) || 1);
@@ -76,12 +76,14 @@ if (form) {
         }
         render();
     };
-    $('#couponApply').addEventListener('click', applyCoupon);
-    couponInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } });
-    // Changing the code after applying it: the old discount no longer applies.
-    couponInput.addEventListener('input', () => {
-        if (coupon.code && couponInput.value.trim().toUpperCase() !== coupon.code) { coupon = { code: '', percent: 0 }; showCouponMsg('', 'muted'); render(); }
-    });
+    if (couponInput) { // no coupon field on custom quotes
+        $('#couponApply').addEventListener('click', applyCoupon);
+        couponInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } });
+        // Changing the code after applying it: the old discount no longer applies.
+        couponInput.addEventListener('input', () => {
+            if (coupon.code && couponInput.value.trim().toUpperCase() !== coupon.code) { coupon = { code: '', percent: 0 }; showCouponMsg('', 'muted'); render(); }
+        });
+    }
 
     form.addEventListener('submit', () => { $$('button[type="submit"]', form).forEach((b) => { b.disabled = true; }); });
     render();

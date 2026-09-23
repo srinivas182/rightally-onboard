@@ -75,7 +75,7 @@ final class ContractRenderer
     {
         $c = $contract->customer;
         $signedOn = $contract->signed_at?->copy()->setTimezone(BusinessClock::timezone()) ?? BusinessClock::today();
-        $goLive = $contract->starts_on ?? BusinessClock::today()->addDays($this->goLiveDays());
+        $goLive = $contract->starts_on ?? BusinessClock::today()->addDays($this->goLiveDays($contract));
 
         return [
             'agreement_number' => $contract->number,
@@ -96,7 +96,7 @@ final class ContractRenderer
             'deposit_percent' => $this->pct($contract->deposit_percent),
             'deposit_amount' => Money::format($contract->deposit_cents),
             'balance_amount' => Money::format($contract->balance_cents),
-            'go_live_days' => (string) $this->goLiveDays(),
+            'go_live_days' => (string) $this->goLiveDays($contract),
             'go_live_date' => Carbon::parse($goLive)->format('F j, Y'),
             'platform_fee' => Money::format($contract->platform_fee_cents),
             'per_agent_fee' => Money::format($contract->per_agent_fee_cents),
@@ -187,9 +187,9 @@ final class ContractRenderer
             : null;
     }
 
-    private function goLiveDays(): int
+    private function goLiveDays(Contract $contract): int
     {
-        return (int) $this->settings->get('pricing', 'go_live_days');
+        return (int) ($contract->go_live_days ?? $this->settings->get('pricing', 'go_live_days'));
     }
 
     private function pct(mixed $value): string

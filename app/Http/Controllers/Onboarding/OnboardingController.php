@@ -56,13 +56,18 @@ class OnboardingController extends Controller
     public function start(Request $request): View
     {
         $this->captureTracking($request);
-        $code = strtoupper(trim((string) ($request->query('coupon') ?? old('coupon', ''))));
+        $custom = $this->sessionQuote($request);
+        $quoteProblem = $request->filled('quote') && ! $custom
+            ? 'This quote link has expired or has already been used. You can continue at our standard pricing, or reply to your quote email for a new link.'
+            : null;
+        $code = $custom ? '' : strtoupper(trim((string) ($request->query('coupon') ?? old('coupon', ''))));
         $check = $this->coupons->check($code);
 
-        return view('onboarding.details', $this->detailsViewData(null, $code, $check) + [
+        return view('onboarding.details', $this->detailsViewData(null, $code, $check, $custom) + [
             'action' => route('onboarding.store'),
             'method' => 'post',
             'fromLink' => $request->has('coupon'),
+            'quoteProblem' => $quoteProblem,
         ]);
     }
 
@@ -72,16 +77,17 @@ class OnboardingController extends Controller
             throw ValidationException::withMessages(['turnstile' => 'Please confirm you’re not a robot, then try again.']);
         }
 
-        $check = $this->coupons->check($request->validated('coupon'));
+        $custom = $this->sessionQuote($request);
+        $check = $custom ? ['coupon' => null, 'message' => null] : $this->coupons->check($request->validated('coupon'));
         if ($check['message']) {
             throw ValidationException::withMessages(['coupon' => $check['message']]);
         }
 
         $tracking = $request->session()->get('onboarding.tracking', []);
         $customer = $this->onboarding->start($request->validated() + ['phone_e164' => $request->input('phone_e164')], $check['coupon'], [
-            'source' => $this->sourceLabel($tracking, $check['coupon']?->code),
+            'source' => $custom ? "Custom quote: {$custom->label}" : $this->sourceLabel($tracking, $check['coupon']?->code),
             'utm' => $tracking['utm'] ?? null,
-        ]);
+        ], $custom);
 
         OnboardingAccess::remember($request, $customer->uuid);
 
@@ -95,7 +101,9 @@ class OnboardingController extends Controller
         }
         $code = old('coupon', $customer->coupon?->code ?? '');
 
-        return view('onboarding.details', $this->detailsViewData($customer, $code, $this->coupons->check($code)) + [
+        $custom = $customer->quote_id ? \App\Models\Quote::find($customer->quote_id) : null;
+
+        return view('onboarding.details', $this->detailsViewData($customer, $custom ? '' : $code, $custom ? ['coupon' => null, 'message' => null] : $this->coupons->check($code), $custom) + [
             'action' => route('onboarding.details.update', $customer),
             'method' => 'put',
             'fromLink' => false,
@@ -298,17 +306,20 @@ class OnboardingController extends Controller
                 'monthly' => $contract->monthlyFeeCents(),
                 'agents' => $contract->agent_count,
             ],
-            'goLive' => $contract->starts_on ?? BusinessClock::today()->addDays((int) $this->settings->get('pricing', 'go_live_days')),
+            'goLive' => $contract->starts_on ?? BusinessClock::today()->addDays((int) ($contract->go_live_days ?? $this->settings->get('pricing', 'go_live_days'))),
         ];
     }
 
-    private function detailsViewData(?Customer $customer, string $code, array $check): array
+    private function detailsViewData(?Customer $customer, string $code, array $check, ?\App\Models\Quote $custom = null): array
     {
-        $agents = (int) old('agents', $customer?->agent_count_entered ?? $this->settings->get('pricing', 'min_agents'));
-        $quote = $this->quotes->quote(max(1, $agents), $check['coupon']);
+        $agents = (int) old('agents', $customer?->agent_count_entered ?? ($custom?->min_agents ?? $this->settings->get('pricing', 'min_agents')));
+        $quote = $this->quotes->quote(max(1, $agents), $check['coupon'], $custom);
 
         return [
             'customer' => $customer,
+            'customQuote' => $custom,
+            'quoteProblem' => null,
+            'prefill' => $custom ? ['company_name' => $custom->company_name, 'email' => $custom->email] : [],
             'states' => UsStates::ALL,
             'quote' => $quote,
             'couponCode' => $code,
@@ -346,6 +357,18 @@ class OnboardingController extends Controller
             $tracking['referrer'] = mb_substr($ref, 0, 120);
         }
         $request->session()->put('onboarding.tracking', $tracking);
+    }
+
+    /** A usable custom quote from ?quote= (remembered in the session for the rest of step 1). */
+    private function sessionQuote(Request $request): ?\App\Models\Quote
+    {
+        if ($request->filled('quote')) {
+            $request->session()->put('onboarding.quote', (string) $request->query('quote'));
+        }
+        $token = $request->session()->get('onboarding.quote');
+        $quote = $token && \Illuminate\Support\Str::isUuid($token) ? \App\Models\Quote::where('token', $token)->first() : null;
+
+        return $quote?->isUsable() ? $quote : null;
     }
 
     private function sourceLabel(array $tracking, ?string $appliedCode): ?string
