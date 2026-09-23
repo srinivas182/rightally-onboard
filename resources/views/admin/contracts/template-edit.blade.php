@@ -37,9 +37,9 @@
                 <p class="text-slate">Click to insert. Each is filled in from the client’s details, the prices at signing and Settings.</p>
                 @foreach ($placeholders as $key => $desc)
                     @php $token = '{'.'{ '.$key.' }'.'}'; @endphp
-                    <div class="d-flex justify-content-between gap-2 py-1 border-bottom">
-                        <button type="button" class="btn btn-link btn-sm p-0 font-monospace text-start" data-insert="{{ $token }}" data-target="#body_html">{{ $token }}</button>
-                        <span class="text-slate text-end">{{ $desc }}</span>
+                    <div class="py-2 border-bottom">
+                        <button type="button" class="btn btn-link btn-sm p-0 font-monospace text-start text-nowrap" data-insert="{{ $token }}" data-target="#body_html">{{ $token }}</button>
+                        <div class="text-slate">{{ $desc }}</div>
                     </div>
                 @endforeach
             </div>

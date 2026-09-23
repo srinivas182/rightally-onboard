@@ -18,8 +18,10 @@ html { scroll-padding-top: env(safe-area-inset-top, 0px); }
 .brand-inv img { width: 28px; height: 28px; }
 
 // ---- Admin shell ------------------------------------------------
-.adm { display: grid; grid-template-columns: 1fr; min-height: 100vh; }
-@media (min-width: 992px) { .adm { grid-template-columns: 248px 1fr; } }
+.adm { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100vh; }
+@media (min-width: 992px) { .adm { grid-template-columns: 248px minmax(0, 1fr); } }
+// Let wide tables scroll inside their panel instead of widening the page.
+.min-w-0 { min-width: 0; }
 .side { background: var(--ra-navy); color: #A9B8D0; padding: 1.25rem .9rem; display: none; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
 @media (min-width: 992px) { .side { display: flex; } }
 .side .brand-inv { padding: .2rem .5rem 1.4rem; }

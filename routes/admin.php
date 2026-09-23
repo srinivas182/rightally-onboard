@@ -2,13 +2,13 @@
 
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AdminUserController;
-use App\Http\Controllers\Admin\ContractController;
-use App\Http\Controllers\Admin\ContractTemplateController;
-use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\Auth\InvitationController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\PasswordResetController;
 use App\Http\Controllers\Admin\Auth\TwoFactorController;
+use App\Http\Controllers\Admin\ContractController;
+use App\Http\Controllers\Admin\ContractTemplateController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;

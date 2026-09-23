@@ -16,6 +16,7 @@ use App\Services\Onboarding\OnboardingService;
 use App\Services\Pricing\QuoteCalculator;
 use App\Services\Security\Turnstile;
 use App\Services\Settings\SettingsService;
+use App\Support\BusinessClock;
 use App\Support\UsPhone;
 use App\Support\UsStates;
 use Illuminate\Http\RedirectResponse;
@@ -192,7 +193,7 @@ class OnboardingController extends Controller
                 'monthly' => $contract->monthlyFeeCents(),
                 'agents' => $contract->agent_count,
             ],
-            'goLive' => $contract->starts_on ?? \App\Support\BusinessClock::today()->addDays((int) $this->settings->get('pricing', 'go_live_days')),
+            'goLive' => $contract->starts_on ?? BusinessClock::today()->addDays((int) $this->settings->get('pricing', 'go_live_days')),
         ];
     }
 
@@ -221,7 +222,7 @@ class OnboardingController extends Controller
                 'monthly' => $quote->monthlyFeeCents(),
                 'agents' => $quote->agentsBilled,
             ],
-            'goLive' => \App\Support\BusinessClock::today()->addDays($quote->goLiveDays),
+            'goLive' => BusinessClock::today()->addDays($quote->goLiveDays),
         ];
     }
 

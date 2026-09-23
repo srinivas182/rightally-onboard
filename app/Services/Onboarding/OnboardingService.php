@@ -7,6 +7,7 @@ use App\Enums\ContractType;
 use App\Enums\CustomerStatus;
 use App\Models\Contract;
 use App\Models\ContractTemplate;
+use App\Models\Coupon;
 use App\Models\Customer;
 use App\Services\Pricing\Quote;
 use App\Services\Pricing\QuoteCalculator;
@@ -30,7 +31,7 @@ final class OnboardingService
      * @param  array<string, mixed>  $details  validated details (see DetailsRequest)
      * @param  array<string, mixed>  $tracking  source + utm
      */
-    public function start(array $details, ?\App\Models\Coupon $coupon, array $tracking = []): Customer
+    public function start(array $details, ?Coupon $coupon, array $tracking = []): Customer
     {
         return DB::transaction(function () use ($details, $coupon, $tracking) {
             $quote = $this->quotes->quote((int) $details['agents'], $coupon);
@@ -49,7 +50,7 @@ final class OnboardingService
     }
 
     /** Update details before signing; the draft agreement is re-priced. */
-    public function update(Customer $customer, array $details, ?\App\Models\Coupon $coupon): Customer
+    public function update(Customer $customer, array $details, ?Coupon $coupon): Customer
     {
         $contract = $this->draftContract($customer);
         if (! $contract) {

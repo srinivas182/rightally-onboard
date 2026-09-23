@@ -12,8 +12,8 @@
     <div class="tab-pane fade show active" id="signed" role="tabpanel">
         <div class="panel">
             <div class="panel-h">
-                <form method="get" class="d-flex gap-2" role="search">
-                    <input class="form-control form-control-sm" style="width:260px" type="search" name="q" value="{{ $q }}" placeholder="Search number, company or email" aria-label="Search agreements">
+                <form method="get" class="d-flex gap-2 flex-grow-1" role="search">
+                    <input class="form-control form-control-sm" style="max-width:260px" type="search" name="q" value="{{ $q }}" placeholder="Search number, company or email" aria-label="Search agreements">
                     <button class="btn btn-outline-secondary btn-sm" type="submit">Search</button>
                 </form>
                 <span class="small text-slate">{{ $contracts->total() }} {{ Str::plural('agreement', $contracts->total()) }}</span>

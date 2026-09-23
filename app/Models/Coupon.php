@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\BusinessClock;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * Percentage discount on the implementation fee.
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string $code
  * @property string $name
  * @property string $percent_off
- * @property ?\Illuminate\Support\Carbon $expires_on
+ * @property ?Carbon $expires_on
  * @property ?int $max_uses
  * @property int $times_used
  * @property bool $is_active

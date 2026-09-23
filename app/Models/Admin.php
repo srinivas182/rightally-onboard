@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 
 /**
  * A back-office user. Access is controlled by the admin's role, which
@@ -20,7 +21,7 @@ use Illuminate\Notifications\Notifiable;
  * @property string $email
  * @property ?string $password
  * @property ?string $two_factor_secret
- * @property ?\Illuminate\Support\Carbon $two_factor_confirmed_at
+ * @property ?Carbon $two_factor_confirmed_at
  * @property bool $is_active
  * @property-read Role $role
  */

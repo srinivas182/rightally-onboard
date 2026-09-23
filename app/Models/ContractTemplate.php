@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Enums\ContractType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property ContractType $type
- * @property ?\Illuminate\Support\Carbon $published_at
+ * @property ?Carbon $published_at
  */
 class ContractTemplate extends Model
 {

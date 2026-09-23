@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\AssignableRole;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +19,7 @@ class InviteAdminRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email:rfc', 'max:160', Rule::unique('admins', 'email')],
-            'role_id' => ['required', Rule::exists('roles', 'id'), new \App\Rules\AssignableRole],
+            'role_id' => ['required', Rule::exists('roles', 'id'), new AssignableRole],
         ];
     }
 
