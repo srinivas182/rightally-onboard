@@ -37,6 +37,22 @@ Then:
 3. Remove `SUPER_ADMIN_PASSWORD` from `.env`.
 4. Work through `GO_LIVE_CHECKLIST.md`.
 
+## 3b. cPanel servers
+On cPanel the `php` command picks a version by folder, so use PHP 8.4 by its full path:
+```bash
+echo "alias php84='/opt/cpanel/ea-php84/root/usr/bin/php'" >> ~/.bashrc
+curl -sS https://getcomposer.org/installer | /opt/cpanel/ea-php84/root/usr/bin/php -d allow_url_fopen=On   # creates ~/composer.phar
+echo "alias composer84='/opt/cpanel/ea-php84/root/usr/bin/php -d allow_url_fopen=On ~/composer.phar'" >> ~/.bashrc
+source ~/.bashrc
+```
+- Use `php84` / `composer84` wherever this guide says `php` / `composer`.
+- Node without root: install nvm (`curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash`, then `nvm install 22`).
+- Subdomain document root: `rightally-onboard/public` (cPanel > Domains). PHP version for the site: 8.4 (MultiPHP Manager).
+- No Supervisor: run the queue from cron every minute:
+  `cd /home/CPUSER/rightally-onboard && /opt/cpanel/ea-php84/root/usr/bin/php artisan queue:work --stop-when-empty --max-time=55 --tries=3 >> /dev/null 2>&1`
+- Scheduler cron (every minute): `cd /home/CPUSER/rightally-onboard && /opt/cpanel/ea-php84/root/usr/bin/php artisan schedule:run >> /dev/null 2>&1`
+- `./deploy/deploy.sh` finds PHP 8.4, `~/composer.phar` and nvm's Node by itself (or set `PHP_BIN`).
+
 ## 4. Updating
 ```bash
 sudo -iu rightally
