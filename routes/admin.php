@@ -88,6 +88,7 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
         Route::get('export', [InvoiceController::class, 'export'])->name('export');
         Route::post('{invoice}/resend', [InvoiceController::class, 'resend'])->middleware('throttle:20,1')->name('resend');
+        Route::get('{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('pdf');
     });
 
     Route::middleware('can:menu.coupons')->group(function () {

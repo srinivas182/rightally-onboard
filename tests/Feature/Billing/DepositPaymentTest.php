@@ -151,7 +151,7 @@ class DepositPaymentTest extends TestCase
         Http::assertSent(fn (Request $r) => str_contains($r->url(), 'api.brevo.com')
             && $r['subject'] === 'Your RightAlly agreement is signed'
             && str_contains($r['htmlContent'], 'deposit of $300.00 is paid')
-            && count($r['attachment']) === 1 && str_ends_with($r['attachment'][0]['name'], '.pdf'));
+            && count($r['attachment']) === 2 && str_starts_with($r['attachment'][0]['name'], 'RightAlly-Agreement-') && str_starts_with($r['attachment'][1]['name'], 'Receipt-INV-'));
     }
 
     public function test_webhook_and_return_url_together_apply_the_payment_once(): void

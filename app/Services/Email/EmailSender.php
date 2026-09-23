@@ -16,6 +16,9 @@ use App\Services\Settings\SettingsService;
  */
 final class EmailSender
 {
+    /** Emails that carry the invoice or receipt PDF. */
+    public const ATTACH_INVOICE = ['agreement_signed', 'deposit_receipt', 'balance_paid', 'monthly_receipt', 'early_termination', 'balance_failed', 'payment_failed'];
+
     public function __construct(
         private readonly EmailRenderer $renderer,
         private readonly CustomerEmailValues $values,
@@ -30,6 +33,14 @@ final class EmailSender
         $template = EmailTemplate::where('key', $templateKey)->first();
         if (! $template || ! $template->is_enabled) {
             return null;
+        }
+
+        if ($invoice && in_array($templateKey, self::ATTACH_INVOICE, true)) {
+            try {
+                $attachments[] = app(\App\Services\Billing\InvoicePdf::class)->attachment($invoice);
+            } catch (\Throwable $e) {
+                report($e); // send the email anyway
+            }
         }
 
         $mail = $this->renderer->render($template, $this->values->for($customer, $invoice, $extra));

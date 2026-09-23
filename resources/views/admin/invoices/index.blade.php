@@ -29,10 +29,10 @@
         </div>
         @if ($paid->isEmpty())<div class="p-4 text-center text-slate">No paid invoices in this period.</div>@else
         <div class="table-responsive"><table class="table">
-            <thead><tr><th>Invoice</th><th>Customer</th><th>Type</th><th class="text-end">Amount</th><th>Paid</th><th>Method</th></tr></thead>
+            <thead><tr><th>Invoice</th><th>Customer</th><th>Type</th><th class="text-end">Amount</th><th>Paid</th><th>Method</th><th></th></tr></thead>
             <tbody>@foreach ($paid as $i)
                 <tr><td class="num">{{ $i->number }}</td><td>{!! $who($i->customer) !!}</td><td class="small">{{ $i->type->label() }}@if ($i->period_start), {{ $i->period_start->format('M Y') }}@endif</td>
-                    <td class="text-end num">{{ $m($i->amount_cents) }}</td><td class="small">{{ $i->paid_at?->setTimezone($tz)->format('M j, Y') }}</td><td class="small">{{ $i->payments->firstWhere('status', 'succeeded')?->method_label }}</td></tr>
+                    <td class="text-end num">{{ $m($i->amount_cents) }}</td><td class="small">{{ $i->paid_at?->setTimezone($tz)->format('M j, Y') }}</td><td class="small">{{ $i->payments->firstWhere('status', 'succeeded')?->method_label }}</td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.invoices.pdf', $i) }}" target="_blank" rel="noopener">PDF</a></td></tr>
             @endforeach</tbody>
         </table></div>
         <div class="p-3 border-top">{{ $paid->links() }}</div>@endif

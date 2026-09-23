@@ -141,6 +141,7 @@
                 <td class="text-end num">{{ $m($inv->amount_cents) }}</td><td class="small">{{ ($inv->paid_at ?? $inv->failed_at ?? $inv->created_at)->setTimezone($tz)->format('M j, Y') }}</td>
                 <td><span class="st {{ $invPill[$inv->status->value] ?? 'st-draft' }}">{{ ucfirst($inv->status->value) }}</span>@if ($inv->failure_reason && $inv->status->value === 'failed')<div class="small text-slate">{{ $inv->failure_reason }}</div>@endif</td>
                 <td class="text-end text-nowrap">
+                    @if ($canInvoices)<a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.invoices.pdf', $inv) }}" target="_blank" rel="noopener">PDF</a>@endif
                     @if ($inv->hosted_invoice_url)<a class="btn btn-sm btn-outline-secondary" href="{{ $inv->hosted_invoice_url }}" target="_blank" rel="noopener">Stripe page</a>@endif
                     @if ($canInvoices && $inv->status->value === 'failed' && $inv->hosted_invoice_url)<form method="post" action="{{ route('admin.invoices.resend', $inv) }}" class="d-inline">@csrf<button class="btn btn-sm btn-outline-primary">Resend link</button></form>@endif
                 </td></tr>

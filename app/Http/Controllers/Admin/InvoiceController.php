@@ -57,6 +57,11 @@ class InvoiceController extends Controller
         }, 'rightally-invoices-'.$period.'-'.BusinessClock::today()->toDateString().'.csv', ['Content-Type' => 'text/csv']);
     }
 
+    public function pdf(Invoice $invoice, \App\Services\Billing\InvoicePdf $pdf): \Illuminate\Http\Response
+    {
+        return response($pdf->render($invoice), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="'.$pdf->filename($invoice).'"']);
+    }
+
     /** Email the client Stripe's secure page to update their payment method and pay. */
     public function resend(Invoice $invoice, EmailSender $email, AuditLogger $audit): RedirectResponse
     {
