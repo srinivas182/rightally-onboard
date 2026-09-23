@@ -92,9 +92,11 @@ class EmailTemplateController extends Controller
         $log = $sender->test($template, $to, SampleEmailValues::all());
         $log->refresh();
 
-        return back()->with($log->status === 'failed' ? 'warning' : 'success', $log->status === 'failed'
-            ? "The test email couldn’t be sent: {$log->error}"
-            : "Test email sent to {$to}.");
+        return match ($log->status) {
+            'failed' => back()->with('warning', "The test email couldn’t be sent: {$log->error}"),
+            'logged' => back()->with('warning', 'Brevo isn’t set up yet (Settings > Email), so the test was written to the application log instead of being sent.'),
+            default => back()->with('success', "Test email sent to {$to}."),
+        };
     }
 
     public function destroy(EmailTemplate $template): RedirectResponse

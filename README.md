@@ -12,7 +12,7 @@ Client onboarding, electronic agreement signing and Stripe billing for RightAlly
 | 0 | Brand, design system, clickable prototype | Approved |
 | 1 | Foundation: database, admin sign-in with two-factor, roles, settings | Done |
 | 2 | Onboarding, agreement signing and PDF, coupons, agreement templates | Done |
-| 3 | Payments (Stripe) and email (Brevo, templates) | Planned |
+| 3 | Payments (Stripe deposit, webhooks) and email (Brevo, editable templates) | Done |
 | 4 | Billing engine: go-live charge, subscriptions, agent counts, suspension, renewals | Planned |
 | 5 | Admin back office: dashboard, customers, contracts, invoices | Planned |
 | 6 | QA, security hardening, VPS go-live | Planned |
