@@ -6,6 +6,7 @@ use App\Services\Admin\SystemHealth;
 use App\Services\Billing\AgentCountService;
 use App\Services\Billing\BalanceService;
 use App\Services\Billing\CardExpiryWarnings;
+use App\Services\Billing\PauseService;
 use App\Services\Billing\RenewalService;
 use App\Services\Billing\SuspensionService;
 use App\Services\Integrations\TeamAlerts;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Schedule;
 | Monthly charges themselves are made by Stripe's subscription; their
 | results arrive by webhook.
 */
-Artisan::command('billing:daily', function (BalanceService $balance, SuspensionService $suspension, RenewalService $renewals, CardExpiryWarnings $cards, TeamAlerts $alerts) {
+Artisan::command('billing:daily', function (BalanceService $balance, SuspensionService $suspension, RenewalService $renewals, CardExpiryWarnings $cards, TeamAlerts $alerts, PauseService $pauses) {
     $this->info('Billing run for '.BusinessClock::today()->toDateString());
 
     $summary = [];
@@ -50,6 +51,7 @@ Artisan::command('billing:daily', function (BalanceService $balance, SuspensionS
     $this->line('Agreements expired: '.$renewals->expire());
     $this->line('Accounts suspended: '.$suspension->run());
     $this->line('Card expiry warnings sent: '.$cards->send());
+    $this->line('Pauses ended: '.$pauses->resumeDue());
     Cache::forever(SystemHealth::BILLING_RUN_KEY, now());
 })->purpose('Go-live charges, reminders, renewals, expiries and suspensions');
 

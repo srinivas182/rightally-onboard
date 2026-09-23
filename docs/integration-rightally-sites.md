@@ -5,7 +5,7 @@ The onboarding app talks to each site in two ways. Both use the **customer's age
 Admin > Customers > (customer) > Live site and agent API. Store it in the site's configuration as a secret.
 
 ## 1. Account status: onboarding app → your site
-Sent when a customer goes live, is suspended, is reactivated, cancels, or their agreement ends.
+Sent when a customer goes live, is suspended, is reactivated, is paused or resumed, cancels, or their agreement ends.
 
 ```
 POST {live_url}/api/rightally/account-status
@@ -28,6 +28,7 @@ Body (abridged):
 - Verify the request: the Bearer token matches, and `v1 == HMAC_SHA256(token, t + "." + raw_body)`, with `t` within 5 minutes of now. Reject otherwise (401).
 - Act on `data.customer.access`:
   - `active`: normal access.
+  - `paused`: the client paused their subscription by agreement (up to 3 months). Block sign-in like `suspended`, with the message "Account paused until <date>". Keep all data.
   - `suspended`: block sign-in for agents and staff (show "Account suspended: contact your broker" and the broker a "Pay now" message). Keep all data.
   - `ended`: read-only or no access per your policy; keep data for export for 30 days (Agreement Section 10).
 - Return 2xx quickly. Anything else is retried: 1 min, 5 min, 30 min, 2 h, 6 h.

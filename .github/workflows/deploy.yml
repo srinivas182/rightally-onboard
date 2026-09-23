@@ -1,0 +1,72 @@
+# Automatic deploys: push a version tag (e.g. v1.4.0) and it deploys to staging,
+# then to production after approval.
+#
+# Inactive until you add these repository secrets (Settings > Secrets and variables > Actions):
+#   DEPLOY_SSH_KEY        private key allowed to log in as the app user (both servers)
+#   STAGING_HOST          e.g. staging.onboard.rightally.io   (optional: skip staging if unset)
+#   PRODUCTION_HOST       e.g. onboard.rightally.io
+#   DEPLOY_USER           default: rightally
+#   DEPLOY_PATH           default: /var/www/rightally-onboard
+# And create an environment named "production" with yourself as a required reviewer
+# (Settings > Environments), so production waits for your approval.
+name: Deploy
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Tag or branch to deploy
+        required: true
+        default: main
+
+concurrency: deploy
+
+jobs:
+  tests:
+    uses: ./.github/workflows/ci.yml
+
+  staging:
+    needs: tests
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      HOST: ${{ secrets.STAGING_HOST }}
+      KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      USER_: ${{ secrets.DEPLOY_USER || 'rightally' }}
+      PATH_: ${{ secrets.DEPLOY_PATH || '/var/www/rightally-onboard' }}
+      REF: ${{ github.event.inputs.ref || github.ref_name }}
+    steps:
+      - name: Deploy to staging
+        run: |
+          if [ -z "$HOST" ] || [ -z "$KEY" ]; then echo "::notice::Staging not configured (STAGING_HOST / DEPLOY_SSH_KEY). Skipping."; exit 0; fi
+          install -m 600 /dev/null ~/key && echo "$KEY" > ~/key
+          ssh -i ~/key -o StrictHostKeyChecking=accept-new "$USER_@$HOST" "cd $PATH_ && ./deploy/deploy.sh $REF"
+      - name: Check staging health
+        run: |
+          if [ -z "$HOST" ]; then exit 0; fi
+          sleep 5
+          curl -fsS "https://$HOST/up" > /dev/null
+
+  production:
+    needs: staging
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      HOST: ${{ secrets.PRODUCTION_HOST }}
+      KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      USER_: ${{ secrets.DEPLOY_USER || 'rightally' }}
+      PATH_: ${{ secrets.DEPLOY_PATH || '/var/www/rightally-onboard' }}
+      REF: ${{ github.event.inputs.ref || github.ref_name }}
+    steps:
+      - name: Deploy to production
+        run: |
+          if [ -z "$HOST" ] || [ -z "$KEY" ]; then echo "::notice::Production not configured (PRODUCTION_HOST / DEPLOY_SSH_KEY). Skipping."; exit 0; fi
+          install -m 600 /dev/null ~/key && echo "$KEY" > ~/key
+          ssh -i ~/key -o StrictHostKeyChecking=accept-new "$USER_@$HOST" "cd $PATH_ && ./deploy/deploy.sh $REF"
+      - name: Check production health
+        run: |
+          if [ -z "$HOST" ]; then exit 0; fi
+          sleep 5
+          curl -fsS "https://$HOST/up" > /dev/null

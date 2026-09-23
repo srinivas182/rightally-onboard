@@ -118,6 +118,14 @@
     </div>
 
     <div class="col-xl-5">
+        <div class="panel mb-3"><div class="panel-h"><h2>Contact</h2></div><div class="p-3 p-md-4">
+            <form method="post" action="{{ route('admin.customers.contact', $customer) }}" class="row g-2">@csrf @method('put')
+                <div class="col-sm-7"><label class="form-label small" for="c_email">Email (receipts and notices)</label><input type="email" class="form-control form-control-sm" id="c_email" name="email" value="{{ old('email', $customer->email) }}" required></div>
+                <div class="col-sm-5"><label class="form-label small" for="c_phone">Phone</label><input class="form-control form-control-sm" id="c_phone" name="phone" value="{{ old('phone', \App\Support\UsPhone::format($customer->phone_e164)) }}" required></div>
+                @if ($errors->contact->any())<div class="col-12 small text-danger">{{ $errors->contact->first() }}</div>@endif
+                <div class="col-12"><button class="btn btn-sm btn-outline-primary">Save contact</button></div>
+            </form>
+        </div></div>
         <div class="panel"><div class="panel-h"><h2>Billing</h2></div><div class="p-3 p-md-4">
             @if ($contract)
                 <dl class="row small mb-3">

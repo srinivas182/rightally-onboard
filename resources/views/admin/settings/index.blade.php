@@ -122,6 +122,8 @@
 
     {{-- Email --}}
     <div class="tab-pane fade" id="t-email" role="tabpanel">
+        <div class="alert alert-light border small mb-4"><b>Delivery tracking.</b> In Brevo: Transactional &gt; Settings &gt; Webhook, add this URL and tick Delivered, Opened, Hard bounce, Soft bounce, Blocked, Spam, Invalid email and Error. Bounces then show on the customer page and dashboard.
+            <div class="input-group input-group-sm mt-2"><input class="form-control font-monospace" value="{{ $brevoWebhookUrl }}" readonly aria-label="Brevo webhook URL"><button class="btn btn-outline-secondary" type="button" data-copy="{{ $brevoWebhookUrl }}">Copy</button></div></div>
         <form method="post" action="{{ route('admin.settings.update', 'email') }}">@csrf @method('put')
             <div class="row g-3">
                 @include('admin.settings._field', ['group' => 'email', 'key' => 'brevo_api_key', 'label' => 'Brevo API key', 'value' => $v['email']['brevo_api_key'], 'col' => 'col-12', 'secret' => true])

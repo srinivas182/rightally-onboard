@@ -67,6 +67,7 @@ final class SettingsSchema
             'email' => [
                 'label' => 'Email',
                 'fields' => [
+                    'brevo_webhook_token' => ['default' => null, 'rules' => ['nullable', 'string', 'max:100'], 'secret' => true],
                     'brevo_api_key' => ['default' => null, 'rules' => ['nullable', 'string', 'max:255'], 'secret' => true],
                     'from_name' => ['default' => 'RightAlly', 'rules' => ['required', 'string', 'max:80']],
                     'from_email' => ['default' => 'no-reply@rightally.io', 'rules' => ['required', 'email', 'max:160']],

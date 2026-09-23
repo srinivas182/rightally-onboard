@@ -6,6 +6,7 @@ use App\Enums\ContractStatus;
 use App\Enums\CustomerStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
+use App\Models\Approval;
 use App\Models\Contract;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -103,7 +104,13 @@ final class DashboardStats
             ->each(fn ($p) => $items->prepend(['kind' => 'danger', 'customer' => $p->customer,
                 'text' => 'Chargeback on '.$p->invoice->number, 'detail' => 'Respond in Stripe by '.($p->dispute_due_by?->setTimezone(BusinessClock::timezone())->format('M j') ?? 'the deadline').'.']));
 
-        return $items->take(8);
+        Approval::with('customer', 'requester')->where('status', 'pending')->oldest()->limit(3)->get()
+            ->each(fn ($a) => $items->prepend(['kind' => 'warning', 'customer' => $a->customer,
+                'text' => "{$a->label()} waiting for approval", 'detail' => "Requested by {$a->requester->name}. Open Approvals to decide."]));
+        Customer::whereNotNull('email_bounced_at')->whereNotIn('status', [CustomerStatus::Cancelled, CustomerStatus::Expired, CustomerStatus::Draft])->limit(3)->get()
+            ->each(fn ($c) => $items->push(['kind' => 'danger', 'customer' => $c, 'text' => 'Emails are bouncing', 'detail' => "{$c->email}: {$c->email_bounce_reason}"]));
+
+        return $items->take(10);
     }
 
     /** @return array{0: Carbon, 1: Carbon, 2: string} */

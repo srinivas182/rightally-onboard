@@ -6,7 +6,7 @@ Tick each item before the first real client signs.
 - [ ] Mayura Consultancy Services LLC name change filed and active on Sunbiz.
 - [ ] Fictitious name "RightAlly" registered on Sunbiz for that LLC.
 - [ ] A Florida attorney has reviewed the Privacy Policy and Terms of Use drafts (Settings > Legal pages).
-- [ ] A Florida attorney has reviewed the agreement and renewal templates (Admin > Contracts > Templates). If they change wording: create a new version, edit, publish.
+- [ ] A Florida attorney has reviewed the agreement (including the new pause clause in Section 5) and renewal templates (Admin > Contracts > Templates). If they change wording: create a new version, edit, publish.
 - [ ] Settings > Company: legal name, DBA, address, phone and support email are correct.
 - [ ] Settings > Pricing and Renewal pricing are correct.
 - [ ] Settings > Signature: name, title, and signature style or image.
@@ -14,6 +14,7 @@ Tick each item before the first real client signs.
 ## Email (Brevo)
 - [ ] `rightally.io` authenticated in Brevo (SPF, DKIM and DMARC DNS records added and verified).
 - [ ] Settings > Email: Brevo API key, from name/email, team CC addresses.
+- [ ] Settings > Email: copy the delivery-tracking URL into Brevo (Transactional > Settings > Webhook) with all delivery events ticked.
 - [ ] Email templates: read each automatic email; send yourself a test of "Agreement signed (welcome)", "Balance failed" and "Payment failed".
 - [ ] Settings > Security: Cloudflare Turnstile site and secret keys (bot check on the onboarding form).
 
@@ -55,4 +56,4 @@ Tick each item before the first real client signs.
 - [ ] Uptime monitor on `/health`.
 - [ ] Off-site backups configured and one restore tested.
 - [ ] Revoke the GitHub token used during the build and issue a new one for the server (read-only is enough for deploys).
-- [ ] Invite Sunil and set his role in Admins and roles.
+- [ ] Invite Sunil and set his role in Admins and roles. At least two admins are needed for approvals (early terminations, refunds and credits over $500).

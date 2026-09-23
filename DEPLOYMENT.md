@@ -44,6 +44,13 @@ cd /var/www/rightally-onboard && ./deploy/deploy.sh          # or ./deploy/deplo
 ```
 The script backs up first, pulls the code, installs, builds, migrates in maintenance mode, caches, restarts the queue worker and checks `/up`.
 
+## 4b. Automatic deploys (optional)
+Once the server works by hand, let GitHub deploy tags for you:
+1. On the server, as the app user: `ssh-keygen -t ed25519 -f ~/.ssh/deploy -N ""` and `cat ~/.ssh/deploy.pub >> ~/.ssh/authorized_keys`.
+2. In GitHub > Settings > Secrets and variables > Actions, add `DEPLOY_SSH_KEY` (contents of `~/.ssh/deploy`) and `PRODUCTION_HOST` (and `STAGING_HOST` if you run staging).
+3. GitHub > Settings > Environments > New environment `production` > Required reviewers: you.
+4. Release: `git tag v1.4.0 && git push origin v1.4.0`. Approve the production step in the Actions tab.
+
 ## 5. Monitoring
 - **Admin dashboard > System status** (super admins): database, cron, daily billing run, email queue, Stripe keys and webhooks, Brevo.
 - **`/health`** returns 200 when all of those are fine and 503 otherwise. Point an uptime monitor (UptimeRobot, Better Stack) at it.

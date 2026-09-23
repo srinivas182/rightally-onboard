@@ -49,6 +49,15 @@ Onboarding funnel shows where prospects drop off, by source, coupon, campaign or
 ## Alerts and integrations
 Settings > Alerts and integrations: choose which alerts the team gets by email or Slack, and add webhooks to send events to your CRM (for example through Zapier).
 
+## Refunds, credits and approvals
+Refund from the Invoices tab on the customer page; add a credit from Actions. Anything over $500, and every early termination, goes to Invoices > Approvals for a second admin. You can’t approve your own requests.
+
+## Pausing
+Actions > Pause subscription, for 1 to 3 months, once a year. No charges during the pause; the term is extended; the client and their site are notified. It resumes by itself, or use Resume subscription now.
+
+## Bounced emails
+A red banner on the customer page means our emails aren’t reaching them. Call the client and update the email in the Contact panel.
+
 ## Coupons
 Percentage off the implementation fee only. Can expire or never expire, and can have a usage limit. Once a code has been used it can’t be renamed; switch it off instead of deleting.
 

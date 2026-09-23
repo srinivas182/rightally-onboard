@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Enums\CustomerStatus;
 use App\Enums\InvoiceStatus;
 use App\Models\Admin;
+use App\Models\Approval;
 use App\Models\Customer;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
@@ -122,7 +123,7 @@ class BackOfficeTest extends TestCase
 
         $this->post("/admin/customers/{$c->uuid}/terminate", ['reason' => 'Closing', 'confirm' => 'Coastal Keys Brokerage'])->assertSessionHas('success');
         $this->assertSame(CustomerStatus::Live, $c->fresh()->status); // waits for a second admin
-        $approval = \App\Models\Approval::firstOrFail();
+        $approval = Approval::firstOrFail();
 
         $this->post("/admin/approvals/{$approval->id}/approve")->assertSessionHasErrors('approval'); // not your own request
         $second = Admin::factory()->superAdmin()->withTwoFactor()->create();

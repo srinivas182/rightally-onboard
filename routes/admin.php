@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\ApprovalController;
 use App\Http\Controllers\Admin\Auth\InvitationController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\PasswordResetController;
@@ -80,6 +81,7 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::put('{customer}/go-live', [CustomerController::class, 'updateGoLive'])->name('go-live');
         Route::put('{customer}/agents', [CustomerController::class, 'updateAgents'])->name('agents');
         Route::put('{customer}/live', [CustomerController::class, 'updateLive'])->name('live');
+        Route::put('{customer}/contact', [CustomerController::class, 'updateContact'])->name('contact');
         Route::post('{customer}/token', [CustomerController::class, 'newToken'])->name('token');
         Route::post('{customer}/resend-welcome', [CustomerController::class, 'resendWelcome'])->name('resend-welcome');
         Route::post('{customer}/send-email', [CustomerController::class, 'sendEmail'])->name('send-email');
@@ -100,9 +102,9 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
     });
 
     Route::middleware('can:menu.invoices')->prefix('approvals')->name('approvals.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\ApprovalController::class, 'index'])->name('index');
-        Route::post('{approval}/approve', [\App\Http\Controllers\Admin\ApprovalController::class, 'approve'])->name('approve');
-        Route::post('{approval}/reject', [\App\Http\Controllers\Admin\ApprovalController::class, 'reject'])->name('reject');
+        Route::get('/', [ApprovalController::class, 'index'])->name('index');
+        Route::post('{approval}/approve', [ApprovalController::class, 'approve'])->name('approve');
+        Route::post('{approval}/reject', [ApprovalController::class, 'reject'])->name('reject');
     });
 
     Route::middleware('can:menu.reports')->group(function () {

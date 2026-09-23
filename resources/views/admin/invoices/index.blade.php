@@ -13,6 +13,8 @@
     <li class="nav-item"><a class="nav-link {{ $tab === 'paid' ? 'active' : '' }}" data-bs-toggle="tab" href="#paid">Paid</a></li>
     <li class="nav-item"><a class="nav-link {{ $tab === 'failed' ? 'active' : '' }}" data-bs-toggle="tab" href="#failed">Failed @if ($failed->count())<span class="badge text-bg-danger">{{ $failed->count() }}</span>@endif</a></li>
     <li class="nav-item"><a class="nav-link {{ $tab === 'upcoming' ? 'active' : '' }}" data-bs-toggle="tab" href="#upcoming">Upcoming</a></li>
+    @php $waiting = \App\Models\Approval::where('status', 'pending')->count(); @endphp
+    <li class="nav-item"><a class="nav-link" href="{{ route('admin.approvals.index') }}">Approvals @if ($waiting)<span class="badge text-bg-warning">{{ $waiting }}</span>@endif</a></li>
 </ul>
 <div class="tab-content">
     <div class="tab-pane fade {{ $tab === 'paid' ? 'show active' : '' }}" id="paid" role="tabpanel"><div class="panel">

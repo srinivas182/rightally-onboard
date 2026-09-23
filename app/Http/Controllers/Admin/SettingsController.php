@@ -10,6 +10,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -25,6 +26,10 @@ class SettingsController extends Controller
 
     public function index(): View
     {
+        // Secret for the Brevo delivery webhook URL, created on first visit.
+        if (blank($this->settings->get('email', 'brevo_webhook_token'))) {
+            $this->settings->setMany('email', ['brevo_webhook_token' => Str::random(40)]);
+        }
         $values = [];
         foreach (SettingsSchema::groups() as $group => $def) {
             foreach ($def['fields'] as $key => $field) {
@@ -35,6 +40,7 @@ class SettingsController extends Controller
         }
 
         return view('admin.settings.index', [
+            'brevoWebhookUrl' => route('brevo.webhook', $this->settings->get('email', 'brevo_webhook_token')),
             'groups' => SettingsSchema::groups(),
             'v' => $values,
             'signatureUrl' => $values['signature']['image_path'] ? route('admin.settings.signature') : null,

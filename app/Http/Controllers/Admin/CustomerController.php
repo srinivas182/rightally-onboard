@@ -8,7 +8,9 @@ use App\Enums\CustomerStatus;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Approval;
 use App\Models\Contract;
+use App\Models\Credit;
 use App\Models\Customer;
 use App\Models\EmailTemplate;
 use App\Models\Invoice;
@@ -16,11 +18,12 @@ use App\Services\Audit\AuditLogger;
 use App\Services\Billing\AgentCountService;
 use App\Services\Billing\ApprovalService;
 use App\Services\Billing\CreditService;
-use App\Services\Billing\PauseService;
-use App\Services\Billing\RefundService;
 use App\Services\Billing\EarlyTerminationService;
 use App\Services\Billing\GoLiveService;
+use App\Services\Billing\PauseService;
+use App\Services\Billing\RefundService;
 use App\Services\Email\EmailSender;
+use App\Services\Stripe\StripeClient;
 use App\Support\BusinessClock;
 use App\Support\Money;
 use App\Support\UsPhone;
@@ -86,9 +89,9 @@ class CustomerController extends Controller
             'customEmails' => EmailTemplate::where('is_system', false)->where('is_enabled', true)->orderBy('name')->get(),
             'newToken' => session('agent_token'),
             'pauseProblem' => $pauses->canPause($customer),
-            'refundable' => $customer->invoices->mapWithKeys(fn ($i) => [$i->id => $i->status === \App\Enums\InvoiceStatus::Paid ? $refunds->refundable($i) : 0]),
-            'credits' => \App\Models\Credit::with('creator')->where('customer_id', $customer->id)->latest('id')->get(),
-            'pendingApprovals' => \App\Models\Approval::with('requester')->where('customer_id', $customer->id)->where('status', 'pending')->get(),
+            'refundable' => $customer->invoices->mapWithKeys(fn ($i) => [$i->id => $i->status === InvoiceStatus::Paid ? $refunds->refundable($i) : 0]),
+            'credits' => Credit::with('creator')->where('customer_id', $customer->id)->latest('id')->get(),
+            'pendingApprovals' => Approval::with('requester')->where('customer_id', $customer->id)->where('status', 'pending')->get(),
             'threshold' => ApprovalService::threshold(),
         ]);
     }
@@ -119,6 +122,28 @@ class CustomerController extends Controller
         $this->audit->log('customer.live_updated', "Updated live site details for {$customer->company_name}", $customer, $data);
 
         return back()->with('success', 'Live site details saved.');
+    }
+
+    public function updateContact(Request $request, Customer $customer): RedirectResponse
+    {
+        $data = $request->validateWithBag('contact', ['email' => ['required', 'email:rfc', 'max:160'], 'phone' => ['required', 'string', 'max:30']]);
+        $phone = UsPhone::toE164($data['phone']);
+        if (! $phone) {
+            return back()->withErrors(['phone' => 'Enter a 10-digit US phone number.'], 'contact');
+        }
+        $old = $customer->email;
+        $customer->update(['email' => strtolower($data['email']), 'phone_e164' => $phone]
+            + (strtolower($data['email']) !== $old ? ['email_bounced_at' => null, 'email_bounce_reason' => null] : []));
+        if ($customer->stripe_customer_id && $customer->wasChanged('email')) {
+            try {
+                app(StripeClient::class)->post('customers/'.$customer->stripe_customer_id, ['email' => $customer->email]);
+            } catch (\Throwable $e) {
+                report($e); // Stripe's copy is only used for Stripe's own receipts
+            }
+        }
+        $this->audit->log('customer.contact_updated', "Updated contact details for {$customer->company_name}", $customer, ['from' => $old, 'to' => $customer->email]);
+
+        return back()->with('success', 'Contact details saved.');
     }
 
     public function newToken(Request $request, Customer $customer, AgentCountService $agents): RedirectResponse
@@ -184,7 +209,7 @@ class CustomerController extends Controller
         return back()->with('success', 'Early termination sent for approval. Another admin must approve it in Approvals before anything is charged.');
     }
 
-    public function refund(Request $request, Customer $customer, \App\Models\Invoice $invoice, RefundService $refunds, ApprovalService $approvals): RedirectResponse
+    public function refund(Request $request, Customer $customer, Invoice $invoice, RefundService $refunds, ApprovalService $approvals): RedirectResponse
     {
         abort_unless($invoice->customer_id === $customer->id, 404);
         $data = $request->validateWithBag('refund', ['amount' => ['required', 'numeric', 'min:0.01'], 'reason' => ['required', 'string', 'max:250']]);

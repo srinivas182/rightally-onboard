@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BrevoWebhookController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\Onboarding\AccountController;
 use App\Http\Controllers\Onboarding\CouponCheckController;
@@ -56,6 +57,9 @@ Route::middleware('signed')->prefix('renew/{contract:uuid}')->name('renewal.')->
 
 // Stripe webhooks (no session, no CSRF; verified by signature).
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
+
+// Email delivery events from Brevo (secret token in the URL, see Settings > Email).
+Route::post('/brevo/webhook/{token}', BrevoWebhookController::class)->middleware('throttle:600,1')->name('brevo.webhook');
 
 // Health check for uptime monitoring: 200 when everything billing needs is working, 503 otherwise. No secrets.
 Route::get('/health', function (SystemHealth $health) {

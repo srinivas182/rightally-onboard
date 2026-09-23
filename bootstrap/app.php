@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [SecurityHeaders::class]);
         // Stripe calls this directly; it is verified by its signature instead.
-        $middleware->preventRequestForgery(except: ['stripe/webhook']);
+        $middleware->preventRequestForgery(except: ['stripe/webhook', 'brevo/webhook/*']);
         $middleware->alias(['admin.2fa' => RequireTwoFactor::class, 'onboarding.access' => OnboardingAccess::class]);
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
