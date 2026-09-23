@@ -193,7 +193,7 @@
         @if ($recent->isNotEmpty())
             <h3 class="h6 mt-4">Recent deliveries</h3>
             <div class="table-responsive"><table class="table table-sm small">
-                <thead><tr><th>When</th><th>Event</th><th>To</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>When</th><th>Event</th><th>To</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>@foreach ($recent as $d)
                     <tr><td class="text-nowrap">{{ $d->created_at->setTimezone(\App\Support\BusinessClock::timezone())->format('M j, g:i A') }}</td><td class="font-monospace">{{ $d->event }}</td>
                         <td class="text-break" style="max-width:260px">{{ $d->url }}</td>

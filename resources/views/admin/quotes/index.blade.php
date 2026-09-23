@@ -17,7 +17,7 @@
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quoteNew">Create a quote</button></div>
     @else
     <div class="table-responsive"><table class="table">
-        <thead><tr><th>Quote</th><th class="text-end">Set-up</th><th class="text-end">Monthly</th><th>Go-live</th><th>Expires</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Quote</th><th class="text-end">Set-up</th><th class="text-end">Monthly</th><th>Go-live</th><th>Expires</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody>@foreach ($quotes as $q)
             @php [$label, $cls] = $pill[$q->status()]; @endphp
             <tr class="{{ session('new_quote') === $q->id ? 'table-info' : '' }}">

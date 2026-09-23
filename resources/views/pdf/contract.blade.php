@@ -57,7 +57,7 @@
 @if ($contract->signed_at)
 <div class="audit">
     <b>Electronic signature record</b><br>
-    Signer: {{ $contract->client_typed_name }} ({{ $contract->signer_email ?? $customer->email }}), who typed their name and drew their signature.@if ($contract->signature_requested_at) Signing link sent to the signer by email {{ $contract->signature_requested_at->copy()->setTimezone($tz)->format('M j, Y g:i A T') }}.@endif<br>
+    Signer: {{ $contract->client_typed_name }} ({{ $contract->signer_email ?? $customer->email }}), who typed their name and {{ $contract->signature_method === 'typed' ? 'adopted it as their signature' : 'drew their signature' }}.@if ($contract->signature_requested_at) Signing link sent to the signer by email {{ $contract->signature_requested_at->copy()->setTimezone($tz)->format('M j, Y g:i A T') }}.@endif<br>
     Consent to sign electronically: {{ $contract->esign_consent_at->copy()->setTimezone($tz)->format('M j, Y g:i:s A T') }}.
     Signed: {{ $contract->signed_at->copy()->setTimezone($tz)->format('M j, Y g:i:s A T') }} from IP {{ $contract->signer_ip }}.<br>
     Device: {{ \Illuminate\Support\Str::limit((string) $contract->signer_user_agent, 150) }}<br>

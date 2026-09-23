@@ -11,6 +11,7 @@
     @stack('head')
 </head>
 <body class="bg-surface">
+<a class="skip-link" href="#main">Skip to main content</a>
 @include('partials.icons')
 @php
     $names = [__('Your details'), __('Review and sign'), __('Payment schedule'), __('Payment method'), __('All set')];
@@ -31,7 +32,7 @@
         <div class="rail-foot"><svg class="ic mt-1" aria-hidden="true"><use href="#i-lock"/></svg>{{ __('Payments are processed securely by Stripe. We never see your card number.') }}</div>
     </aside>
 
-    <main>
+    <main id="main" tabindex="-1">
         <div class="m-head"><img src="{{ asset('brand/logo.png') }}" alt="RightAlly"><span class="small text-slate">{{ __('Step :n of 5', ['n' => $step]) }}</span></div>
         <div class="m-prog" aria-hidden="true"><i style="width: {{ $step * 20 }}%"></i></div>
         <div class="work"><div class="work-inner">

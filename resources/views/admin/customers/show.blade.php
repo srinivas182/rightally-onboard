@@ -159,7 +159,7 @@
 <div class="tab-pane fade" id="invoices" role="tabpanel"><div class="panel">
     @if ($customer->invoices->isEmpty())<div class="p-4 text-center text-slate">No invoices yet.</div>@else
     <div class="table-responsive"><table class="table">
-        <thead><tr><th>Invoice</th><th>Type</th><th class="text-end">Amount</th><th>Date</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Invoice</th><th>Type</th><th class="text-end">Amount</th><th>Date</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody>@foreach ($customer->invoices as $inv)
             <tr><td class="num">{{ $inv->number }}</td><td>{{ $inv->type->label() }}@if ($inv->period_start)<div class="small text-slate">{{ $inv->period_start->format('M j') }} to {{ $inv->period_end?->format('M j, Y') }}, {{ $inv->agents_billed }} agents</div>@endif</td>
                 <td class="text-end num">{{ $m($inv->amount_cents) }}</td><td class="small">{{ ($inv->paid_at ?? $inv->failed_at ?? $inv->created_at)->setTimezone($tz)->format('M j, Y') }}</td>
@@ -177,7 +177,7 @@
 <div class="tab-pane fade" id="contracts" role="tabpanel"><div class="panel">
     @if ($customer->contracts->isEmpty())<div class="p-4 text-center text-slate">No agreements yet.</div>@else
     <div class="table-responsive"><table class="table">
-        <thead><tr><th>Agreement</th><th>Type</th><th>Status</th><th>Signed</th><th>Term</th><th></th></tr></thead>
+        <thead><tr><th>Agreement</th><th>Type</th><th>Status</th><th>Signed</th><th>Term</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody>@foreach ($customer->contracts as $k)
             <tr><td class="num">{{ $k->number }}</td><td>{{ ucfirst($k->type->value) }} (template v{{ $k->template->version }})</td><td>{{ ucfirst($k->status->value) }}</td>
                 <td class="small">{{ $k->signed_at?->setTimezone($tz)->format('M j, Y g:i A') ?? '—' }}</td>

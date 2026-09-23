@@ -21,6 +21,7 @@ class SignRequest extends FormRequest
             'consent' => ['accepted'],
             'typed_name' => ['required', 'string', 'min:2', 'max:160'],
             'signature' => ['required', 'string', 'starts_with:data:image/png;base64,'],
+            'signature_method' => ['nullable', 'in:drawn,typed'],
         ];
     }
 

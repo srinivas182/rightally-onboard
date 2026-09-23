@@ -31,9 +31,9 @@ final class ContractSigner
         private readonly AuditLogger $audit,
     ) {}
 
-    public function sign(Contract $contract, string $typedName, string $signaturePng, ?string $ip, ?string $userAgent): Contract
+    public function sign(Contract $contract, string $typedName, string $signaturePng, ?string $ip, ?string $userAgent, string $method = 'drawn'): Contract
     {
-        return DB::transaction(function () use ($contract, $typedName, $signaturePng, $ip, $userAgent) {
+        return DB::transaction(function () use ($contract, $typedName, $signaturePng, $ip, $userAgent, $method) {
             /** @var Contract $contract */
             $contract = Contract::whereKey($contract->id)->lockForUpdate()->firstOrFail();
             if ($contract->status !== ContractStatus::Draft) {
@@ -57,6 +57,7 @@ final class ContractSigner
                 'client_title' => $customer->title,
                 'signer_email' => $contract->signer_email ?? $customer->email,
                 'client_signature_path' => "{$dir}/client-signature.png",
+                'signature_method' => $method === 'typed' ? 'typed' : 'drawn',
                 'company_signature_path' => $companySig,
                 'esign_consent_at' => $now,
                 'signed_at' => $now,

@@ -18,7 +18,7 @@
 <div class="tab-content">
     <div class="tab-pane fade show active" id="automatic" role="tabpanel"><div class="panel">
         <div class="table-responsive"><table class="table table-hover">
-            <thead><tr><th>Email</th><th>Sent when</th><th>CC team</th><th>Status</th><th>Last edited</th><th></th></tr></thead>
+            <thead><tr><th>Email</th><th>Sent when</th><th>CC team</th><th>Status</th><th>Last edited</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
             <tbody>
             @foreach ($system as $t)
                 <tr>
@@ -42,7 +42,7 @@
                 <a class="btn btn-primary" href="{{ route('admin.email-templates.create') }}">Create a custom email</a></div>
         @else
         <div class="table-responsive"><table class="table">
-            <thead><tr><th>Email</th><th>Subject</th><th>Last edited</th><th></th></tr></thead>
+            <thead><tr><th>Email</th><th>Subject</th><th>Last edited</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
             <tbody>
             @foreach ($custom as $t)
                 <tr><td><b>{{ $t->name }}</b></td><td class="small">{{ $t->subject }}</td><td class="small">{{ $t->updated_at->copy()->setTimezone($tz)->format('M j, Y') }}</td>

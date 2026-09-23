@@ -11,6 +11,7 @@
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to main content</a>
 @include('partials.icons')
 @php
     $admin = auth('admin')->user();
@@ -83,7 +84,7 @@
             </div>
         </div>
 
-        <main class="main">
+        <main class="main" id="main" tabindex="-1">
             @include('partials.flash')
             @yield('content')
         </main>

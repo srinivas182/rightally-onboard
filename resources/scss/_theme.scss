@@ -89,3 +89,24 @@ body { background: var(--ra-mist); color: var(--ra-text); font-feature-settings:
 .btn-primary { background-image: var(--ra-gradient); border: 0; }
 .btn-primary:hover { filter: brightness(1.06); }
 .doc-serif { font-family: var(--ra-doc-font); }
+
+
+// Accessibility: outline-secondary buttons meet 4.5:1 contrast on white and on the page background.
+.btn-outline-secondary {
+    --bs-btn-color: #4A5670;
+    --bs-btn-border-color: #B9C3D4;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #4A5670;
+    --bs-btn-hover-border-color: #4A5670;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #3B4659;
+    --bs-btn-active-border-color: #3B4659;
+    --bs-btn-disabled-color: #4A5670;
+}
+
+// Skip link: hidden until focused with the keyboard.
+.skip-link {
+    position: absolute; left: .75rem; top: -3rem; z-index: 2000;
+    background: #041527; color: #fff; padding: .5rem 1rem; border-radius: 8px; text-decoration: none;
+    &:focus { top: .75rem; outline: 3px solid #7FA6FF; }
+}

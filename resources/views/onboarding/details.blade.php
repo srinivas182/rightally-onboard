@@ -98,6 +98,7 @@
 
     @unless ($customQuote)
     <fieldset class="mb-4"><legend>{{ __('Coupon') }} <span class="fw-normal text-slate">({{ __('optional') }})</span></legend>
+        <label class="visually-hidden" for="coupon">{{ __('Coupon code') }}</label>
         <div class="input-group has-validation" style="max-width:420px">
             <input class="form-control text-uppercase @error('coupon') is-invalid @enderror" id="coupon" name="coupon" value="{{ $couponCode }}" placeholder="{{ __('Enter code') }}" aria-describedby="couponMsg" maxlength="40" autocomplete="off">
             <button class="btn btn-outline-primary" type="button" id="couponApply">{{ __('Apply') }}</button>

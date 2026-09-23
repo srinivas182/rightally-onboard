@@ -23,7 +23,7 @@
                 <div class="p-4 text-center text-slate">{{ $q ? 'No agreements match “'.$q.'”.' : 'Signed agreements appear here as soon as clients sign.' }}</div>
             @else
             <div class="table-responsive"><table class="table">
-                <thead><tr><th>Agreement</th><th>Customer</th><th>Signed</th><th>Go-live</th><th>Term ends</th><th>Template</th><th class="text-end">Monthly</th><th></th></tr></thead>
+                <thead><tr><th>Agreement</th><th>Customer</th><th>Signed</th><th>Go-live</th><th>Term ends</th><th>Template</th><th class="text-end">Monthly</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>
                 @foreach ($contracts as $k)
                     <tr>
@@ -50,7 +50,7 @@
                 <div class="p-4 text-center text-slate">Renewal agreements are sent automatically 45 days before a term ends, and appear here.</div>
             @else
             <div class="table-responsive"><table class="table">
-                <thead><tr><th>Customer</th><th>Current term ends</th><th>Renewal</th><th class="text-end">New monthly</th><th>Offer sent</th><th>Reminder</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>Customer</th><th>Current term ends</th><th>Renewal</th><th class="text-end">New monthly</th><th>Offer sent</th><th>Reminder</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>@foreach ($renewals as $row)
                     @php $r = $row['contract']; @endphp
                     <tr><td><b>{{ $r->customer->company_name }}</b></td><td class="small">{{ $r->previous->ends_on?->format('M j, Y') }}</td><td class="small num">{{ $r->number }}</td>
@@ -72,7 +72,7 @@
         <div class="panel">
             <div class="panel-h"><h2>Agreement templates</h2></div>
             <div class="table-responsive"><table class="table">
-                <thead><tr><th>Version</th><th>Type</th><th>Title</th><th>Published</th><th class="text-end">Signed with it</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>Version</th><th>Type</th><th>Title</th><th>Published</th><th class="text-end">Signed with it</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>
                 @foreach ($templates as $t)
                     <tr>

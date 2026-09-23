@@ -25,7 +25,7 @@
         </div>
     @else
     <div class="table-responsive"><table class="table">
-        <thead><tr><th>Code</th><th>Name</th><th class="text-end">Discount</th><th>Expires</th><th class="text-end">Used</th><th>Share link</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Code</th><th>Name</th><th class="text-end">Discount</th><th>Expires</th><th class="text-end">Used</th><th>Share link</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody>
         @foreach ($coupons as $c)
             @php [$label, $pill] = $status($c); $link = $onboardUrl.'/?coupon='.$c->code; @endphp

@@ -135,13 +135,38 @@ if (signForm) {
 
     $('#padClear').addEventListener('click', () => pad.clear());
     const typed = $('#typed_name');
+
+    // Keyboard and screen-reader friendly: adopt the typed name as the signature.
+    const useTyped = $('#useTyped');
+    const syncTyped = () => {
+        const on = useTyped?.checked;
+        $('#padBox')?.classList.toggle('d-none', !!on);
+        $('#padClear')?.classList.toggle('d-none', !!on);
+    };
+    useTyped?.addEventListener('change', syncTyped);
+    syncTyped();
+    const typedSignaturePng = async (name) => {
+        // Wait briefly for the signature font; fall back to a cursive font if it's slow or blocked.
+        try { await Promise.race([document.fonts.load('56px "Mrs Saint Delafield"'), new Promise((r) => setTimeout(r, 1500))]); } catch (e) { /* fallback font */ }
+        const c = document.createElement('canvas');
+        c.width = 900; c.height = 220;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#0839B2';
+        ctx.font = '96px "Mrs Saint Delafield", cursive';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(name, 30, 115, 840);
+        return c.toDataURL('image/png');
+    };
     typed.addEventListener('input', () => { $('#typedPreview').textContent = typed.value; });
 
-    signForm.addEventListener('submit', (e) => {
+    let typedReady = false;
+    signForm.addEventListener('submit', async (e) => {
+        if (typedReady) return; // second pass after rendering the typed signature
         const problems = [];
+        const typedMode = !!useTyped?.checked;
         if (!$('#consent').checked) problems.push(T('Tick the box to agree to sign electronically.'));
         if (!typed.value.trim()) problems.push(T('Type your full legal name.'));
-        if (pad.isEmpty()) problems.push(T('Draw your signature in the box.'));
+        if (!typedMode && pad.isEmpty()) problems.push(T('Draw your signature in the box, or use your typed name instead.'));
         const err = $('#signErr');
         if (problems.length) {
             e.preventDefault();
@@ -150,10 +175,17 @@ if (signForm) {
             return;
         }
         err.classList.add('d-none');
-        $('#signatureData').value = pad.toDataURL('image/png');
         const btn = $('#signBtn');
         btn.disabled = true;
         btn.textContent = T('Signing…');
+        if (typedMode) {
+            e.preventDefault();
+            $('#signatureData').value = await typedSignaturePng(typed.value.trim());
+            typedReady = true;
+            HTMLFormElement.prototype.submit.call(signForm); // bypasses this handler; checks already done
+            return;
+        }
+        $('#signatureData').value = pad.toDataURL('image/png');
     });
 }
 

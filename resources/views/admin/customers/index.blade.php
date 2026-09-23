@@ -22,7 +22,7 @@
         <div class="p-4 p-md-5 text-center text-slate">{{ $q || $status ? 'No customers match these filters.' : 'Customers appear here as soon as someone starts onboarding.' }}</div>
     @else
     <div class="table-responsive"><table class="table table-hover">
-        <thead><tr><th>Customer</th><th>Status</th><th>Go-live</th><th class="text-end">Agents</th><th>Payment method</th><th>Source</th><th></th></tr></thead>
+        <thead><tr><th>Customer</th><th>Status</th><th>Go-live</th><th class="text-end">Agents</th><th>Payment method</th><th>Source</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody>
         @foreach ($customers as $c)
             <tr>

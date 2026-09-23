@@ -38,7 +38,7 @@ class RenewalController extends Controller
     {
         abort_unless($contract->type === ContractType::Renewal, 404);
         if ($contract->status === ContractStatus::Draft) {
-            $signer->sign($contract, trim($request->validated('typed_name')), (string) $request->signaturePng(), $request->ip(), $request->userAgent());
+            $signer->sign($contract, trim($request->validated('typed_name')), (string) $request->signaturePng(), $request->ip(), $request->userAgent(), (string) $request->input('signature_method', 'drawn'));
         }
 
         return redirect()->to(URL::temporarySignedRoute('renewal.show', now()->addDays(7), ['contract' => $contract->uuid]));

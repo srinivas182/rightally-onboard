@@ -40,6 +40,9 @@ Send them `https://onboard.rightally.io`, or a coupon link from Coupons (Copy li
 ## Client self-service
 Clients can open their own account at `https://onboard.rightally.io/account` (they enter their email and get a link). There they see their agreement, invoices and receipts (PDF), what’s charged next, and can update their card or bank account. Point clients there before resending documents by hand.
 
+## Yearly billing
+Clients can choose to pay yearly in advance for a discount (Settings > Pricing sets the discount or switches the option off). Yearly clients show “Yearly” on their customer page; agent-count changes apply at their next yearly charge.
+
 ## Custom quotes
 When you agree different pricing with a brokerage, create a quote (Custom quotes > New quote) and send them its link. It shows their pricing, can’t be combined with a coupon, and works once. Void it if the deal changes.
 

@@ -63,7 +63,9 @@
                 <div class="col-sm-5"><span class="form-label d-block">{{ __('Preview') }}</span><div class="sig-font text-primary text-truncate" id="typedPreview" aria-hidden="true">{{ old('typed_name', $customer->fullName()) }}</div></div>
                 <div class="col-12">
                     <div class="d-flex justify-content-between align-items-end"><span class="form-label mb-2" id="padLabel">{{ __('Draw your signature') }}</span><button type="button" class="btn btn-link btn-sm p-0 mb-2" id="padClear">{{ __('Clear') }}</button></div>
-                    <div class="pad-wrap @error('signature') is-invalid @enderror"><canvas id="pad" aria-labelledby="padLabel" role="img"></canvas><div class="base"></div><div class="hint">{{ __('Sign with your finger, stylus or mouse') }}</div></div>
+                    <div id="padBox" class="pad-wrap @error('signature') is-invalid @enderror"><canvas id="pad" aria-labelledby="padLabel" role="img"></canvas><div class="base"></div><div class="hint">{{ __('Sign with your finger, stylus or mouse') }}</div></div>
+                    <div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="useTyped" name="signature_method" value="typed" @checked(old('signature_method') === 'typed')>
+                        <label class="form-check-label small" for="useTyped">{{ __('Use my typed name as my signature instead of drawing') }}</label></div>
                 </div>
             </div>
             <div class="alert alert-danger small mt-3 d-none" id="signErr" role="alert"></div>

@@ -10,10 +10,11 @@
     @vite(['resources/scss/app.scss', 'resources/js/onboarding.js'])
 </head>
 <body class="bg-surface">
+<a class="skip-link" href="#main">Skip to main content</a>
 @include('partials.icons')
 @php $signed = $contract->isSigned(); @endphp
 <header class="border-bottom"><div class="container py-3" style="max-width:760px"><img src="{{ asset('brand/logo.png') }}" alt="RightAlly" style="height:28px"></div></header>
-<main class="container py-4 py-md-5" style="max-width:760px">
+<main id="main" tabindex="-1" class="container py-4 py-md-5" style="max-width:760px">
     <h1 class="h2">{{ $signed ? __('Your renewal is signed') : __('Renew your RightAlly agreement') }}</h1>
     <p class="lead text-slate">
         @if ($expired) {{ __('This renewal offer has ended. Reply to our email or contact us to continue.') }}
@@ -43,7 +44,9 @@
                     <div class="col-sm-7"><label class="form-label" for="typed_name">{{ __('Type your full legal name') }}</label><input class="form-control" id="typed_name" name="typed_name" value="{{ old('typed_name', $customer->fullName()) }}" maxlength="160" required></div>
                     <div class="col-sm-5"><span class="form-label d-block">{{ __('Preview') }}</span><div class="sig-font text-primary text-truncate" id="typedPreview" aria-hidden="true">{{ $customer->fullName() }}</div></div>
                     <div class="col-12"><div class="d-flex justify-content-between align-items-end"><span class="form-label mb-2" id="padLabel">{{ __('Draw your signature') }}</span><button type="button" class="btn btn-link btn-sm p-0 mb-2" id="padClear">{{ __('Clear') }}</button></div>
-                        <div class="pad-wrap"><canvas id="pad" aria-labelledby="padLabel" role="img"></canvas><div class="base"></div><div class="hint">{{ __('Sign with your finger, stylus or mouse') }}</div></div></div>
+                        <div id="padBox" class="pad-wrap"><canvas id="pad" aria-labelledby="padLabel" role="img"></canvas><div class="base"></div><div class="hint">{{ __('Sign with your finger, stylus or mouse') }}</div></div>
+                    <div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="useTyped" name="signature_method" value="typed" @checked(old('signature_method') === 'typed')>
+                        <label class="form-check-label small" for="useTyped">{{ __('Use my typed name as my signature instead of drawing') }}</label></div></div>
                 </div>
                 <div class="alert alert-danger small mt-3 d-none" id="signErr" role="alert"></div>
                 <button class="btn btn-primary btn-lg px-5 mt-4" type="submit" id="signBtn">{{ __('Sign renewal') }}</button>

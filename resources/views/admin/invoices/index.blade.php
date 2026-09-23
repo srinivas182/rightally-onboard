@@ -31,7 +31,7 @@
         </div>
         @if ($paid->isEmpty())<div class="p-4 text-center text-slate">No paid invoices in this period.</div>@else
         <div class="table-responsive"><table class="table">
-            <thead><tr><th>Invoice</th><th>Customer</th><th>Type</th><th class="text-end">Amount</th><th>Paid</th><th>Method</th><th></th></tr></thead>
+            <thead><tr><th>Invoice</th><th>Customer</th><th>Type</th><th class="text-end">Amount</th><th>Paid</th><th>Method</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
             <tbody>@foreach ($paid as $i)
                 <tr><td class="num">{{ $i->number }}</td><td>{!! $who($i->customer) !!}</td><td class="small">{{ $i->type->label() }}@if ($i->period_start), {{ $i->period_start->format('M Y') }}@endif</td>
                     <td class="text-end num">{{ $m($i->amount_cents) }}</td><td class="small">{{ $i->paid_at?->setTimezone($tz)->format('M j, Y') }}</td><td class="small">{{ $i->payments->firstWhere('status', 'succeeded')?->method_label }}</td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.invoices.pdf', $i) }}" target="_blank" rel="noopener">PDF</a></td></tr>
@@ -44,7 +44,7 @@
         <div class="panel mb-3">
             @if ($failed->isEmpty())<div class="p-4 text-center text-slate">No failed payments.</div>@else
             <div class="table-responsive"><table class="table">
-                <thead><tr><th>Customer</th><th>Invoice</th><th class="text-end">Amount</th><th>Failed</th><th>Reason</th><th>Link sent</th><th></th></tr></thead>
+                <thead><tr><th>Customer</th><th>Invoice</th><th class="text-end">Amount</th><th>Failed</th><th>Reason</th><th>Link sent</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>@foreach ($failed as $i)
                     @php $days = $i->failed_at ? (int) $i->failed_at->diffInDays(now()) : null; @endphp
                     <tr><td>{!! $who($i->customer) !!}</td><td class="small">{{ $i->number }}<div class="text-slate">{{ $i->type->label() }}</div></td><td class="text-end num">{{ $m($i->amount_cents) }}</td>

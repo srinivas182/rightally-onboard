@@ -10,7 +10,8 @@
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
 <body>
-    <main class="auth">
+<a class="skip-link" href="#main">Skip to main content</a>
+    <main id="main" tabindex="-1" class="auth">
         <div class="auth-card">
             <img src="{{ asset('brand/logo.png') }}" alt="RightAlly" class="auth-logo">
             @include('partials.flash', ['hideErrorSummary' => true])

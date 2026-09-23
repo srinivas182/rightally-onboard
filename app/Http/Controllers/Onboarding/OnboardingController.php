@@ -152,7 +152,7 @@ class OnboardingController extends Controller
             return redirect()->route('onboarding.agreement', $customer);
         }
 
-        $contract = $signer->sign($contract, trim($request->validated('typed_name')), (string) $request->signaturePng(), $request->ip(), $request->userAgent());
+        $contract = $signer->sign($contract, trim($request->validated('typed_name')), (string) $request->signaturePng(), $request->ip(), $request->userAgent(), (string) $request->input('signature_method', 'drawn'));
         // Their signed copy by email, with a link back to payment in case they stop here.
         $pdf = [['path' => $contract->pdf_path, 'name' => "RightAlly-Agreement-{$contract->number}.pdf"]];
         $mailer = app(EmailSender::class);

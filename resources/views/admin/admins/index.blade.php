@@ -17,7 +17,7 @@
             <div class="panel-h"><span class="small text-slate">{{ $admins->count() }} {{ Str::plural('admin', $admins->count()) }}</span>
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#inviteModal"><svg class="ic me-1"><use href="#i-plus"/></svg>Invite admin</button></div>
             <div class="table-responsive"><table class="table">
-                <thead><tr><th>Name</th><th>Role</th><th>Two-factor</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>Name</th><th>Role</th><th>Two-factor</th><th>Last sign-in</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>
                 @foreach ($admins as $a)
                     <tr>

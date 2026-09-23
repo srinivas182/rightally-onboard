@@ -12,7 +12,7 @@
         h1{font-size:1.5rem;margin:0 0 8px;letter-spacing:-.01em}
         p{color:#56627A;line-height:1.55;margin:0 0 20px}
         a.btn{display:inline-block;background:#1457EC;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600}
-        .code{font-size:.8rem;color:#8795ad;margin-top:20px}
+        .code{font-size:.8rem;color:#5E6B82;margin-top:20px}
     </style>
 </head>
 <body>
