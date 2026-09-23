@@ -99,6 +99,7 @@
         </div>
     @endif
 
+    <p class="small text-slate">By continuing you agree to our <a href="{{ route('legal', 'terms') }}" target="_blank" rel="noopener">Terms of Use</a> and <a href="{{ route('legal', 'privacy') }}" target="_blank" rel="noopener">Privacy Policy</a>.</p>
     <div class="d-flex flex-column flex-sm-row gap-2">
         <button class="btn btn-primary btn-lg px-5" type="submit">{{ $customer ? 'Save and review agreement' : 'Continue to agreement' }}</button>
         @if ($customer)<a class="btn btn-link" href="{{ route('onboarding.agreement', $customer) }}">Cancel</a>@endif

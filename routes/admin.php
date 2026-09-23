@@ -120,6 +120,8 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
     });
 
     Route::middleware('can:menu.settings')->group(function () {
+        Route::get('legal/{page}', [\App\Http\Controllers\LegalPageController::class, 'edit'])->name('legal.edit');
+        Route::put('legal/{page}', [\App\Http\Controllers\LegalPageController::class, 'update'])->name('legal.update');
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('settings/signature', [SettingsController::class, 'updateSignature'])->name('settings.signature.update');
         Route::get('settings/signature/image', [SettingsController::class, 'signature'])->name('settings.signature');

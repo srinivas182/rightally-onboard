@@ -18,7 +18,8 @@
         </td></tr>
         <tr><td style="padding:20px 36px;background:#F6F8FC;font-size:12px;line-height:1.5;color:#5E6B82">
             {{ $company['legal_name'] }}@if ($company['dba']) d/b/a {{ $company['dba'] }}@endif, {{ $company['address'] }}<br>
-            Questions? Reply to this email or write to <a href="mailto:{{ $company['support_email'] }}" style="color:#1457EC">{{ $company['support_email'] }}</a>.
+            Questions? Reply to this email or write to <a href="mailto:{{ $company['support_email'] }}" style="color:#1457EC">{{ $company['support_email'] }}</a>.<br>
+            <a href="{{ route('legal', 'privacy') }}" style="color:#5E6B82">Privacy Policy</a> · <a href="{{ route('legal', 'terms') }}" style="color:#5E6B82">Terms of Use</a>@isset($accountLink) · <a href="{{ $accountLink }}" style="color:#5E6B82">Your account</a>@endisset
         </td></tr>
     </table>
 </td></tr>

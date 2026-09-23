@@ -4,7 +4,7 @@
 @section('content')
 <h1 class="h3 mb-4">Settings</h1>
 <ul class="nav nav-tabs tabs-scroll mb-4" role="tablist" data-remember-tab="settings">
-    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'security' => 'Security', 'tax' => 'Tax'] as $tab => $label)
+    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'security' => 'Security', 'tax' => 'Tax', 'legal' => 'Legal pages'] as $tab => $label)
         <li class="nav-item"><a class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab" href="#t-{{ $tab }}">{{ $label }}</a></li>
     @endforeach
 </ul>
@@ -143,6 +143,15 @@
             </div>
             <button class="btn btn-primary mt-4" type="submit">Save security settings</button>
         </form>
+    </div>
+
+    {{-- Legal pages --}}
+    <div class="tab-pane fade" id="t-legal" role="tabpanel">
+        <p class="text-slate">Shown in the footer of every onboarding page and email. Drafts are provided for your attorney to review.</p>
+        @foreach (\App\Models\LegalPage::orderBy('slug')->get() as $lp)
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><b>{{ $lp->title }}</b><div class="small text-slate">Last saved {{ $lp->updated_at->format('M j, Y') }}</div></div>
+                <div class="d-flex gap-2"><a class="btn btn-sm btn-outline-secondary" href="{{ route('legal', $lp->slug) }}" target="_blank" rel="noopener">View</a><a class="btn btn-sm btn-primary" href="{{ route('admin.legal.edit', $lp) }}">Edit</a></div></div>
+        @endforeach
     </div>
 
     {{-- Tax --}}

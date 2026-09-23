@@ -30,6 +30,7 @@ final class DepositService
         private readonly EmailSender $email,
         private readonly AuditLogger $audit,
         private readonly TaxService $tax,
+        private readonly PaymentMethods $paymentMethods,
     ) {}
 
     /**
@@ -223,21 +224,10 @@ final class DepositService
         return $sc['id'];
     }
 
-    /** @return array{0: string, 1: string} [card|us_bank_account, "Visa ending 4242"] */
+    /** @return array{0: string, 1: string} */
     private function methodLabel(array $pi): array
     {
-        $pm = $pi['payment_method'] ?? null;
-        if (! is_array($pm)) {
-            return [$pi['payment_method_types'][0] ?? 'card', 'your saved payment method'];
-        }
-        if (($pm['type'] ?? '') === 'us_bank_account') {
-            $b = $pm['us_bank_account'] ?? [];
-
-            return ['us_bank_account', trim(($b['bank_name'] ?? 'Bank account').' ending '.($b['last4'] ?? ''))];
-        }
-        $c = $pm['card'] ?? [];
-
-        return ['card', ucfirst((string) ($c['brand'] ?? 'Card')).' ending '.($c['last4'] ?? '')];
+        return $this->paymentMethods->describe(is_array($pi['payment_method'] ?? null) ? $pi['payment_method'] : null, $pi['payment_method_types'][0] ?? 'card');
     }
 
     private function recordPayment(Invoice $invoice, array $pi, string $status, string $method, string $label): void
@@ -261,15 +251,11 @@ final class DepositService
 
     private function saveDefaultPaymentMethod(Customer $customer, array $pi, string $method, string $label): void
     {
-        $pmId = is_array($pi['payment_method'] ?? null) ? $pi['payment_method']['id'] : ($pi['payment_method'] ?? null);
-        if (! $pmId || $customer->stripe_payment_method_id === $pmId) {
+        $pm = is_array($pi['payment_method'] ?? null) ? $pi['payment_method'] : null;
+        if (! $pm || $customer->stripe_payment_method_id === $pm['id']) {
             return;
         }
-        $customer->forceFill(['stripe_payment_method_id' => $pmId, 'payment_method_type' => $method, 'payment_method_label' => $label])->save();
-
-        if ($customer->stripe_customer_id) {
-            // Future invoices (balance, monthly) charge this method automatically.
-            $this->stripe->post('customers/'.$customer->stripe_customer_id, ['invoice_settings' => ['default_payment_method' => $pmId]]);
-        }
+        // Future invoices (balance, monthly) charge this method automatically.
+        $this->paymentMethods->makeDefault($customer, $pm);
     }
 }

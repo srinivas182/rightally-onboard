@@ -51,5 +51,6 @@
         </div>
     @endif
 </main>
+@include('partials.legal-footer')
 </body>
 </html>

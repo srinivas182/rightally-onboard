@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\Onboarding\CouponCheckController;
 use App\Http\Controllers\Onboarding\OnboardingController;
 use App\Http\Controllers\Onboarding\RenewalController;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', [OnboardingController::class, 'start'])->name('home');
+Route::get('/{slug}', [LegalPageController::class, 'show'])->whereIn('slug', ['privacy', 'terms'])->name('legal');
 Route::post('/start', [OnboardingController::class, 'store'])->middleware('throttle:onboarding')->name('onboarding.store');
 Route::post('/coupon/check', CouponCheckController::class)->middleware('throttle:coupon-check')->name('onboarding.coupon');
 

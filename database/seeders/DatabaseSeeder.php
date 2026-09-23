@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             EmailTemplateSeeder::class,
             ContractTemplateSeeder::class,
+            LegalPageSeeder::class,
         ]);
     }
 }
