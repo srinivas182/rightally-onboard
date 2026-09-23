@@ -5,6 +5,7 @@ use App\Models\Customer;
 use App\Services\Admin\SystemHealth;
 use App\Services\Billing\AgentCountService;
 use App\Services\Billing\BalanceService;
+use App\Services\Billing\CardExpiryWarnings;
 use App\Services\Billing\RenewalService;
 use App\Services\Billing\SuspensionService;
 use App\Services\Onboarding\DepositReminders;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Schedule;
 | Monthly charges themselves are made by Stripe's subscription; their
 | results arrive by webhook.
 */
-Artisan::command('billing:daily', function (BalanceService $balance, SuspensionService $suspension, RenewalService $renewals, \App\Services\Billing\CardExpiryWarnings $cards) {
+Artisan::command('billing:daily', function (BalanceService $balance, SuspensionService $suspension, RenewalService $renewals, CardExpiryWarnings $cards) {
     $this->info('Billing run for '.BusinessClock::today()->toDateString());
 
     foreach ($balance->due() as $customer) {

@@ -12,6 +12,7 @@ use App\Http\Requests\Onboarding\SignRequest;
 use App\Models\Contract;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Services\Audit\AuditLogger;
 use App\Services\Billing\DepositService;
 use App\Services\Contracts\ContractRenderer;
 use App\Services\Contracts\ContractSigner;
@@ -29,6 +30,7 @@ use App\Support\UsStates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use RuntimeException;
@@ -154,7 +156,7 @@ class OnboardingController extends Controller
     }
 
     /** "Someone else will sign": the signer's details go on the agreement and they get a link by email. */
-    public function delegate(Request $request, Customer $customer, \App\Services\Email\EmailSender $email, \App\Services\Audit\AuditLogger $audit): RedirectResponse
+    public function delegate(Request $request, Customer $customer, EmailSender $email, AuditLogger $audit): RedirectResponse
     {
         $contract = $this->onboarding->draftContract($customer);
         if (! $contract) {
@@ -174,7 +176,7 @@ class OnboardingController extends Controller
         $email->toPerson('signature_request', $customer, strtolower($data['signer_email']), $customer->fullName(), [
             'signer_name' => $data['signer_first_name'],
             'requested_by' => $requestedBy,
-            'signing_link' => \Illuminate\Support\Facades\URL::temporarySignedRoute('onboarding.agreement', now()->addDays(7), ['customer' => $customer->uuid]),
+            'signing_link' => URL::temporarySignedRoute('onboarding.agreement', now()->addDays(7), ['customer' => $customer->uuid]),
         ]);
         $audit->log('contract.signature_requested', "{$requestedBy} asked {$customer->fullName()} ({$data['signer_email']}) to sign {$contract->number}", $contract, null, 'client');
 

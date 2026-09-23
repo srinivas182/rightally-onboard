@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Invoice;
+use App\Services\Billing\InvoicePdf;
 use App\Services\Settings\SettingsService;
 
 /**
@@ -37,7 +38,7 @@ final class EmailSender
 
         if ($invoice && in_array($templateKey, self::ATTACH_INVOICE, true)) {
             try {
-                $attachments[] = app(\App\Services\Billing\InvoicePdf::class)->attachment($invoice);
+                $attachments[] = app(InvoicePdf::class)->attachment($invoice);
             } catch (\Throwable $e) {
                 report($e); // send the email anyway
             }

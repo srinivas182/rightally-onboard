@@ -22,7 +22,9 @@ Send them `https://onboard.rightally.io`, or a coupon link from Coupons (Copy li
 ## What happens automatically
 | When | What |
 |---|---|
-| Client signs | Signed agreement emailed with a link to finish payment |
+| Client signs | Signed agreement emailed with a link to finish payment (also to the signer, if someone else signed) |
+| Agents billed change | Client told the new count and monthly fee (automatic syncs at most daily) |
+| 30 days before the saved card expires | Card expiring email with the account link |
 | 24 hours and 3 days after signing, if unpaid | Deposit reminder |
 | Client pays deposit | Welcome email with signed agreement (CC team) |
 | 3 days before go-live | Reminder email |
@@ -34,6 +36,9 @@ Send them `https://onboard.rightally.io`, or a coupon link from Coupons (Copy li
 | 30 days unpaid | Account suspended, email |
 | 45 / 15 days before term end | Renewal agreement, then reminder |
 | Term ends unsigned | Subscription ends, account expired, email |
+
+## Client self-service
+Clients can open their own account at `https://onboard.rightally.io/account` (they enter their email and get a link). There they see their agreement, invoices and receipts (PDF), what’s charged next, and can update their card or bank account. Point clients there before resending documents by hand.
 
 ## Coupons
 Percentage off the implementation fee only. Can expire or never expire, and can have a usage limit. Once a code has been used it can’t be renamed; switch it off instead of deleting.

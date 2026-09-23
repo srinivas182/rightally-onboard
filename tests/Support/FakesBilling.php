@@ -34,10 +34,11 @@ trait FakesBilling
             'POST invoices/in_1/finalize' => ['id' => 'in_1', 'status' => 'open', 'hosted_invoice_url' => 'https://invoice.stripe.com/i/in_1'],
             'POST invoices/in_1/pay' => ['id' => 'in_1', 'status' => 'paid', 'hosted_invoice_url' => 'https://invoice.stripe.com/i/in_1', 'payment_intent' => ['status' => 'succeeded']],
             'POST invoiceitems' => ['id' => 'ii_1'],
+            'POST customers' => ['id' => 'cus_1'],
             'POST invoices' => ['id' => 'in_1', 'status' => 'draft'],
             'GET prices' => fn (Request $r) => ['data' => []],
             'POST prices' => fn (Request $r) => ['id' => 'price_'.$r['lookup_key']],
-            'POST subscriptions' => fn (Request $r) => ['id' => 'sub_1', 'items' => ['data' => [
+            'POST subscriptions' => fn (Request $r) => ! isset($r['items']) ? ['id' => 'sub_1'] : ['id' => 'sub_1', 'items' => ['data' => [
                 ['id' => 'si_platform', 'price' => ['id' => $r['items'][0]['price']]],
                 ['id' => 'si_agent', 'price' => ['id' => $r['items'][1]['price']]],
             ]]],

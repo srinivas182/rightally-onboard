@@ -5,6 +5,7 @@ Tick each item before the first real client signs.
 ## Legal and business
 - [ ] Mayura Consultancy Services LLC name change filed and active on Sunbiz.
 - [ ] Fictitious name "RightAlly" registered on Sunbiz for that LLC.
+- [ ] A Florida attorney has reviewed the Privacy Policy and Terms of Use drafts (Settings > Legal pages).
 - [ ] A Florida attorney has reviewed the agreement and renewal templates (Admin > Contracts > Templates). If they change wording: create a new version, edit, publish.
 - [ ] Settings > Company: legal name, DBA, address, phone and support email are correct.
 - [ ] Settings > Pricing and Renewal pricing are correct.

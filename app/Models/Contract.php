@@ -35,6 +35,7 @@ class Contract extends Model
             'ends_on' => 'date',
             'esign_consent_at' => 'datetime',
             'signed_at' => 'datetime',
+            'signature_requested_at' => 'datetime',
         ];
     }
 

@@ -6,7 +6,6 @@ use App\Enums\ContractStatus;
 use App\Enums\CustomerStatus;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Middleware\OnboardingAccess;
 use App\Models\Contract;
 use App\Models\Customer;
 use App\Models\Invoice;
@@ -20,6 +19,7 @@ use App\Support\BusinessClock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -127,7 +127,7 @@ class AccountController extends Controller
         return redirect()->route('account.payment-method', $customer)->with('warning', $si['last_setup_error']['message'] ?? 'The update didn’t go through. Please try again.');
     }
 
-    /** @return array{date: \Illuminate\Support\Carbon, amount: int, label: string}|null */
+    /** @return array{date: Carbon, amount: int, label: string}|null */
     private function nextCharge(Customer $customer, ?Contract $contract): ?array
     {
         if (! $contract || ! $customer->go_live_date) {

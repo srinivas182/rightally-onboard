@@ -10,10 +10,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Services\Audit\AuditLogger;
+use App\Services\Billing\InvoicePdf;
 use App\Services\Email\EmailSender;
 use App\Support\BusinessClock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
@@ -57,7 +59,7 @@ class InvoiceController extends Controller
         }, 'rightally-invoices-'.$period.'-'.BusinessClock::today()->toDateString().'.csv', ['Content-Type' => 'text/csv']);
     }
 
-    public function pdf(Invoice $invoice, \App\Services\Billing\InvoicePdf $pdf): \Illuminate\Http\Response
+    public function pdf(Invoice $invoice, InvoicePdf $pdf): Response
     {
         return response($pdf->render($invoice), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="'.$pdf->filename($invoice).'"']);
     }
