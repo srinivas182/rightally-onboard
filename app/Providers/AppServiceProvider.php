@@ -54,6 +54,9 @@ class AppServiceProvider extends ServiceProvider
             return [Limit::perMinute(5)->by($key), Limit::perHour(20)->by($key)];
         });
 
+        RateLimiter::for('onboarding', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+        RateLimiter::for('coupon-check', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
+
         View::composer('layouts.admin', function ($view) {
             $admin = auth('admin')->user();
             $menus = collect(config('rightally.menus'))

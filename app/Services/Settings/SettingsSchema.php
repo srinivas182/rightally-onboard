@@ -73,6 +73,14 @@ final class SettingsSchema
                     'team_cc' => ['default' => 'm.sunil@rightally.io, srini@rightally.io', 'rules' => ['nullable', 'string', 'max:500']],
                 ],
             ],
+            'security' => [
+                'label' => 'Security',
+                'fields' => [
+                    // Cloudflare Turnstile on the public onboarding form. Off until both keys are set.
+                    'turnstile_site_key' => ['default' => null, 'rules' => ['nullable', 'string', 'max:120']],
+                    'turnstile_secret_key' => ['default' => null, 'rules' => ['nullable', 'string', 'max:255'], 'secret' => true],
+                ],
+            ],
             'tax' => [
                 'label' => 'Tax',
                 'fields' => [

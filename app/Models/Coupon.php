@@ -40,7 +40,10 @@ class Coupon extends Model
 
     public function isExpired(): bool
     {
-        return $this->expires_on !== null && $this->expires_on->lt(BusinessClock::today());
+        // Compare calendar dates: a coupon is valid through its whole expiry day
+        // in the business time zone, whatever the server's time zone is.
+        return $this->expires_on !== null
+            && $this->expires_on->toDateString() < BusinessClock::today()->toDateString();
     }
 
     public function isUsable(): bool

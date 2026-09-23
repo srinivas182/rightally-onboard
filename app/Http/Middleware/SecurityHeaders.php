@@ -24,7 +24,9 @@ class SecurityHeaders
 
         $csp = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'nonce-{$nonce}'{$dev}",
+            // Cloudflare Turnstile on the onboarding form.
+            "script-src 'self' 'nonce-{$nonce}' https://challenges.cloudflare.com{$dev}",
+            "frame-src https://challenges.cloudflare.com",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com{$dev}",
             "font-src 'self' https://fonts.gstatic.com data:",
             "img-src 'self' data: blob:",

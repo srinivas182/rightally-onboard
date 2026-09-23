@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\ContractController;
+use App\Http\Controllers\Admin\ContractTemplateController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\Auth\InvitationController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\PasswordResetController;
@@ -63,13 +66,30 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
     });
 
+    Route::middleware('can:menu.coupons')->group(function () {
+        Route::get('coupons', [CouponController::class, 'index'])->name('coupons.index');
+        Route::post('coupons', [CouponController::class, 'store'])->name('coupons.store');
+        Route::put('coupons/{coupon}', [CouponController::class, 'update'])->name('coupons.update');
+    });
+
+    Route::middleware('can:menu.contracts')->group(function () {
+        Route::get('contracts', [ContractController::class, 'index'])->name('contracts.index');
+        Route::get('contracts/{contract:uuid}/pdf', [ContractController::class, 'pdf'])->name('contracts.pdf');
+        Route::get('contract-templates/{template}', [ContractTemplateController::class, 'show'])->name('contracts.templates.show');
+        Route::post('contract-templates/{template}/new-version', [ContractTemplateController::class, 'duplicate'])->name('contracts.templates.duplicate');
+        Route::get('contract-templates/{template}/edit', [ContractTemplateController::class, 'edit'])->name('contracts.templates.edit');
+        Route::put('contract-templates/{template}', [ContractTemplateController::class, 'update'])->name('contracts.templates.update');
+        Route::post('contract-templates/{template}/publish', [ContractTemplateController::class, 'publish'])->name('contracts.templates.publish');
+        Route::delete('contract-templates/{template}', [ContractTemplateController::class, 'destroy'])->name('contracts.templates.destroy');
+    });
+
     Route::middleware('can:menu.settings')->group(function () {
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('settings/signature', [SettingsController::class, 'updateSignature'])->name('settings.signature.update');
         Route::get('settings/signature/image', [SettingsController::class, 'signature'])->name('settings.signature');
         Route::delete('settings/stripe/live', [SettingsController::class, 'clearStripeLive'])->name('settings.stripe.clear-live');
         Route::put('settings/{group}', [SettingsController::class, 'update'])
-            ->whereIn('group', ['company', 'pricing', 'renewal', 'stripe', 'email', 'tax'])
+            ->whereIn('group', ['company', 'pricing', 'renewal', 'stripe', 'email', 'security', 'tax'])
             ->name('settings.update');
     });
 });

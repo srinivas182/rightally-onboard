@@ -32,9 +32,9 @@ return [
     'menus' => [
         'dashboard' => ['label' => 'Dashboard', 'icon' => 'home', 'route' => 'admin.dashboard', 'group' => 'main'],
         'customers' => ['label' => 'Customers', 'icon' => 'users', 'route' => 'admin.dashboard', 'group' => 'main', 'sprint' => 5],
-        'contracts' => ['label' => 'Contracts', 'icon' => 'file', 'route' => 'admin.dashboard', 'group' => 'main', 'sprint' => 5],
+        'contracts' => ['label' => 'Contracts', 'icon' => 'file', 'route' => 'admin.contracts.index', 'group' => 'main'],
         'invoices' => ['label' => 'Invoices', 'icon' => 'receipt', 'route' => 'admin.dashboard', 'group' => 'main', 'sprint' => 5],
-        'coupons' => ['label' => 'Coupons', 'icon' => 'tag', 'route' => 'admin.dashboard', 'group' => 'main', 'sprint' => 2],
+        'coupons' => ['label' => 'Coupons', 'icon' => 'tag', 'route' => 'admin.coupons.index', 'group' => 'main'],
         'email_templates' => ['label' => 'Email templates', 'icon' => 'mail', 'route' => 'admin.dashboard', 'group' => 'admin', 'sprint' => 3],
         'admins' => ['label' => 'Admins and roles', 'icon' => 'shield', 'route' => 'admin.admins.index', 'group' => 'admin'],
         'settings' => ['label' => 'Settings', 'icon' => 'gear', 'route' => 'admin.settings.index', 'group' => 'admin'],

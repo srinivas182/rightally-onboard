@@ -4,7 +4,7 @@
 @section('content')
 <h1 class="h3 mb-4">Settings</h1>
 <ul class="nav nav-tabs tabs-scroll mb-4" role="tablist" data-remember-tab="settings">
-    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'tax' => 'Tax'] as $tab => $label)
+    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'security' => 'Security', 'tax' => 'Tax'] as $tab => $label)
         <li class="nav-item"><a class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab" href="#t-{{ $tab }}">{{ $label }}</a></li>
     @endforeach
 </ul>
@@ -125,6 +125,18 @@
                 @include('admin.settings._field', ['group' => 'email', 'key' => 'team_cc', 'label' => 'Team CC addresses', 'value' => $v['email']['team_cc'], 'col' => 'col-12', 'help' => 'Comma-separated. Each email template chooses whether to CC the team.'])
             </div>
             <button class="btn btn-primary mt-4" type="submit">Save email settings</button>
+        </form>
+    </div>
+
+    {{-- Security --}}
+    <div class="tab-pane fade" id="t-security" role="tabpanel">
+        <form method="post" action="{{ route('admin.settings.update', 'security') }}">@csrf @method('put')
+            <p class="text-slate">Cloudflare Turnstile stops bots submitting the onboarding form. It’s off until both keys are saved. Get the keys from the Cloudflare dashboard under Turnstile, and add your onboarding domain to the widget.</p>
+            <div class="row g-3">
+                @include('admin.settings._field', ['group' => 'security', 'key' => 'turnstile_site_key', 'label' => 'Turnstile site key', 'value' => $v['security']['turnstile_site_key'], 'col' => 'col-12'])
+                @include('admin.settings._field', ['group' => 'security', 'key' => 'turnstile_secret_key', 'label' => 'Turnstile secret key', 'value' => $v['security']['turnstile_secret_key'], 'col' => 'col-12', 'secret' => true])
+            </div>
+            <button class="btn btn-primary mt-4" type="submit">Save security settings</button>
         </form>
     </div>
 

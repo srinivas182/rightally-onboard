@@ -1,0 +1,254 @@
+<?php
+
+namespace App\Http\Controllers\Onboarding;
+
+use App\Enums\ContractStatus;
+use App\Http\Controllers\Controller;
+use App\Http\Middleware\OnboardingAccess;
+use App\Http\Requests\Onboarding\DetailsRequest;
+use App\Http\Requests\Onboarding\SignRequest;
+use App\Models\Contract;
+use App\Models\Customer;
+use App\Services\Contracts\ContractRenderer;
+use App\Services\Contracts\ContractSigner;
+use App\Services\Onboarding\CouponCheck;
+use App\Services\Onboarding\OnboardingService;
+use App\Services\Pricing\QuoteCalculator;
+use App\Services\Security\Turnstile;
+use App\Services\Settings\SettingsService;
+use App\Support\UsPhone;
+use App\Support\UsStates;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
+use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+
+/**
+ * The client onboarding flow:
+ *   1 details  ->  2 review and sign  ->  3 payment schedule  ->  4 payment (Sprint 3)  ->  5 done
+ */
+class OnboardingController extends Controller
+{
+    public function __construct(
+        private readonly OnboardingService $onboarding,
+        private readonly QuoteCalculator $quotes,
+        private readonly CouponCheck $coupons,
+        private readonly Turnstile $turnstile,
+        private readonly SettingsService $settings,
+        private readonly ContractRenderer $renderer,
+    ) {}
+
+    // ---- Step 1: details ------------------------------------------------
+
+    public function start(Request $request): View
+    {
+        $this->captureTracking($request);
+        $code = strtoupper(trim((string) ($request->query('coupon') ?? old('coupon', ''))));
+        $check = $this->coupons->check($code);
+
+        return view('onboarding.details', $this->detailsViewData(null, $code, $check) + [
+            'action' => route('onboarding.store'),
+            'method' => 'post',
+            'fromLink' => $request->has('coupon'),
+        ]);
+    }
+
+    public function store(DetailsRequest $request): RedirectResponse
+    {
+        if (! $this->turnstile->verify($request->input('cf-turnstile-response'), $request->ip())) {
+            throw ValidationException::withMessages(['turnstile' => 'Please confirm you’re not a robot, then try again.']);
+        }
+
+        $check = $this->coupons->check($request->validated('coupon'));
+        if ($check['message']) {
+            throw ValidationException::withMessages(['coupon' => $check['message']]);
+        }
+
+        $tracking = $request->session()->get('onboarding.tracking', []);
+        $customer = $this->onboarding->start($request->validated() + ['phone_e164' => $request->input('phone_e164')], $check['coupon'], [
+            'source' => $this->sourceLabel($tracking, $check['coupon']?->code),
+            'utm' => $tracking['utm'] ?? null,
+        ]);
+
+        OnboardingAccess::remember($request, $customer->uuid);
+
+        return redirect()->route('onboarding.agreement', $customer);
+    }
+
+    public function editDetails(Customer $customer): View|RedirectResponse
+    {
+        if (! $this->onboarding->draftContract($customer)) {
+            return redirect()->route('onboarding.agreement', $customer);
+        }
+        $code = old('coupon', $customer->coupon?->code ?? '');
+
+        return view('onboarding.details', $this->detailsViewData($customer, $code, $this->coupons->check($code)) + [
+            'action' => route('onboarding.details.update', $customer),
+            'method' => 'put',
+            'fromLink' => false,
+        ]);
+    }
+
+    public function updateDetails(DetailsRequest $request, Customer $customer): RedirectResponse
+    {
+        $check = $this->coupons->check($request->validated('coupon'));
+        if ($check['message']) {
+            throw ValidationException::withMessages(['coupon' => $check['message']]);
+        }
+
+        try {
+            $this->onboarding->update($customer, $request->validated() + ['phone_e164' => $request->input('phone_e164')], $check['coupon']);
+        } catch (RuntimeException) {
+            return redirect()->route('onboarding.agreement', $customer);
+        }
+
+        return redirect()->route('onboarding.agreement', $customer);
+    }
+
+    // ---- Step 2: review and sign ---------------------------------------
+
+    public function agreement(Customer $customer): View
+    {
+        $contract = $this->onboarding->currentContract($customer);
+        abort_unless($contract, 404);
+        $contract->loadMissing('template', 'customer');
+
+        return view('onboarding.agreement', [
+            'customer' => $customer,
+            'contract' => $contract,
+            'body' => $contract->isSigned() ? $contract->rendered_html : $this->renderer->body($contract),
+            'companySignature' => $this->renderer->companySignatureDataUri($contract),
+            'step' => 2,
+        ] + $this->ledger($contract));
+    }
+
+    public function sign(SignRequest $request, Customer $customer, ContractSigner $signer): RedirectResponse
+    {
+        $contract = $this->onboarding->draftContract($customer);
+        if (! $contract) {
+            return redirect()->route('onboarding.agreement', $customer);
+        }
+
+        $signer->sign($contract, trim($request->validated('typed_name')), (string) $request->signaturePng(), $request->ip(), $request->userAgent());
+
+        return redirect()->route('onboarding.agreement', $customer)->with('signed', true);
+    }
+
+    public function pdf(Customer $customer): StreamedResponse
+    {
+        $contract = $this->onboarding->currentContract($customer);
+        abort_unless($contract && $contract->isSigned() && $contract->pdf_path, 404);
+
+        return Storage::disk('local')->download($contract->pdf_path, "RightAlly-Agreement-{$contract->number}.pdf", [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
+
+    // ---- Step 3: schedule; Step 4: payment -----------------------------
+
+    public function schedule(Customer $customer): View|RedirectResponse
+    {
+        $contract = $this->signedContractOrNull($customer);
+        if (! $contract) {
+            return redirect()->route('onboarding.agreement', $customer);
+        }
+
+        return view('onboarding.schedule', ['customer' => $customer, 'contract' => $contract, 'step' => 3] + $this->ledger($contract));
+    }
+
+    public function payment(Customer $customer): View|RedirectResponse
+    {
+        $contract = $this->signedContractOrNull($customer);
+        if (! $contract) {
+            return redirect()->route('onboarding.agreement', $customer);
+        }
+
+        return view('onboarding.payment', ['customer' => $customer, 'contract' => $contract, 'step' => 4] + $this->ledger($contract));
+    }
+
+    // ---- helpers ------------------------------------------------------
+
+    private function signedContractOrNull(Customer $customer): ?Contract
+    {
+        $contract = $this->onboarding->currentContract($customer);
+
+        return $contract && $contract->status === ContractStatus::Signed ? $contract : null;
+    }
+
+    /** Values for the "Your agreement" panel. */
+    private function ledger(Contract $contract): array
+    {
+        return [
+            'ledger' => [
+                'setup' => $contract->setup_fee_cents,
+                'code' => $contract->coupon_code,
+                'discount' => $contract->discount_cents,
+                'implementation' => $contract->implementation_fee_cents,
+                'deposit' => $contract->deposit_cents,
+                'balance' => $contract->balance_cents,
+                'monthly' => $contract->monthlyFeeCents(),
+                'agents' => $contract->agent_count,
+            ],
+            'goLive' => $contract->starts_on ?? \App\Support\BusinessClock::today()->addDays((int) $this->settings->get('pricing', 'go_live_days')),
+        ];
+    }
+
+    private function detailsViewData(?Customer $customer, string $code, array $check): array
+    {
+        $agents = (int) old('agents', $customer?->agent_count_entered ?? $this->settings->get('pricing', 'min_agents'));
+        $quote = $this->quotes->quote(max(1, $agents), $check['coupon']);
+
+        return [
+            'customer' => $customer,
+            'states' => UsStates::ALL,
+            'quote' => $quote,
+            'couponCode' => $code,
+            'couponMessage' => $check['message'],
+            'agents' => $agents,
+            'phone' => $customer ? UsPhone::format($customer->phone_e164) : '',
+            'turnstileSiteKey' => $this->turnstile->enabled() ? $this->turnstile->siteKey() : null,
+            'step' => 1,
+            'ledger' => [
+                'setup' => $quote->setupFeeCents,
+                'code' => $quote->coupon?->code,
+                'discount' => $quote->discountCents,
+                'implementation' => $quote->implementationFeeCents,
+                'deposit' => $quote->depositCents,
+                'balance' => $quote->balanceCents,
+                'monthly' => $quote->monthlyFeeCents(),
+                'agents' => $quote->agentsBilled,
+            ],
+            'goLive' => \App\Support\BusinessClock::today()->addDays($quote->goLiveDays),
+        ];
+    }
+
+    private function captureTracking(Request $request): void
+    {
+        $utm = array_filter($request->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']));
+        $tracking = $request->session()->get('onboarding.tracking', []);
+        if ($utm) {
+            $tracking['utm'] = array_map(fn ($v) => mb_substr((string) $v, 0, 120), $utm);
+        }
+        if ($request->filled('coupon')) {
+            $tracking['coupon_link'] = strtoupper(mb_substr((string) $request->query('coupon'), 0, 40));
+        }
+        $ref = parse_url((string) $request->headers->get('referer'), PHP_URL_HOST);
+        if ($ref && $ref !== $request->getHost() && empty($tracking['referrer'])) {
+            $tracking['referrer'] = mb_substr($ref, 0, 120);
+        }
+        $request->session()->put('onboarding.tracking', $tracking);
+    }
+
+    private function sourceLabel(array $tracking, ?string $appliedCode): ?string
+    {
+        return match (true) {
+            ! empty($tracking['coupon_link']) && $tracking['coupon_link'] === $appliedCode => "{$appliedCode} link",
+            ! empty($tracking['utm']['utm_source']) => trim($tracking['utm']['utm_source'].' '.($tracking['utm']['utm_campaign'] ?? '')),
+            ! empty($tracking['referrer']) => $tracking['referrer'],
+            default => 'Direct',
+        };
+    }
+}

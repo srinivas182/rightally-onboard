@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\OnboardingAccess;
 use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
@@ -19,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [SecurityHeaders::class]);
-        $middleware->alias(['admin.2fa' => RequireTwoFactor::class]);
+        $middleware->alias(['admin.2fa' => RequireTwoFactor::class, 'onboarding.access' => OnboardingAccess::class]);
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
         // Only trust forwarding headers from our own reverse proxy. Trusting
