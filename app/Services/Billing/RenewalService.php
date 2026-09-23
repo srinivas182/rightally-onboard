@@ -51,7 +51,7 @@ final class RenewalService
         $sent = 0;
 
         foreach ($this->currentAgreements() as $contract) {
-            if (! $contract->ends_on || $today->lt($contract->ends_on->copy()->subDays($offerDays)) || $today->gt($contract->ends_on)) {
+            if (! $contract->ends_on || $today->lt(BusinessClock::date($contract->ends_on)->subDays($offerDays)) || $today->gt(BusinessClock::date($contract->ends_on))) {
                 continue;
             }
             if (RenewalNotice::where('contract_id', $contract->id)->where('kind', 'offer')->exists()) {
@@ -74,7 +74,7 @@ final class RenewalService
         $sent = 0;
 
         foreach ($this->currentAgreements() as $contract) {
-            if (! $contract->ends_on || $today->lt($contract->ends_on->copy()->subDays($reminderDays)) || $today->gt($contract->ends_on)) {
+            if (! $contract->ends_on || $today->lt(BusinessClock::date($contract->ends_on)->subDays($reminderDays)) || $today->gt(BusinessClock::date($contract->ends_on))) {
                 continue;
             }
             $renewal = $this->pendingRenewal($contract);
@@ -96,7 +96,7 @@ final class RenewalService
         $count = 0;
 
         foreach ($this->currentAgreements() as $contract) {
-            if (! $contract->ends_on || ! $today->gt($contract->ends_on)) {
+            if (! $contract->ends_on || ! $today->gt(BusinessClock::date($contract->ends_on))) {
                 continue;
             }
             $customer = $contract->customer;

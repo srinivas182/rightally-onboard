@@ -66,7 +66,8 @@ final class StripeBilling
             $this->applyStripeInvoiceStatus($invoice, $si);
         } catch (StripeException $e) {
             // Declines come back as errors; the invoice stays open on Stripe for the client to pay.
-            $invoice->update(['status' => InvoiceStatus::Failed, 'failed_at' => now(), 'failure_reason' => mb_substr($e->userMessage ?? $e->getMessage(), 0, 250)]);
+            // failed_at stays empty: InvoiceEvents::failed() records it and sends the one email.
+            $invoice->update(['status' => InvoiceStatus::Failed, 'failure_reason' => mb_substr($e->userMessage ?? $e->getMessage(), 0, 250)]);
         }
 
         return $invoice->fresh();

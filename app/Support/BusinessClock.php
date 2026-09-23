@@ -25,4 +25,12 @@ final class BusinessClock
     {
         return self::now()->startOfDay();
     }
+
+    /** A stored calendar date (e.g. go_live_date, ends_on) as midnight in the business time zone. */
+    public static function date(\DateTimeInterface|string $date): Carbon
+    {
+        $day = $date instanceof \DateTimeInterface ? $date->format('Y-m-d') : substr($date, 0, 10);
+
+        return Carbon::parse($day, self::timezone())->startOfDay();
+    }
 }

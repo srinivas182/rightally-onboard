@@ -44,8 +44,6 @@ class EmailTemplateSeeder extends Seeder
                 "Hi {first_name},\n\n{company_name} is live. We received {balance_amount}. Your first monthly charge of {monthly_amount} is on {first_monthly_date}.".$sign],
             'balance_failed' => ['Balance failed', 'The go-live charge fails', true, 'Action needed: your go-live payment didn’t go through',
                 "Hi {first_name},\n\nWe couldn’t charge {balance_amount} to {payment_method}. Please update your payment method and pay using the button below.\n\n{button:Update payment method|{payment_link}}".$sign],
-            'subscription_started' => ['Subscription started', 'The first monthly charge is scheduled', false, 'Your RightAlly subscription has started',
-                "Hi {first_name},\n\nYour monthly subscription starts on {first_monthly_date}: {monthly_amount} for {agent_count} agents.".$sign],
             'monthly_receipt' => ['Monthly receipt', 'A monthly charge succeeds', false, 'Your RightAlly receipt for {period}',
                 "Hi {first_name},\n\nWe received {amount} for {period} ({agent_count} agents).\n\n{receipt_details}".$sign],
             'payment_failed' => ['Payment failed', 'A monthly charge fails', true, 'Action needed: your RightAlly payment didn’t go through',

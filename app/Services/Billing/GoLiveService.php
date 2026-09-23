@@ -22,7 +22,7 @@ final class GoLiveService
 
     public function lockDate(Customer $customer): ?Carbon
     {
-        return $customer->go_live_date?->copy()->subDays((int) config('rightally.go_live_lock_days'));
+        return $customer->go_live_date ? BusinessClock::date($customer->go_live_date)->subDays((int) config('rightally.go_live_lock_days')) : null;
     }
 
     public function canChange(Customer $customer): bool
