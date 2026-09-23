@@ -83,7 +83,7 @@ final class DashboardStats
 
         Invoice::with('customer')->where('status', InvoiceStatus::Failed)->latest('failed_at')->limit(5)->get()
             ->each(fn (Invoice $i) => $items->push(['kind' => 'danger', 'customer' => $i->customer,
-                'text' => "{$i->type->label()} payment failed", 'detail' => ($i->failure_reason ?? 'Declined').', '.($i->failed_at?->setTimezone(BusinessClock::timezone())->format('M j') ?? '')]));
+                'text' => "{$i->type->label()} payment failed", 'detail' => rtrim($i->failure_reason ?? 'Declined', '.').'. Failed '.($i->failed_at?->setTimezone(BusinessClock::timezone())->format('M j') ?? '').'.']));
 
         Customer::where('status', CustomerStatus::AwaitingGoLive)->whereBetween('go_live_date', [$today->toDateString(), $today->copy()->addDays(7)->toDateString()])->orderBy('go_live_date')->limit(5)->get()
             ->each(fn (Customer $c) => $items->push(['kind' => 'primary', 'customer' => $c,

@@ -29,7 +29,7 @@ final class EarlyTerminationService
         private readonly AuditLogger $audit,
     ) {}
 
-    /** @return array{months: int, amount_cents: int, monthly_cents: int} */
+    /** @return array{months: int, amount_cents: int, monthly_cents: int, unpaid_cents: int} */
     public function quote(Customer $customer): array
     {
         $contract = $this->contract($customer);
@@ -37,7 +37,10 @@ final class EarlyTerminationService
         $months = max(0, $contract->term_months - $issued);
         $monthly = $contract->monthlyFeeCents($customer->agent_count);
 
-        return ['months' => $months, 'amount_cents' => $months * $monthly, 'monthly_cents' => $monthly];
+        // Monthly invoices already issued but unpaid stay due separately.
+        $unpaid = (int) $customer->invoices()->where('status', InvoiceStatus::Failed)->sum('amount_cents');
+
+        return ['months' => $months, 'amount_cents' => $months * $monthly, 'monthly_cents' => $monthly, 'unpaid_cents' => $unpaid];
     }
 
     public function terminate(Customer $customer, Admin $admin, string $reason): ?Invoice

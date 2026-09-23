@@ -261,7 +261,7 @@ class BillingEngineTest extends TestCase
         $this->stripeWebhook(['id' => 'evt_m2', 'type' => 'invoice.paid', 'data' => ['object' => $this->monthlyInvoice('in_m2')]]);
 
         $quote = app(EarlyTerminationService::class)->quote($customer->fresh());
-        $this->assertSame(['months' => 10, 'amount_cents' => 660000, 'monthly_cents' => 66000], $quote);
+        $this->assertSame(['months' => 10, 'amount_cents' => 660000, 'monthly_cents' => 66000, 'unpaid_cents' => 0], $quote);
 
         $invoice = app(EarlyTerminationService::class)->terminate($customer->fresh(), Admin::factory()->create(), 'Client closing the brokerage');
 

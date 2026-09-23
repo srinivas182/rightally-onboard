@@ -229,6 +229,7 @@
                 <tr><td>Monthly fee ({{ $customer->agent_count }} agents)</td><td class="text-end">{{ $m($termination['monthly_cents']) }}</td></tr>
                 <tr><td class="fw-semibold">Charged now</td><td class="text-end fw-semibold">{{ $m($termination['amount_cents']) }}</td></tr>
             </tbody></table>
+            @if ($termination['unpaid_cents'])<div class="alert alert-warning small py-2">Unpaid invoices of {{ $m($termination['unpaid_cents']) }} stay due on top of this. Their payment links remain active.</div>@endif
             <p class="small text-slate">The subscription ends immediately, the amount is charged to {{ $customer->payment_method_label ?? 'the saved payment method' }}, and the client is emailed the invoice. This can’t be undone.</p>
             <div class="mb-3"><label class="form-label" for="treason">Reason</label><input class="form-control" id="treason" name="reason" maxlength="250" required placeholder="e.g. Client asked to cancel on Sep 30"></div>
             <label class="form-label" for="confirm">Type <b>{{ $customer->company_name }}</b> to confirm</label><input class="form-control @error('confirm') is-invalid @enderror" id="confirm" name="confirm" required autocomplete="off">
