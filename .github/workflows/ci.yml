@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -42,3 +45,13 @@ jobs:
             echo "::error title=Test failures::${msg}"
             exit 1
           fi
+
+      # Temporary diagnostic (Sprint 1 takeover): publish test output to the ci-logs branch
+      - name: Publish test output
+        if: failure()
+        shell: bash
+        run: |
+          mkdir -p /tmp/logs && cp test-output.txt /tmp/logs/ 2>/dev/null || true
+          git config user.name ci-bot && git config user.email ci-bot@users.noreply.github.com
+          git checkout --orphan ci-logs && git rm -rfq . && cp /tmp/logs/test-output.txt .
+          git add test-output.txt && git commit -qm "Test output for ${GITHUB_SHA}" && git push -fq origin ci-logs
