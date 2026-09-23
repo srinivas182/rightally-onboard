@@ -148,6 +148,34 @@ class OnboardingController extends Controller
         return redirect()->route('onboarding.agreement', $customer)->with('signed', true);
     }
 
+    /** "Someone else will sign": the signer's details go on the agreement and they get a link by email. */
+    public function delegate(Request $request, Customer $customer, \App\Services\Email\EmailSender $email, \App\Services\Audit\AuditLogger $audit): RedirectResponse
+    {
+        $contract = $this->onboarding->draftContract($customer);
+        if (! $contract) {
+            return redirect()->route('onboarding.agreement', $customer);
+        }
+        $data = $request->validateWithBag('delegate', [
+            'signer_first_name' => ['required', 'string', 'max:80'],
+            'signer_last_name' => ['required', 'string', 'max:80'],
+            'signer_title' => ['required', 'string', 'max:80'],
+            'signer_email' => ['required', 'email:rfc', 'max:160'],
+        ]);
+        $requestedBy = $customer->fullName();
+
+        $customer->update(['first_name' => $data['signer_first_name'], 'last_name' => $data['signer_last_name'], 'title' => $data['signer_title']]);
+        $contract->forceFill(['signer_email' => strtolower($data['signer_email']), 'signature_requested_at' => now()])->save();
+
+        $email->toPerson('signature_request', $customer, strtolower($data['signer_email']), $customer->fullName(), [
+            'signer_name' => $data['signer_first_name'],
+            'requested_by' => $requestedBy,
+            'signing_link' => \Illuminate\Support\Facades\URL::temporarySignedRoute('onboarding.agreement', now()->addDays(7), ['customer' => $customer->uuid]),
+        ]);
+        $audit->log('contract.signature_requested', "{$requestedBy} asked {$customer->fullName()} ({$data['signer_email']}) to sign {$contract->number}", $contract, null, 'client');
+
+        return redirect()->route('onboarding.agreement', $customer)->with('delegated', "We’ve emailed {$data['signer_first_name']} at {$data['signer_email']} a link to review and sign. Receipts will still go to {$customer->email}.");
+    }
+
     public function pdf(Customer $customer): StreamedResponse
     {
         $contract = $this->onboarding->currentContract($customer);

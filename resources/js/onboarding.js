@@ -186,3 +186,9 @@ if (payForm) {
 
     if (window.Stripe) start(); else window.addEventListener('load', start);
 }
+
+// Reopen a modal whose form failed validation: <div data-open-modal="#id">
+document.querySelectorAll('[data-open-modal]').forEach((el) => {
+    const modal = document.querySelector(el.dataset.openModal);
+    if (modal) bootstrap.Modal.getOrCreateInstance(modal).show();
+});

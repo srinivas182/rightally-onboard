@@ -60,6 +60,20 @@ final class EmailSender
         return $log;
     }
 
+    /** A customer email sent to someone other than the account email (e.g. the person asked to sign). */
+    public function toPerson(string $templateKey, Customer $customer, string $email, string $name, array $extra = [], array $attachments = []): ?EmailLog
+    {
+        $template = EmailTemplate::where('key', $templateKey)->first();
+        if (! $template || ! $template->is_enabled) {
+            return null;
+        }
+        $mail = $this->renderer->render($template, $this->values->for($customer, null, $extra));
+        $log = EmailLog::create(['customer_id' => $customer->id, 'template_key' => $templateKey, 'to_email' => $email, 'cc' => $template->cc_team ? $this->teamCc() : [], 'subject' => $mail['subject'], 'status' => 'queued']);
+        SendEmail::dispatch($log->id, $name, $mail['html'], $mail['text'], $attachments);
+
+        return $log;
+    }
+
     /** Admin emails (invitation, password reset) through the same templates and delivery. */
     public function toAdmin(string $templateKey, Admin $admin, array $values): ?EmailLog
     {

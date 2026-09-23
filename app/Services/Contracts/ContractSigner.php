@@ -54,6 +54,7 @@ final class ContractSigner
             $contract->forceFill([
                 'client_typed_name' => $typedName,
                 'client_title' => $customer->title,
+                'signer_email' => $contract->signer_email ?? $customer->email,
                 'client_signature_path' => "{$dir}/client-signature.png",
                 'company_signature_path' => $companySig,
                 'esign_consent_at' => $now,

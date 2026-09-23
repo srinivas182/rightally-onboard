@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Schedule;
 | Monthly charges themselves are made by Stripe's subscription; their
 | results arrive by webhook.
 */
-Artisan::command('billing:daily', function (BalanceService $balance, SuspensionService $suspension, RenewalService $renewals) {
+Artisan::command('billing:daily', function (BalanceService $balance, SuspensionService $suspension, RenewalService $renewals, \App\Services\Billing\CardExpiryWarnings $cards) {
     $this->info('Billing run for '.BusinessClock::today()->toDateString());
 
     foreach ($balance->due() as $customer) {
@@ -41,6 +41,7 @@ Artisan::command('billing:daily', function (BalanceService $balance, SuspensionS
     $this->line('Renewal reminders sent: '.$renewals->sendReminders());
     $this->line('Agreements expired: '.$renewals->expire());
     $this->line('Accounts suspended: '.$suspension->run());
+    $this->line('Card expiry warnings sent: '.$cards->send());
     Cache::forever(SystemHealth::BILLING_RUN_KEY, now());
 })->purpose('Go-live charges, reminders, renewals, expiries and suspensions');
 

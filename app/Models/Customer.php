@@ -47,6 +47,7 @@ class Customer extends Model
             'utm' => 'array',
             'onboarding_started_at' => 'datetime',
             'agent_count_synced_at' => 'datetime',
+            'agents_notified_at' => 'datetime',
             'suspended_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];

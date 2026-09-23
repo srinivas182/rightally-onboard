@@ -7,7 +7,10 @@ use App\Enums\ContractStatus;
 use App\Models\Admin;
 use App\Models\AgentCountLog;
 use App\Models\Customer;
+use App\Enums\CustomerStatus;
 use App\Services\Audit\AuditLogger;
+use App\Services\Email\EmailSender;
+use App\Support\BusinessClock;
 use App\Services\Stripe\StripeException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -20,7 +23,7 @@ use Throwable;
  */
 final class AgentCountService
 {
-    public function __construct(private readonly SubscriptionService $subscriptions, private readonly AuditLogger $audit) {}
+    public function __construct(private readonly SubscriptionService $subscriptions, private readonly AuditLogger $audit, private readonly EmailSender $email) {}
 
     /** @return int the count now billed */
     public function set(Customer $customer, int $reported, AgentCountSource $source, ?Admin $admin = null, ?string $note = null): int
@@ -43,6 +46,8 @@ final class AgentCountService
             'admin_id' => $admin?->id, 'note' => $note ?? ($reported < $min ? "Reported {$reported}; billed at the {$min}-agent minimum" : null),
         ]);
         $this->audit->log('customer.agents_changed', "Agents billed for {$customer->company_name}: {$old} to {$billed}", $customer, ['source' => $source->value], $admin ? 'admin' : 'system');
+
+        $this->notifyClient($customer, $old, $source);
 
         try {
             $this->subscriptions->setAgents($customer, $billed);
@@ -88,5 +93,29 @@ final class AgentCountService
         }
 
         return $this->set($customer, $agents, AgentCountSource::ApiPull);
+    }
+
+    /**
+     * Tells the client their new count and monthly fee before it's charged.
+     * Admin changes always email; automatic syncs at most once a day.
+     */
+    private function notifyClient(Customer $customer, int $old, AgentCountSource $source): void
+    {
+        if (! in_array($customer->status, [CustomerStatus::AwaitingGoLive, CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended], true)) {
+            return;
+        }
+        $automatic = in_array($source, [AgentCountSource::ApiPush, AgentCountSource::ApiPull], true);
+        if ($automatic && $customer->agents_notified_at && $customer->agents_notified_at->gt(now()->subDay())) {
+            return;
+        }
+        $next = $customer->go_live_date ? BusinessClock::date($customer->go_live_date)->addDays(30) : null;
+        while ($next && $next->lt(BusinessClock::today())) {
+            $next->addMonthNoOverflow();
+        }
+        $this->email->toCustomer('agents_changed', $customer, null, [], [
+            'old_agent_count' => (string) $old,
+            'effective_date' => $next?->format('F j, Y') ?? 'your next monthly charge',
+        ]);
+        $customer->forceFill(['agents_notified_at' => now()])->save();
     }
 }

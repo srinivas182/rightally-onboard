@@ -6,6 +6,9 @@
 <h1>{{ $signed ? 'Your agreement is signed' : 'Review and sign your agreement' }}</h1>
 <p class="lead">{{ $signed ? 'Download a copy for your records, then review your payment schedule.' : 'Read the agreement below. You can download a signed copy as soon as you sign.' }}</p>
 
+@if (session('delegated'))
+    <div class="alert alert-info" role="status">{{ session('delegated') }}</div>
+@endif
 @if ($signed)
     <div class="alert alert-success d-flex gap-2 align-items-start" role="status">
         <svg class="ic mt-1" aria-hidden="true"><use href="#i-check"/></svg>
@@ -68,7 +71,25 @@
                 <button class="btn btn-primary btn-lg px-5" type="submit" id="signBtn">Sign agreement</button>
                 <a class="btn btn-link" href="{{ route('onboarding.details', $customer) }}">Back to details</a>
             </div>
+            <p class="small text-slate mt-3 mb-0">Not the person who signs for {{ $customer->company_name }}? <button type="button" class="btn btn-link btn-sm p-0 align-baseline" data-bs-toggle="modal" data-bs-target="#delegateModal">Send it to someone else to sign</button></p>
         </form>
+
+        <div class="modal fade" id="delegateModal" tabindex="-1" aria-labelledby="delegateTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" method="post" action="{{ route('onboarding.delegate', $customer) }}">@csrf
+                <div class="modal-header"><h2 class="modal-title h5" id="delegateTitle">Send to someone else to sign</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-body">
+                    <p class="small text-slate">Their name and title go on the agreement, and we email them a link to review and sign. Receipts and account emails still go to {{ $customer->email }}.</p>
+                    <div class="row g-3">
+                        <div class="col-sm-6"><label class="form-label" for="signer_first_name">First name</label><input class="form-control" id="signer_first_name" name="signer_first_name" required maxlength="80" value="{{ old('signer_first_name') }}"></div>
+                        <div class="col-sm-6"><label class="form-label" for="signer_last_name">Last name</label><input class="form-control" id="signer_last_name" name="signer_last_name" required maxlength="80" value="{{ old('signer_last_name') }}"></div>
+                        <div class="col-sm-6"><label class="form-label" for="signer_title">Title</label><input class="form-control" id="signer_title" name="signer_title" required maxlength="80" placeholder="e.g. Owner" value="{{ old('signer_title') }}"></div>
+                        <div class="col-sm-6"><label class="form-label" for="signer_email">Email</label><input type="email" class="form-control" id="signer_email" name="signer_email" required maxlength="160" value="{{ old('signer_email') }}"></div>
+                    </div>
+                    @if ($errors->delegate->any())<div class="alert alert-danger small mt-3 mb-0">{{ $errors->delegate->first() }}</div>@endif
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Send signing link</button></div>
+            </form></div></div>
+        @if ($errors->delegate->any())<div data-open-modal="#delegateModal" hidden></div>@endif
     @endif
 </div>
 @endsection
