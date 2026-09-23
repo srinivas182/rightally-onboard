@@ -54,7 +54,9 @@ The script backs up first, pulls the code, installs, builds, migrates in mainten
 | Time (Miami) | Job |
 |---|---|
 | 9:00 AM daily | `billing:daily`: go-live charges, reminders, renewals, expiries, suspensions |
+| 5:00 AM daily | `billing:reconcile`: apply any Stripe events the webhook missed |
 | 6:00 AM daily | `agents:sync`: pull agent counts from live sites |
+| hourly | `onboarding:reminders`: deposit reminders 24 hours and 3 days after signing |
 | every 5 min | scheduler heartbeat (for System status) |
 | weekly | prune failed jobs older than 30 days |
 | 2:30 AM (server) | `deploy/backup.sh` |

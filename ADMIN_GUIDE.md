@@ -22,11 +22,15 @@ Send them `https://onboard.rightally.io`, or a coupon link from Coupons (Copy li
 ## What happens automatically
 | When | What |
 |---|---|
+| Client signs | Signed agreement emailed with a link to finish payment |
+| 24 hours and 3 days after signing, if unpaid | Deposit reminder |
 | Client pays deposit | Welcome email with signed agreement (CC team) |
 | 3 days before go-live | Reminder email |
 | Go-live date, 9 AM Miami | Balance charged; client goes live; monthly subscription starts |
 | Go-live + 30 days, then monthly | Stripe charges $500 + $20 per agent; receipt email |
 | Payment fails | Email with a link to update the card and pay (CC team); Stripe retries |
+| Bank asks the client to confirm a charge | Email with Stripe’s confirm link (CC team) |
+| Client disputes a charge (chargeback) | Alert to the team with the deadline; shown under Needs attention. Respond in Stripe with the signed agreement PDF as evidence |
 | 30 days unpaid | Account suspended, email |
 | 45 / 15 days before term end | Renewal agreement, then reminder |
 | Term ends unsigned | Subscription ends, account expired, email |

@@ -7,7 +7,9 @@ use App\Enums\CustomerStatus;
 use App\Models\Contract;
 use App\Models\Coupon;
 use App\Models\Customer;
+use App\Models\EmailLog;
 use Database\Seeders\ContractTemplateSeeder;
+use Database\Seeders\EmailTemplateSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -21,7 +23,7 @@ class OnboardingFlowTest extends TestCase
     {
         parent::setUp();
         Storage::fake('local');
-        $this->seed(ContractTemplateSeeder::class);
+        $this->seed([ContractTemplateSeeder::class, EmailTemplateSeeder::class]);
         Carbon::setTestNow(Carbon::parse('2026-09-23 14:00:00', 'America/New_York'));
     }
 
@@ -166,6 +168,8 @@ class OnboardingFlowTest extends TestCase
         $this->assertSame(1, $customer->agentCountLogs()->count());
 
         $this->get("/onboard/{$customer->uuid}/agreement/pdf")->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        // Their signed copy is emailed straight away, in case they stop before paying.
+        $this->assertSame(1, EmailLog::where('template_key', 'signed_payment_pending')->where('to_email', 'maria@sunlinerealty.com')->count());
         $this->get("/onboard/{$customer->uuid}/schedule")->assertOk()->assertSee('$2,295.00')->assertSee('Nov 22, 2026');
     }
 

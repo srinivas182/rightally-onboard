@@ -16,6 +16,7 @@ Client onboarding, electronic agreement signing and Stripe billing for RightAlly
 | 4 | Billing engine: go-live charge, subscriptions, agent counts, suspension, early termination, renewals | Done |
 | 5 | Admin back office: dashboard, customers, invoices, renewals | Done |
 | 6 | QA, security hardening, deployment kit, guides | Done |
+| 7 | Tax, bank confirmation, refunds and chargebacks, Stripe reconciliation, deposit reminders | Done |
 
 ## Guides
 - `DEPLOYMENT.md`: server set-up, updates, monitoring, backups and disaster recovery
