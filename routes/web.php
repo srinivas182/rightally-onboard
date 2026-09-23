@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LegalPageController;
+use App\Http\Controllers\Onboarding\AccountController;
 use App\Http\Controllers\Onboarding\CouponCheckController;
 use App\Http\Controllers\Onboarding\OnboardingController;
 use App\Http\Controllers\Onboarding\RenewalController;
@@ -32,6 +33,17 @@ Route::prefix('onboard/{customer}')->name('onboarding.')->middleware('onboarding
     Route::get('payment', [OnboardingController::class, 'payment'])->middleware('throttle:onboarding')->name('payment');
     Route::get('payment/return', [OnboardingController::class, 'paymentReturn'])->name('payment.return');
     Route::get('done', [OnboardingController::class, 'done'])->name('done');
+});
+
+// Client account (no password): request a link, then open it from the email.
+Route::get('/account', [AccountController::class, 'request'])->name('account.request');
+Route::post('/account', [AccountController::class, 'sendLink'])->middleware('throttle:5,10')->name('account.send-link');
+Route::prefix('account/{customer}')->name('account.')->middleware('onboarding.access')->group(function () {
+    Route::get('/', [AccountController::class, 'show'])->name('show');
+    Route::get('invoices/{invoice}/pdf', [AccountController::class, 'invoicePdf'])->name('invoice-pdf');
+    Route::get('agreements/{contract:uuid}/pdf', [AccountController::class, 'agreementPdf'])->name('agreement-pdf');
+    Route::get('payment-method', [AccountController::class, 'paymentMethod'])->middleware('throttle:10,1')->name('payment-method');
+    Route::get('payment-method/return', [AccountController::class, 'paymentMethodReturn'])->name('payment-method.return');
 });
 
 // Renewal agreements, opened from the emailed (signed) link.

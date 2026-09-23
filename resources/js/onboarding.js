@@ -175,7 +175,8 @@ if (payForm) {
             btn.disabled = true;
             const label = btn.textContent;
             btn.textContent = 'Processing…';
-            const { error } = await stripe.confirmPayment({ elements, confirmParams: { return_url: payForm.dataset.return } });
+            const confirm = payForm.dataset.mode === 'setup' ? stripe.confirmSetup.bind(stripe) : stripe.confirmPayment.bind(stripe);
+            const { error } = await confirm({ elements, confirmParams: { return_url: payForm.dataset.return } });
             // Only reached on an immediate error; success redirects to return_url.
             showError(error?.message || 'The payment didn’t go through. Please try again.');
             btn.disabled = false;
