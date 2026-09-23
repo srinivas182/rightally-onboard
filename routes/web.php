@@ -4,6 +4,7 @@ use App\Http\Controllers\Onboarding\CouponCheckController;
 use App\Http\Controllers\Onboarding\OnboardingController;
 use App\Http\Controllers\Onboarding\RenewalController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Services\Admin\SystemHealth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -40,3 +41,10 @@ Route::middleware('signed')->prefix('renew/{contract:uuid}')->name('renewal.')->
 
 // Stripe webhooks (no session, no CSRF; verified by signature).
 Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');
+
+// Health check for uptime monitoring: 200 when everything billing needs is working, 503 otherwise. No secrets.
+Route::get('/health', function (SystemHealth $health) {
+    $checks = collect($health->checks())->map(fn ($c) => $c['ok']);
+
+    return response()->json(['ok' => $checks->every(fn ($ok) => $ok), 'checks' => $checks], $checks->every(fn ($ok) => $ok) ? 200 : 503);
+})->middleware('throttle:30,1')->name('health');

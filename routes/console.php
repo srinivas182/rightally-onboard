@@ -2,12 +2,14 @@
 
 use App\Enums\CustomerStatus;
 use App\Models\Customer;
+use App\Services\Admin\SystemHealth;
 use App\Services\Billing\AgentCountService;
 use App\Services\Billing\BalanceService;
 use App\Services\Billing\RenewalService;
 use App\Services\Billing\SuspensionService;
 use App\Support\BusinessClock;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 
 /*
@@ -36,6 +38,7 @@ Artisan::command('billing:daily', function (BalanceService $balance, SuspensionS
     $this->line('Renewal reminders sent: '.$renewals->sendReminders());
     $this->line('Agreements expired: '.$renewals->expire());
     $this->line('Accounts suspended: '.$suspension->run());
+    Cache::forever(SystemHealth::BILLING_RUN_KEY, now());
 })->purpose('Go-live charges, reminders, renewals, expiries and suspensions');
 
 Artisan::command('agents:sync', function (AgentCountService $agents) {
@@ -48,3 +51,10 @@ Artisan::command('agents:sync', function (AgentCountService $agents) {
 
 Schedule::command('billing:daily')->dailyAt('09:00')->timezone(BusinessClock::timezone())->withoutOverlapping()->onOneServer();
 Schedule::command('agents:sync')->dailyAt('06:00')->timezone(BusinessClock::timezone())->withoutOverlapping()->onOneServer();
+
+// Heartbeat so the dashboard can tell whether cron is running.
+Schedule::call(fn () => Cache::forever(SystemHealth::HEARTBEAT_KEY, now()))->everyFiveMinutes()->name('scheduler-heartbeat')->onOneServer();
+
+// Housekeeping.
+Schedule::command('queue:prune-failed --hours=720')->weekly();
+Schedule::command('auth:clear-resets')->daily();

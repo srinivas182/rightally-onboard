@@ -60,4 +60,20 @@
         @endforelse
     </div></div>
 </div>
+
+@if ($health)
+    @php $problems = collect($health)->reject(fn ($c) => $c['ok']); @endphp
+    <div class="panel mt-3">
+        <div class="panel-h"><h2>System status</h2>
+            @if ($problems->isEmpty())<span class="st st-live">All systems working</span>@else<span class="st st-fail">{{ $problems->count() }} {{ Str::plural('issue', $problems->count()) }}</span>@endif</div>
+        <div class="row g-0">
+            @foreach ($health as $c)
+                <div class="col-md-6 col-xl-4 px-3 py-2 border-bottom d-flex gap-2">
+                    <svg class="ic mt-1 {{ $c['ok'] ? 'text-success' : 'text-danger' }}" aria-hidden="true"><use href="#i-{{ $c['ok'] ? 'check' : 'alert' }}"/></svg>
+                    <div><b>{{ $c['label'] }}</b><div class="small text-slate">{{ $c['detail'] }}</div></div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
 @endsection
