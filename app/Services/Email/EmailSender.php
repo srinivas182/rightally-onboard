@@ -3,6 +3,7 @@
 namespace App\Services\Email;
 
 use App\Jobs\SendEmail;
+use App\Models\Admin;
 use App\Models\Customer;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
@@ -44,6 +45,20 @@ final class EmailSender
         ]);
 
         SendEmail::dispatch($log->id, $customer->fullName(), $mail['html'], $mail['text'], $attachments);
+
+        return $log;
+    }
+
+    /** Admin emails (invitation, password reset) through the same templates and delivery. */
+    public function toAdmin(string $templateKey, Admin $admin, array $values): ?EmailLog
+    {
+        $template = EmailTemplate::where('key', $templateKey)->first();
+        if (! $template || ! $template->is_enabled) {
+            return null;
+        }
+        $mail = $this->renderer->render($template, $values + ['admin_name' => $admin->name]);
+        $log = EmailLog::create(['template_key' => $templateKey, 'to_email' => $admin->email, 'cc' => [], 'subject' => $mail['subject'], 'status' => 'queued']);
+        SendEmail::dispatch($log->id, $admin->name, $mail['html'], $mail['text'], []);
 
         return $log;
     }

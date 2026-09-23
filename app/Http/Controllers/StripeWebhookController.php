@@ -39,8 +39,7 @@ class StripeWebhookController extends Controller
         try {
             $object = $event['data']['object'] ?? [];
             match (true) {
-                str_starts_with($event['type'], 'payment_intent.') && ($object['metadata']['type'] ?? null) === 'deposit'
-                    => $deposits->syncFromStripe($object['id']),
+                str_starts_with($event['type'], 'payment_intent.') && ($object['metadata']['type'] ?? null) === 'deposit' => $deposits->syncFromStripe($object['id']),
                 default => null, // other events are handled from Sprint 4 on
             };
             $stored->update(['processed_at' => now(), 'error' => null]);

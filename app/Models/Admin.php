@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Email\EmailSender;
 use Database\Factories\AdminFactory;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
@@ -81,6 +82,14 @@ class Admin extends Authenticatable implements CanResetPasswordContract
     public function hasAcceptedInvite(): bool
     {
         return $this->password !== null;
+    }
+
+    /** Password reset email, from the editable "Password reset" template. */
+    public function sendPasswordResetNotification($token): void
+    {
+        app(EmailSender::class)->toAdmin('password_reset', $this, [
+            'reset_link' => route('admin.password.reset', ['token' => $token, 'email' => $this->email]),
+        ]);
     }
 
     public function initials(): string

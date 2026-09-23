@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\InviteAdminRequest;
 use App\Models\Admin;
 use App\Models\Role;
-use App\Notifications\AdminInvitation;
 use App\Rules\AssignableRole;
 use App\Services\Audit\AuditLogger;
+use App\Services\Email\EmailSender;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -41,7 +42,7 @@ class AdminUserController extends Controller
             'invited_by' => $request->user('admin')->id,
         ]);
 
-        $admin->notify(new AdminInvitation($request->user('admin')->name));
+        $this->sendInvite($admin, $request->user('admin')->name);
         $this->audit->log('admin.invited', "Invited {$admin->email} as {$admin->role->name}", $admin);
 
         return back()->with('success', "Invitation sent to {$admin->email}.");
@@ -79,7 +80,7 @@ class AdminUserController extends Controller
     {
         abort_if($admin->hasAcceptedInvite(), 422, 'This admin has already accepted.');
         $admin->forceFill(['invited_at' => now()])->save();
-        $admin->notify(new AdminInvitation($request->user('admin')->name));
+        $this->sendInvite($admin, $request->user('admin')->name);
         $this->audit->log('admin.invite_resent', "Resent invitation to {$admin->email}", $admin);
 
         return back()->with('success', "Invitation resent to {$admin->email}.");
@@ -101,5 +102,13 @@ class AdminUserController extends Controller
         $me = $request->user('admin');
         abort_if($me->is($target), 403, 'You can’t change your own access. Ask another super admin.');
         abort_if($target->isSuperAdmin() && ! $me->isSuperAdmin(), 403);
+    }
+
+    private function sendInvite(Admin $admin, string $invitedBy): void
+    {
+        app(EmailSender::class)->toAdmin('admin_invite', $admin, [
+            'invited_by' => $invitedBy,
+            'invite_link' => URL::temporarySignedRoute('admin.invitation.show', now()->addHours(72), ['admin' => $admin->id]),
+        ]);
     }
 }

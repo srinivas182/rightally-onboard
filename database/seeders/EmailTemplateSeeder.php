@@ -13,7 +13,7 @@ class EmailTemplateSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach ($this->templates() as $key => [$name, $when, $cc, $subject, $body]) {
+        foreach (self::templates() as $key => [$name, $when, $cc, $subject, $body]) {
             EmailTemplate::firstOrCreate(['key' => $key], [
                 'is_system' => true,
                 'name' => $name,
@@ -27,7 +27,7 @@ class EmailTemplateSeeder extends Seeder
     }
 
     /** @return array<string, array{0: string, 1: string, 2: bool, 3: string, 4: string}> */
-    private function templates(): array
+    public static function templates(): array
     {
         $sign = "\n\nSrini\nCo-Founder, RightAlly";
 

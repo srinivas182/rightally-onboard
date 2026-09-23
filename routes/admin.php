@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EmailTemplateController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
 use Illuminate\Support\Facades\Route;
@@ -81,6 +82,17 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::put('contract-templates/{template}', [ContractTemplateController::class, 'update'])->name('contracts.templates.update');
         Route::post('contract-templates/{template}/publish', [ContractTemplateController::class, 'publish'])->name('contracts.templates.publish');
         Route::delete('contract-templates/{template}', [ContractTemplateController::class, 'destroy'])->name('contracts.templates.destroy');
+    });
+
+    Route::middleware('can:menu.email_templates')->prefix('email-templates')->name('email-templates.')->group(function () {
+        Route::get('/', [EmailTemplateController::class, 'index'])->name('index');
+        Route::get('create', [EmailTemplateController::class, 'create'])->name('create');
+        Route::post('/', [EmailTemplateController::class, 'store'])->name('store');
+        Route::get('{template}/edit', [EmailTemplateController::class, 'edit'])->name('edit');
+        Route::put('{template}', [EmailTemplateController::class, 'update'])->name('update');
+        Route::post('{template}/reset', [EmailTemplateController::class, 'reset'])->name('reset');
+        Route::post('{template}/test', [EmailTemplateController::class, 'test'])->middleware('throttle:10,1')->name('test');
+        Route::delete('{template}', [EmailTemplateController::class, 'destroy'])->name('destroy');
     });
 
     Route::middleware('can:menu.settings')->group(function () {

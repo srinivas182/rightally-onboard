@@ -7,8 +7,10 @@ use App\Services\Email\BrevoClient;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Mail\Message;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -38,9 +40,7 @@ class SendEmail implements ShouldQueue
         }
 
         if (! $brevo->isConfigured()) {
-            // Keep a copy in the application log so nothing is lost before Brevo is set up.
-            Log::info("Email not sent (Brevo not configured): {$log->subject} to {$log->to_email}", ['text' => $this->text]);
-            $log->update(['status' => 'failed', 'error' => 'Brevo API key is not set in Settings > Email.']);
+            $this->sendWithLaravelMailer($log);
 
             return;
         }
@@ -60,6 +60,33 @@ class SendEmail implements ShouldQueue
             if ($this->attempts() < $this->tries) {
                 $this->release($this->backoff[$this->attempts() - 1] ?? 300);
             }
+        }
+    }
+
+    /**
+     * Before Brevo is set up, emails go through the mailer in .env (MAIL_MAILER;
+     * "log" writes them to storage/logs). The log marks them so admins can see
+     * they weren't delivered by Brevo.
+     */
+    private function sendWithLaravelMailer(EmailLog $log): void
+    {
+        try {
+            Mail::html($this->html, function (Message $m) use ($log) {
+                $m->to($log->to_email, $this->toName ?: null)->subject($log->subject);
+                foreach ((array) $log->cc as $cc) {
+                    $m->cc($cc);
+                }
+                foreach ($this->attachments as $a) {
+                    if (Storage::disk('local')->exists($a['path'])) {
+                        $m->attachData(Storage::disk('local')->get($a['path']), $a['name'], ['mime' => 'application/pdf']);
+                    }
+                }
+            });
+            $mailer = (string) config('mail.default');
+            $log->update(['status' => $mailer === 'log' ? 'logged' : 'sent', 'sent_at' => now(), 'error' => $mailer === 'log' ? 'Brevo not set up; written to the application log' : null]);
+        } catch (Throwable $e) {
+            Log::warning('Email failed via Laravel mailer', ['error' => $e->getMessage()]);
+            $log->update(['status' => 'failed', 'error' => 'Brevo not set up, and the fallback mailer failed: '.mb_substr($e->getMessage(), 0, 500)]);
         }
     }
 }
