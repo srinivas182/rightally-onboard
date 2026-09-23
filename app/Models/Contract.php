@@ -69,6 +69,12 @@ class Contract extends Model
         return $this->belongsTo(Contract::class, 'previous_contract_id');
     }
 
+    /** Renewal agreements offered for this one. @return HasMany<Contract, $this> */
+    public function renewals(): HasMany
+    {
+        return $this->hasMany(Contract::class, 'previous_contract_id');
+    }
+
     /** @return HasMany<Invoice, $this> */
     public function invoices(): HasMany
     {

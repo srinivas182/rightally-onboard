@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\Auth\TwoFactorController;
 use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\CustomerController;
+use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailTemplateController;
 use App\Http\Controllers\Admin\RoleController;
@@ -65,6 +67,27 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::post('roles', [RoleController::class, 'store'])->name('roles.store');
         Route::put('roles/access', [RoleController::class, 'syncAccess'])->name('roles.access');
         Route::delete('roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    });
+
+    Route::middleware('can:menu.customers')->prefix('customers')->name('customers.')->group(function () {
+        Route::get('/', [CustomerController::class, 'index'])->name('index');
+        Route::get('export', [CustomerController::class, 'export'])->name('export');
+        Route::get('{customer}', [CustomerController::class, 'show'])->name('show');
+        Route::put('{customer}/go-live', [CustomerController::class, 'updateGoLive'])->name('go-live');
+        Route::put('{customer}/agents', [CustomerController::class, 'updateAgents'])->name('agents');
+        Route::put('{customer}/live', [CustomerController::class, 'updateLive'])->name('live');
+        Route::post('{customer}/token', [CustomerController::class, 'newToken'])->name('token');
+        Route::post('{customer}/resend-welcome', [CustomerController::class, 'resendWelcome'])->name('resend-welcome');
+        Route::post('{customer}/send-email', [CustomerController::class, 'sendEmail'])->name('send-email');
+        Route::post('{customer}/suspend', [CustomerController::class, 'suspend'])->name('suspend');
+        Route::post('{customer}/reactivate', [CustomerController::class, 'reactivate'])->name('reactivate');
+        Route::post('{customer}/terminate', [CustomerController::class, 'terminate'])->name('terminate');
+    });
+
+    Route::middleware('can:menu.invoices')->prefix('invoices')->name('invoices.')->group(function () {
+        Route::get('/', [InvoiceController::class, 'index'])->name('index');
+        Route::get('export', [InvoiceController::class, 'export'])->name('export');
+        Route::post('{invoice}/resend', [InvoiceController::class, 'resend'])->middleware('throttle:20,1')->name('resend');
     });
 
     Route::middleware('can:menu.coupons')->group(function () {

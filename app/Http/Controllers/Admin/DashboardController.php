@@ -2,32 +2,27 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\CustomerStatus;
-use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Customer;
-use App\Models\Invoice;
-use App\Models\Payment;
-use App\Support\BusinessClock;
+use App\Services\Admin\DashboardStats;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/**
- * Dashboard shell. KPIs read live data now; the revenue chart, date ranges
- * and "needs attention" list are completed in Sprint 5.
- */
 class DashboardController extends Controller
 {
-    public function __invoke(): View
+    public function __invoke(Request $request, DashboardStats $stats): View
     {
-        $monthStart = BusinessClock::now()->startOfMonth()->utc();
+        $range = in_array($request->query('range'), ['day', 'month', 'year', 'custom'], true) ? $request->query('range') : 'month';
+        [$start, $end, $label] = $stats->range($range, $request->query('from'), $request->query('to'));
 
         return view('admin.dashboard', [
-            'kpis' => [
-                'customers' => Customer::whereNotIn('status', [CustomerStatus::Draft])->count(),
-                'revenue_cents' => (int) Payment::where('status', 'succeeded')->where('settled_at', '>=', $monthStart)->sum('amount_cents'),
-                'failed' => Invoice::where('status', InvoiceStatus::Failed)->count(),
-                'suspended' => Customer::where('status', CustomerStatus::Suspended)->count(),
-            ],
+            'kpis' => $stats->kpis(),
+            'range' => $range,
+            'rangeLabel' => $label,
+            'from' => $start->toDateString(),
+            'to' => $end->toDateString(),
+            'revenueCents' => $stats->revenueCents($start, $end),
+            'chart' => $stats->monthlyRevenue(),
+            'attention' => $stats->attention(),
         ]);
     }
 }

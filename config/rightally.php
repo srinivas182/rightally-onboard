@@ -31,9 +31,9 @@ return [
     */
     'menus' => [
         'dashboard' => ['label' => 'Dashboard', 'icon' => 'home', 'route' => 'admin.dashboard', 'group' => 'main'],
-        'customers' => ['label' => 'Customers', 'icon' => 'users', 'route' => 'admin.dashboard', 'group' => 'main', 'sprint' => 5],
+        'customers' => ['label' => 'Customers', 'icon' => 'users', 'route' => 'admin.customers.index', 'group' => 'main'],
         'contracts' => ['label' => 'Contracts', 'icon' => 'file', 'route' => 'admin.contracts.index', 'group' => 'main'],
-        'invoices' => ['label' => 'Invoices', 'icon' => 'receipt', 'route' => 'admin.dashboard', 'group' => 'main', 'sprint' => 5],
+        'invoices' => ['label' => 'Invoices', 'icon' => 'receipt', 'route' => 'admin.invoices.index', 'group' => 'main'],
         'coupons' => ['label' => 'Coupons', 'icon' => 'tag', 'route' => 'admin.coupons.index', 'group' => 'main'],
         'email_templates' => ['label' => 'Email templates', 'icon' => 'mail', 'route' => 'admin.email-templates.index', 'group' => 'admin'],
         'admins' => ['label' => 'Admins and roles', 'icon' => 'shield', 'route' => 'admin.admins.index', 'group' => 'admin'],

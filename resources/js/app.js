@@ -72,3 +72,25 @@ document.addEventListener('click', (e) => {
     ta.focus();
     ta.selectionStart = ta.selectionEnd = start + btn.dataset.insert.length;
 });
+
+// Dashboard revenue chart (Chart.js is loaded only on pages that have one).
+const revChart = document.getElementById('revChart');
+if (revChart) {
+    import('chart.js/auto').then(({ default: Chart }) => {
+        const data = JSON.parse(revChart.dataset.chart);
+        const css = getComputedStyle(document.documentElement);
+        const fmt = (v) => '$' + Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        new Chart(revChart, {
+            type: 'bar',
+            data: { labels: data.labels, datasets: [{ label: 'Revenue', data: data.values, backgroundColor: '#1457EC', borderRadius: 6, maxBarThickness: 36 }] },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (x) => fmt(x.parsed.y) } } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: (v) => '$' + (v >= 1000 ? v / 1000 + 'k' : v), color: css.getPropertyValue('--ra-slate') }, grid: { color: css.getPropertyValue('--ra-line') } },
+                    x: { ticks: { color: css.getPropertyValue('--ra-slate') }, grid: { display: false } },
+                },
+            },
+        });
+    });
+}
