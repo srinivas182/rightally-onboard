@@ -34,7 +34,7 @@ final class OnboardingService
     public function start(array $details, ?Coupon $coupon, array $tracking = [], ?\App\Models\Quote $custom = null): Customer
     {
         return DB::transaction(function () use ($details, $coupon, $tracking, $custom) {
-            $quote = $this->quotes->quote((int) $details['agents'], $coupon, $custom);
+            $quote = $this->quotes->quote((int) $details['agents'], $coupon, $custom, (string) ($details['billing'] ?? 'month'));
 
             $customer = Customer::create($this->customerAttributes($details, $quote) + [
                 'status' => CustomerStatus::Draft,
@@ -60,7 +60,7 @@ final class OnboardingService
 
         return DB::transaction(function () use ($customer, $details, $coupon, $contract) {
             $custom = $customer->quote_id ? \App\Models\Quote::find($customer->quote_id) : null;
-            $quote = $this->quotes->quote((int) $details['agents'], $custom ? null : $coupon, $custom);
+            $quote = $this->quotes->quote((int) $details['agents'], $custom ? null : $coupon, $custom, (string) ($details['billing'] ?? 'month'));
             $customer->update($this->customerAttributes($details, $quote));
             $contract->update($this->snapshot($quote) + ['contract_template_id' => $this->activeTemplate()->id]);
 
@@ -121,6 +121,8 @@ final class OnboardingService
             'agent_count' => $quote->agentsBilled,
             'term_months' => 12,
             'go_live_days' => $quote->goLiveDays,
+            'billing_interval' => $quote->billingInterval,
+            'annual_discount_percent' => $quote->billingInterval === 'year' ? $quote->annualDiscountPercent : 0,
             'company_legal_name' => $company['legal_name'],
             'company_dba' => $company['dba'],
             'company_address' => $company['address'],

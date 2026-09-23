@@ -29,6 +29,8 @@ final class SettingsSchema
                 'fields' => [
                     'setup_fee' => ['default' => '3000.00', 'rules' => ['required', 'numeric', 'min:0', 'max:1000000'], 'type' => 'money'],
                     'deposit_percent' => ['default' => '10', 'rules' => ['required', 'numeric', 'min:0', 'max:100']],
+                    'annual_enabled' => ['default' => '1', 'rules' => ['boolean']],
+                    'annual_discount_percent' => ['default' => '10', 'rules' => ['nullable', 'numeric', 'min:0', 'max:50']],
                     'go_live_days' => ['default' => '30', 'rules' => ['required', 'integer', 'min:1', 'max:365']],
                     'platform_fee' => ['default' => '500.00', 'rules' => ['required', 'numeric', 'min:0', 'max:1000000'], 'type' => 'money'],
                     'per_agent_fee' => ['default' => '20.00', 'rules' => ['required', 'numeric', 'min:0', 'max:100000'], 'type' => 'money'],

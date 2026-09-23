@@ -76,3 +76,12 @@
 .tl .n { position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--ra-mist); border: 2px solid var(--ra-line); display: grid; place-items: center; font-size: .72rem; font-weight: 700; color: var(--ra-slate); }
 .tl li.now .n { background: var(--ra-blue); border-color: var(--ra-blue); color: #fff; }
 .tl .amt { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+// Billing choice (monthly / yearly)
+.choice {
+    display: flex; align-items: flex-start; gap: .25rem; width: 100%;
+    border: 1.5px solid var(--ra-line); border-radius: 10px; padding: .85rem 1rem; cursor: pointer; background: #fff;
+    &.is-on { border-color: var(--ra-blue); box-shadow: 0 0 0 3px rgba(20, 87, 236, .12); }
+    &:focus-within { outline: 2px solid var(--ra-blue); outline-offset: 2px; }
+    .form-check-input { margin-top: .2rem; flex-shrink: 0; }
+}

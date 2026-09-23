@@ -15,9 +15,11 @@ final class QuoteCalculator
 {
     public function __construct(private readonly SettingsService $settings) {}
 
-    public function quote(int $agentsEntered, ?Coupon $coupon = null, ?CustomQuote $custom = null): Quote
+    public function quote(int $agentsEntered, ?Coupon $coupon = null, ?CustomQuote $custom = null, string $billing = 'month'): Quote
     {
         $p = $this->settings->group('pricing');
+        $annualAvailable = (string) ($p['annual_enabled'] ?? '1') === '1' && (float) ($p['annual_discount_percent'] ?? 0) >= 0;
+        $annualDiscount = (float) ($p['annual_discount_percent'] ?? 0);
         if ($custom) {
             // Negotiated pricing replaces Settings; coupons don't stack on custom quotes.
             $coupon = null;
@@ -52,6 +54,9 @@ final class QuoteCalculator
             agentsEntered: $agentsEntered,
             agentsBilled: max($minAgents, $agentsEntered),
             goLiveDays: (int) $p['go_live_days'],
+            billingInterval: $billing === 'year' && $annualAvailable ? 'year' : 'month',
+            annualDiscountPercent: $annualDiscount,
+            annualAvailable: $annualAvailable,
         );
     }
 }

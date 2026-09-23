@@ -51,6 +51,7 @@ final class ContractRenderer
         'term_end_date' => 'End of the term (renewals)',
         'previous_agreement_number' => 'Agreement being renewed (renewals)',
         'fee_table' => 'The fee summary table',
+        'billing_terms' => 'Annual billing paragraph (empty for monthly billing)',
     ];
 
     public function __construct(private readonly SettingsService $settings) {}
@@ -103,6 +104,11 @@ final class ContractRenderer
             'min_agents' => (string) $contract->min_agents,
             'agent_count' => (string) $contract->agent_count,
             'monthly_fee' => Money::format($contract->monthlyFeeCents()),
+            'annual_discount' => rtrim(rtrim(number_format((float) $contract->annual_discount_percent, 2), '0'), '.'),
+            'billing_terms' => $contract->isAnnual()
+                ? 'Client has chosen annual billing. Instead of monthly charges, the Subscription Fee for each twelve (12) month period is charged in advance, less a '
+                    .rtrim(rtrim(number_format((float) $contract->annual_discount_percent, 2), '0'), '.').'% discount ('.Money::format($contract->annualFeeCents()).' at '.max($contract->min_agents, $contract->agent_count).' agents), with the first annual charge thirty (30) days after the Go-Live Date. The agent count on each annual billing date applies for that year. Annual Subscription Fees are non-refundable.'
+                : '',
             'min_monthly_fee' => Money::format($contract->monthlyFeeCents($contract->min_agents)),
             'term_months' => (string) $contract->term_months,
             'term_start_date' => $contract->starts_on ? Carbon::parse($contract->starts_on)->format('F j, Y') : '',
@@ -132,6 +138,9 @@ final class ContractRenderer
         $rows[] = ["Deposit on signing ({$v['deposit_percent']}%)", $v['deposit_amount']];
         $rows[] = ["Balance on go-live date (target {$v['go_live_date']})", $v['balance_amount']];
         $rows[] = ["Monthly: {$v['platform_fee']} platform + {$v['per_agent_fee']} × {$v['agent_count']} agents (minimum {$v['min_agents']})", $v['monthly_fee']];
+        if ($contract->isAnnual()) {
+            $rows[] = ["<b>Billed yearly in advance ({$v['annual_discount']}% discount)</b>", '<b>'.e(Money::format($contract->annualFeeCents())).' a year</b>'];
+        }
 
         return $this->feeRows('Fee summary', $rows);
     }

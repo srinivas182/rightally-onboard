@@ -57,8 +57,8 @@
                     @error('agents')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-text" id="agHelp" data-min="{{ $quote->minAgents }}">Agents who will use RightAlly. You can change this later.</div></div>
-            <div class="col-sm-6"><div class="fee-mini"><div class="small text-slate">Your monthly fee</div>
-                <div class="fs-4 fw-semibold num" data-l="monthly">{{ \App\Support\Money::format($quote->monthlyFeeCents()) }}</div>
+            <div class="col-sm-6"><div class="fee-mini"><div class="small text-slate" data-l="periodfee">{{ $quote->billingInterval === 'year' ? 'Your yearly fee' : 'Your monthly fee' }}</div>
+                <div class="fs-4 fw-semibold num" data-l="monthly">{{ \App\Support\Money::format($quote->billingInterval === 'year' ? $quote->annualFeeCents() : $quote->monthlyFeeCents()) }}</div>
                 <div class="small text-slate">{{ \App\Support\Money::format($quote->platformFeeCents) }} platform + {{ \App\Support\Money::format($quote->perAgentFeeCents) }} × <span data-l="agents">{{ $quote->agentsBilled }}</span> agents</div></div></div>
         </div>
     </fieldset>
@@ -84,6 +84,17 @@
                 <input class="form-control locked" id="country" value="United States" readonly aria-readonly="true"></div>
         </div>
     </fieldset>
+
+    @if ($quote->annualAvailable)
+    <fieldset class="mb-4"><legend>Subscription billing</legend>
+        <div class="row g-2" role="radiogroup">
+            <div class="col-sm-6"><label class="choice h-100 {{ $quote->billingInterval === 'month' ? 'is-on' : '' }}"><input class="form-check-input me-2" type="radio" name="billing" value="month" @checked($quote->billingInterval === 'month')>
+                <span><b>Monthly</b><span class="d-block small text-slate" data-billing-note="month">Pay each month</span></span></label></div>
+            <div class="col-sm-6"><label class="choice h-100 {{ $quote->billingInterval === 'year' ? 'is-on' : '' }}"><input class="form-check-input me-2" type="radio" name="billing" value="year" @checked($quote->billingInterval === 'year')>
+                <span><b>Yearly</b> <span class="badge text-bg-success">Save {{ rtrim(rtrim(number_format($quote->annualDiscountPercent, 2), '0'), '.') }}%</span><span class="d-block small text-slate" data-billing-note="year">Pay 12 months in advance</span></span></label></div>
+        </div>
+    </fieldset>
+    @endif
 
     @unless ($customQuote)
     <fieldset class="mb-4"><legend>Coupon <span class="fw-normal text-slate">(optional)</span></legend>

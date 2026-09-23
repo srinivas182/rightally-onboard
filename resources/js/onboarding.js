@@ -38,7 +38,14 @@ if (form) {
         setL('implementation', money(impl));
         setL('deposit', money(deposit));
         setL('balance', money(impl - deposit));
-        setL('monthly', money(pricing.platform + billed * pricing.perAgent));
+        const yearly = ($('input[name="billing"]:checked') || {}).value === 'year';
+        const d = 1 - (pricing.annualDiscount || 0) / 100;
+        setL('monthly', money(yearly
+            ? Math.round(pricing.platform * 12 * d) + billed * Math.round(pricing.perAgent * 12 * d)
+            : pricing.platform + billed * pricing.perAgent));
+        setL('period', yearly ? 'Yearly' : 'Monthly');
+        setL('periodfee', yearly ? 'Your yearly fee' : 'Your monthly fee');
+        $$('input[name="billing"]').forEach((r) => r.closest('.choice')?.classList.toggle('is-on', r.checked));
         setL('agents', String(billed));
         $$('[data-l-disc]').forEach((el) => el.classList.toggle('d-none', !discount));
         help.textContent = entered < pricing.minAgents
@@ -47,6 +54,7 @@ if (form) {
     };
 
     agentsInput.addEventListener('input', render);
+    $$('input[name="billing"]').forEach((r) => r.addEventListener('change', render));
     $$('[data-agstep]').forEach((b) => b.addEventListener('click', () => {
         agentsInput.value = Math.min(5000, Math.max(1, (parseInt(agentsInput.value, 10) || 1) + Number(b.dataset.agstep)));
         render();

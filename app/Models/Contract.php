@@ -30,6 +30,7 @@ class Contract extends Model
             'type' => ContractType::class,
             'status' => ContractStatus::class,
             'discount_percent' => 'decimal:2',
+            'annual_discount_percent' => 'decimal:2',
             'deposit_percent' => 'decimal:2',
             'starts_on' => 'date',
             'ends_on' => 'date',
@@ -50,6 +51,46 @@ class Contract extends Model
         $billed = max($this->min_agents, $agents ?? $this->agent_count);
 
         return $this->platform_fee_cents + $billed * $this->per_agent_fee_cents;
+    }
+
+    public function isAnnual(): bool
+    {
+        return $this->billing_interval === 'year';
+    }
+
+    /** Yearly platform fee: 12 months less the annual discount. */
+    public function platformYearCents(): int
+    {
+        return (int) round($this->platform_fee_cents * 12 * (1 - (float) $this->annual_discount_percent / 100));
+    }
+
+    /** Yearly fee per agent: 12 months less the annual discount. */
+    public function perAgentYearCents(): int
+    {
+        return (int) round($this->per_agent_fee_cents * 12 * (1 - (float) $this->annual_discount_percent / 100));
+    }
+
+    public function annualFeeCents(?int $agents = null): int
+    {
+        return $this->platformYearCents() + max($this->min_agents, $agents ?? $this->agent_count) * $this->perAgentYearCents();
+    }
+
+    /** What each subscription charge is: the monthly fee, or the annual fee when billed yearly. */
+    public function recurringFeeCents(?int $agents = null): int
+    {
+        return $this->isAnnual() ? $this->annualFeeCents($agents) : $this->monthlyFeeCents($agents);
+    }
+
+    /** Monthly equivalent, for recurring-revenue reporting. */
+    public function monthlyEquivalentCents(?int $agents = null): int
+    {
+        return $this->isAnnual() ? (int) round($this->annualFeeCents($agents) / 12) : $this->monthlyFeeCents($agents);
+    }
+
+    /** "$660.00 a month" or "$7,128.00 a year". */
+    public function recurringLabel(?int $agents = null): string
+    {
+        return \App\Support\Money::format($this->recurringFeeCents($agents)).($this->isAnnual() ? ' a year' : ' a month');
     }
 
     /** @return BelongsTo<Customer, $this> */

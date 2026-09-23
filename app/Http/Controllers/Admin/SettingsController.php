@@ -56,6 +56,9 @@ class SettingsController extends Controller
         if ($group === 'tax') {
             $request->merge(['enabled' => $request->boolean('enabled') ? '1' : '0']);
         }
+        if ($group === 'pricing') {
+            $request->merge(['annual_enabled' => $request->boolean('annual_enabled') ? '1' : '0', 'annual_discount_percent' => $request->input('annual_discount_percent', '10') ?? '10']);
+        }
         if ($group === 'alerts') {
             foreach (['email', 'new_signing', 'payment_failed', 'go_lives', 'chargebacks'] as $flag) {
                 $request->merge([$flag => $request->boolean($flag) ? '1' : '0']);

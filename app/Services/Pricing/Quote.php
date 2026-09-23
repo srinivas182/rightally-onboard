@@ -25,11 +25,21 @@ final readonly class Quote
         public int $agentsEntered,
         public int $agentsBilled,
         public int $goLiveDays,
+        public string $billingInterval = 'month',
+        public float $annualDiscountPercent = 0,
+        public bool $annualAvailable = false,
     ) {}
 
     public function monthlyFeeCents(): int
     {
         return $this->platformFeeCents + $this->agentsBilled * $this->perAgentFeeCents;
+    }
+
+    public function annualFeeCents(): int
+    {
+        $d = 1 - $this->annualDiscountPercent / 100;
+
+        return (int) round($this->platformFeeCents * 12 * $d) + $this->agentsBilled * (int) round($this->perAgentFeeCents * 12 * $d);
     }
 
     /** Values the onboarding page's JavaScript needs to recalculate live. */
@@ -42,6 +52,8 @@ final readonly class Quote
             'platform' => $this->platformFeeCents,
             'perAgent' => $this->perAgentFeeCents,
             'minAgents' => $this->minAgents,
+            'annualDiscount' => $this->annualDiscountPercent,
+            'annualAvailable' => $this->annualAvailable,
         ];
     }
 }

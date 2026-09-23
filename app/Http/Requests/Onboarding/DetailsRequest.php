@@ -41,6 +41,7 @@ class DetailsRequest extends FormRequest
             'state_code' => ['required', Rule::in(UsStates::codes())],
             'zip' => ['required', 'regex:/^\d{5}(-\d{4})?$/'],
             'coupon' => ['nullable', 'string', 'max:40'],
+            'billing' => ['nullable', 'in:month,year'],
         ];
     }
 

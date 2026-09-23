@@ -305,7 +305,8 @@ class OnboardingController extends Controller
                 'implementation' => $contract->implementation_fee_cents,
                 'deposit' => $contract->deposit_cents,
                 'balance' => $contract->balance_cents,
-                'monthly' => $contract->monthlyFeeCents(),
+                'monthly' => $contract->recurringFeeCents(),
+                'period' => $contract->isAnnual() ? 'Yearly' : 'Monthly',
                 'agents' => $contract->agent_count,
             ],
             'goLive' => $contract->starts_on ?? BusinessClock::today()->addDays((int) ($contract->go_live_days ?? $this->settings->get('pricing', 'go_live_days'))),
@@ -315,7 +316,8 @@ class OnboardingController extends Controller
     private function detailsViewData(?Customer $customer, string $code, array $check, ?Quote $custom = null): array
     {
         $agents = (int) old('agents', $customer?->agent_count_entered ?? ($custom?->min_agents ?? $this->settings->get('pricing', 'min_agents')));
-        $quote = $this->quotes->quote(max(1, $agents), $check['coupon'], $custom);
+        $billing = (string) old('billing', $customer ? ($this->onboarding->draftContract($customer)?->billing_interval ?? 'month') : 'month');
+        $quote = $this->quotes->quote(max(1, $agents), $check['coupon'], $custom, $billing);
 
         return [
             'customer' => $customer,
@@ -336,7 +338,8 @@ class OnboardingController extends Controller
                 'implementation' => $quote->implementationFeeCents,
                 'deposit' => $quote->depositCents,
                 'balance' => $quote->balanceCents,
-                'monthly' => $quote->monthlyFeeCents(),
+                'monthly' => $quote->billingInterval === 'year' ? $quote->annualFeeCents() : $quote->monthlyFeeCents(),
+                'period' => $quote->billingInterval === 'year' ? 'Yearly' : 'Monthly',
                 'agents' => $quote->agentsBilled,
             ],
             'goLive' => BusinessClock::today()->addDays($quote->goLiveDays),
