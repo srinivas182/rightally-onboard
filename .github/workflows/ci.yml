@@ -33,4 +33,12 @@ jobs:
           php artisan key:generate
 
       - name: Run tests
-        run: php artisan test
+        shell: bash
+        run: |
+          set -o pipefail
+          if ! php artisan test --compact 2>&1 | tee test-output.txt; then
+            # Surface the failure summary as an annotation so it is readable from the API and the PR page.
+            msg=$(tail -c 60000 test-output.txt | sed -e 's/\x1b\[[0-9;]*m//g' | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | awk 'BEGIN{ORS="%0A"}{print}')
+            echo "::error title=Test failures::${msg}"
+            exit 1
+          fi
