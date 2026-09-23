@@ -92,6 +92,11 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::get('{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('pdf');
     });
 
+    Route::middleware('can:menu.reports')->group(function () {
+        Route::get('reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/{report}.csv', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->whereIn('report', ['funnel', 'revenue'])->name('reports.export');
+    });
+
     Route::middleware('can:menu.quotes')->prefix('quotes')->name('quotes.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\QuoteController::class, 'index'])->name('index');
         Route::post('/', [\App\Http\Controllers\Admin\QuoteController::class, 'store'])->name('store');
