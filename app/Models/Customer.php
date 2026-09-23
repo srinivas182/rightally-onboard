@@ -21,9 +21,9 @@ class Customer extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $guarded = ['id', 'uuid', 'agent_api_token_hash', 'stripe_customer_id', 'stripe_subscription_id'];
+    protected $guarded = ['id', 'uuid', 'agent_api_token_hash', 'stripe_customer_id', 'stripe_subscription_id', 'stripe_agent_item_id', 'agent_api_token'];
 
-    protected $hidden = ['agent_api_token_hash'];
+    protected $hidden = ['agent_api_token_hash', 'agent_api_token'];
 
     /** HasUuids fills the "uuid" column; the primary key stays an integer. */
     public function uniqueIds(): array
@@ -41,6 +41,9 @@ class Customer extends Model
         return [
             'status' => CustomerStatus::class,
             'go_live_date' => 'date',
+            'balance_reminder_for' => 'date',
+            'live_at' => 'datetime',
+            'agent_api_token' => 'encrypted',
             'utm' => 'array',
             'onboarding_started_at' => 'datetime',
             'agent_count_synced_at' => 'datetime',

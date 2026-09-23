@@ -53,6 +53,12 @@ final class StripeClient
     }
 
     /** @return array<string, mixed> */
+    public function delete(string $path): array
+    {
+        return $this->send('delete', $path, []);
+    }
+
+    /** @return array<string, mixed> */
     private function send(string $method, string $path, array $data, ?string $idempotencyKey = null): array
     {
         $secret = $this->secretKey();
@@ -67,9 +73,11 @@ final class StripeClient
             ->retry(2, 300, fn ($e) => $e instanceof ConnectionException, throw: false);
 
         try {
-            $response = $method === 'get'
-                ? $request->get(self::BASE.$path, $data)
-                : $request->asForm()->post(self::BASE.$path, $data);
+            $response = match ($method) {
+                'get' => $request->get(self::BASE.$path, $data),
+                'delete' => $request->delete(self::BASE.$path),
+                default => $request->asForm()->post(self::BASE.$path, $data),
+            };
         } catch (ConnectionException $e) {
             throw new StripeException('Could not reach Stripe: '.$e->getMessage(), 'We couldn’t reach our payment provider. Please try again in a minute.');
         }
