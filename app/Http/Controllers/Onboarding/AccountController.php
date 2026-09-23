@@ -15,6 +15,7 @@ use App\Services\Billing\PaymentMethods;
 use App\Services\Email\EmailSender;
 use App\Services\Stripe\StripeClient;
 use App\Services\Stripe\StripeException;
+use App\Support\BillingDates;
 use App\Support\BusinessClock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -137,12 +138,12 @@ class AccountController extends Controller
             return ['date' => BusinessClock::date($customer->go_live_date), 'amount' => $contract->balance_cents, 'label' => 'Implementation balance, on your go-live date'];
         }
         if (in_array($customer->status, [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended], true)) {
-            $next = BusinessClock::date($customer->go_live_date)->addDays(30);
-            while ($next->lt(BusinessClock::today())) {
-                $next->addMonthNoOverflow();
-            }
-
-            return ['date' => $next, 'amount' => $contract->monthlyFeeCents($customer->agent_count), 'label' => "Monthly fee, {$customer->agent_count} agents"];
+            return ['date' => BillingDates::nextCharge($customer, $contract), 'amount' => $contract->recurringFeeCents($customer->agent_count),
+                'label' => ($contract->isAnnual() ? 'Yearly fee' : 'Monthly fee').", {$customer->agent_count} agents"];
+        }
+        if ($customer->status === CustomerStatus::Paused && $customer->paused_until) {
+            return ['date' => BillingDates::nextCharge($customer, $contract, BusinessClock::date($customer->paused_until)), 'amount' => $contract->recurringFeeCents($customer->agent_count),
+                'label' => 'First charge after your pause'];
         }
 
         return null;

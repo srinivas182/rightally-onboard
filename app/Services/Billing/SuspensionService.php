@@ -21,7 +21,7 @@ final class SuspensionService
         $count = 0;
 
         Invoice::with('customer')
-            ->whereIn('type', [InvoiceType::Balance, InvoiceType::Monthly])
+            ->whereIn('type', [InvoiceType::Balance, InvoiceType::Monthly, InvoiceType::Annual])
             ->where('status', InvoiceStatus::Failed)
             ->where('failed_at', '<=', $cutoff)
             ->get()

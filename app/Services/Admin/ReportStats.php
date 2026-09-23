@@ -6,6 +6,7 @@ use App\Enums\ContractStatus;
 use App\Enums\CustomerStatus;
 use App\Models\Customer;
 use App\Models\Payment;
+use App\Support\BillingDates;
 use App\Support\BusinessClock;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -47,13 +48,13 @@ final class ReportStats
     public function mrr(): array
     {
         $month = BusinessClock::now()->startOfMonth();
-        $fee = fn (Customer $c) => $c->contracts->where('status', ContractStatus::Signed)->sortByDesc('signed_at')->first()?->monthlyFeeCents($c->agent_count) ?? 0;
+        $fee = fn (Customer $c) => $c->contracts->where('status', ContractStatus::Signed)->sortByDesc('signed_at')->first()?->monthlyEquivalentCents($c->agent_count) ?? 0;
 
         $active = Customer::with('contracts')->whereIn('status', self::ACTIVE)->get();
         $newThisMonth = $active->filter(fn ($c) => $c->live_at && $c->live_at->gte($month->copy()->utc()));
         $churned = Customer::with('contracts')->whereIn('status', [CustomerStatus::Cancelled, CustomerStatus::Expired])
             ->where('cancelled_at', '>=', $month->copy()->utc())->get();
-        $churnFee = fn (Customer $c) => $c->contracts->whereIn('status', [ContractStatus::Terminated, ContractStatus::Expired, ContractStatus::Signed])->sortByDesc('signed_at')->first()?->monthlyFeeCents($c->agent_count) ?? 0;
+        $churnFee = fn (Customer $c) => $c->contracts->whereIn('status', [ContractStatus::Terminated, ContractStatus::Expired, ContractStatus::Signed])->sortByDesc('signed_at')->first()?->monthlyEquivalentCents($c->agent_count) ?? 0;
 
         return [
             'mrr' => (int) $active->sum($fee),
@@ -75,7 +76,7 @@ final class ReportStats
             ->where('payments.settled_at', '>=', $start->copy()->utc())
             ->get(['payments.settled_at', 'payments.amount_cents', 'payments.refunded_cents', 'invoices.tax_cents', 'invoices.type']);
 
-        $months = collect(range(0, 11))->mapWithKeys(fn ($i) => [$start->copy()->addMonths($i)->format('Y-m') => ['deposit' => 0, 'balance' => 0, 'monthly' => 0, 'early_termination' => 0]]);
+        $months = collect(range(0, 11))->mapWithKeys(fn ($i) => [$start->copy()->addMonths($i)->format('Y-m') => ['deposit' => 0, 'balance' => 0, 'monthly' => 0, 'annual' => 0, 'early_termination' => 0]]);
         foreach ($rows as $r) {
             $key = Carbon::parse($r->settled_at)->setTimezone(BusinessClock::timezone())->format('Y-m');
             if ($months->has($key)) {
@@ -107,8 +108,9 @@ final class ReportStats
                 if (in_array($c->status, [CustomerStatus::AwaitingGoLive, CustomerStatus::ContractSigned], true) && $goLive->between($start, $end)) {
                     $balances += $k->balance_cents;
                 }
-                if ($goLive->copy()->addDays(30)->lte($end) && $c->status !== CustomerStatus::Suspended) {
-                    $monthly += $k->monthlyFeeCents($c->agent_count);
+                $charge = BillingDates::nextCharge($c, $k, $start);
+                if ($charge && $charge->lte($end) && ! in_array($c->status, [CustomerStatus::Suspended, CustomerStatus::Paused], true)) {
+                    $monthly += $k->recurringFeeCents($c->agent_count);
                 }
             }
 

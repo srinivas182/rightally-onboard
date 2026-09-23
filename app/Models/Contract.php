@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ContractStatus;
 use App\Enums\ContractType;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -90,7 +91,7 @@ class Contract extends Model
     /** "$660.00 a month" or "$7,128.00 a year". */
     public function recurringLabel(?int $agents = null): string
     {
-        return \App\Support\Money::format($this->recurringFeeCents($agents)).($this->isAnnual() ? ' a year' : ' a month');
+        return Money::format($this->recurringFeeCents($agents)).($this->isAnnual() ? ' a year' : ' a month');
     }
 
     /** @return BelongsTo<Customer, $this> */

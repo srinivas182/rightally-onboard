@@ -112,6 +112,8 @@ final class Webhooks
                     'access' => self::access($customer),
                     'agents_billed' => $customer->agent_count,
                     'monthly_fee' => $contract ? round($contract->monthlyFeeCents($customer->agent_count) / 100, 2) : null,
+                    'billing_interval' => $contract?->billing_interval,
+                    'subscription_fee' => $contract ? round($contract->recurringFeeCents($customer->agent_count) / 100, 2) : null,
                     'go_live_date' => $customer->go_live_date?->toDateString(),
                     'live_url' => $customer->live_url,
                     'source' => $customer->source,

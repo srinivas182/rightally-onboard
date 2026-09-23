@@ -11,7 +11,7 @@ final class SampleEmailValues
         return [
             'first_name' => 'Maria', 'company_name' => 'Sunline Realty Group',
             'deposit_amount' => '$255.00', 'deposit_status' => 'paid', 'balance_amount' => '$2,295.00',
-            'monthly_amount' => '$660.00', 'agent_count' => '8', 'go_live_date' => 'October 23, 2026',
+            'monthly_amount' => '$660.00', 'subscription_amount' => '$660.00 a month', 'agent_count' => '8', 'go_live_date' => 'October 23, 2026',
             'first_monthly_date' => 'November 22, 2026', 'term_end_date' => 'October 22, 2027',
             'payment_method' => 'Visa ending 4242', 'amount' => '$660.00', 'period' => 'November 2026',
             'agreement_number' => 'RA-2026-0024', 'agreement_link' => url('/'), 'payment_link' => url('/'), 'renewal_link' => url('/'),

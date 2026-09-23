@@ -63,6 +63,7 @@ final class CustomerEmailValues
             'deposit_amount' => Money::format($contract->deposit_cents),
             'balance_amount' => Money::format($contract->balance_cents),
             'monthly_amount' => Money::format($contract->monthlyFeeCents($contract->customer->agent_count)),
+            'subscription_amount' => $contract->recurringLabel($contract->customer->agent_count),
             'term_end_date' => $contract->ends_on?->format('F j, Y') ?? '',
             'fee_table' => [
                 ['Paid today', Money::format($contract->deposit_cents)],

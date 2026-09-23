@@ -55,7 +55,7 @@ final class InvoiceEvents
 
         match ($invoice->type) {
             InvoiceType::Balance => $this->balancePaid($customer, $invoice),
-            InvoiceType::Monthly => $this->email->toCustomer('monthly_receipt', $customer, $invoice),
+            InvoiceType::Monthly, InvoiceType::Annual => $this->email->toCustomer('monthly_receipt', $customer, $invoice),
             default => null,
         };
         $this->restoreIfNothingOverdue($customer->fresh());
@@ -92,7 +92,7 @@ final class InvoiceEvents
         if ($invoice->type === InvoiceType::Balance) {
             $customer->update(['status' => CustomerStatus::BalanceFailed]);
             $this->email->toCustomer('balance_failed', $customer, $invoice);
-        } elseif ($invoice->type === InvoiceType::Monthly) {
+        } elseif (in_array($invoice->type, [InvoiceType::Monthly, InvoiceType::Annual], true)) {
             if ($customer->status !== CustomerStatus::Suspended) {
                 $customer->update(['status' => CustomerStatus::PaymentFailed]);
             }
@@ -130,7 +130,7 @@ final class InvoiceEvents
         $customer = $invoice->customer;
         if ($invoice->type === InvoiceType::Balance) {
             $customer->update(['status' => CustomerStatus::BalanceFailed]);
-        } elseif ($invoice->type === InvoiceType::Monthly && $customer->status !== CustomerStatus::Suspended) {
+        } elseif (in_array($invoice->type, [InvoiceType::Monthly, InvoiceType::Annual], true) && $customer->status !== CustomerStatus::Suspended) {
             $customer->update(['status' => CustomerStatus::PaymentFailed]);
         }
         $this->audit->log('payment.action_required', "Bank confirmation needed for {$invoice->number} ({$customer->company_name})", $invoice, null, 'system');
@@ -153,7 +153,7 @@ final class InvoiceEvents
         if (! in_array($customer->status, [CustomerStatus::PaymentFailed, CustomerStatus::Suspended, CustomerStatus::BalanceFailed], true)) {
             return;
         }
-        $stillOpen = $customer->invoices()->whereIn('type', [InvoiceType::Balance, InvoiceType::Monthly])->where('status', InvoiceStatus::Failed)->exists();
+        $stillOpen = $customer->invoices()->whereIn('type', [InvoiceType::Balance, InvoiceType::Monthly, InvoiceType::Annual])->where('status', InvoiceStatus::Failed)->exists();
         if ($stillOpen) {
             return;
         }
@@ -179,12 +179,13 @@ final class InvoiceEvents
         $period = $lines[0]['period'] ?? null;
 
         $tax = (int) ($si['tax'] ?? 0);
+        $contract = $customer->contracts()->where('status', ContractStatus::Signed)->latest('signed_at')->first();
         $invoice = Invoice::firstOrCreate(['stripe_invoice_id' => $si['id']], [
             'tax_cents' => $tax,
             'number' => 'TMP-'.bin2hex(random_bytes(6)),
             'customer_id' => $customer->id,
-            'contract_id' => $customer->contracts()->where('status', ContractStatus::Signed)->latest('signed_at')->value('id'),
-            'type' => InvoiceType::Monthly,
+            'contract_id' => $contract?->id,
+            'type' => $contract?->isAnnual() ? InvoiceType::Annual : InvoiceType::Monthly,
             'status' => InvoiceStatus::Scheduled,
             'amount_cents' => $amount - $tax,
             'agents_billed' => $agentLine['quantity'] ?? $customer->agent_count,

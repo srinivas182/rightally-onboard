@@ -133,6 +133,7 @@
                     <dt class="col-5 fw-normal text-slate">Term</dt><dd class="col-7">{{ $contract->starts_on?->format('M j, Y') }} to {{ $contract->ends_on?->format('M j, Y') }}</dd>
                     <dt class="col-5 fw-normal text-slate">Implementation</dt><dd class="col-7">{{ $m($contract->implementation_fee_cents) }}@if ($contract->coupon_code) ({{ $contract->coupon_code }}, {{ rtrim(rtrim((string) $contract->discount_percent, '0'), '.') }}% off)@endif</dd>
                     <dt class="col-5 fw-normal text-slate">Monthly</dt><dd class="col-7">{{ $m($contract->platform_fee_cents) }} + {{ $m($contract->per_agent_fee_cents) }} × {{ $customer->agent_count }} = <b>{{ $m($contract->monthlyFeeCents($customer->agent_count)) }}</b></dd>
+                    @if ($contract->isAnnual())<dt class="col-5 fw-normal text-slate">Billing</dt><dd class="col-7"><b>Yearly</b>, {{ $m($contract->annualFeeCents($customer->agent_count)) }} a year ({{ rtrim(rtrim((string) $contract->annual_discount_percent, '0'), '.') }}% off)</dd>@endif
                     <dt class="col-5 fw-normal text-slate">Payment method</dt><dd class="col-7">{{ $customer->payment_method_label ?? '—' }}</dd>
                     @if ($customer->stripe_customer_id)<dt class="col-5 fw-normal text-slate">Stripe</dt><dd class="col-7 font-monospace small">{{ $customer->stripe_customer_id }}</dd>@endif
                 </dl>

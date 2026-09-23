@@ -27,8 +27,7 @@ final class SubscriptionService
             return;
         }
 
-        $platformPrice = $this->billing->monthlyPrice('platform', $contract->platform_fee_cents);
-        $agentPrice = $this->billing->monthlyPrice('agent', $contract->per_agent_fee_cents);
+        [$platformPrice, $agentPrice] = $this->prices($contract);
         $firstCharge = $this->firstChargeAt($customer);
 
         $sub = $this->stripe->post('subscriptions', array_filter([
@@ -42,7 +41,7 @@ final class SubscriptionService
             'trial_end' => $firstCharge->isFuture() ? $firstCharge->getTimestamp() : null,
             'proration_behavior' => 'none',
             'off_session' => 'true',
-            'metadata' => ['customer_uuid' => $customer->uuid, 'agreement' => $contract->number],
+            'metadata' => ['customer_uuid' => $customer->uuid, 'agreement' => $contract->number, 'billing' => $contract->billing_interval],
         ] + $this->tax->automaticTax()), "subscription-{$customer->uuid}");
 
         $agentItem = collect($sub['items']['data'] ?? [])->first(fn ($i) => ($i['price']['id'] ?? null) === $agentPrice);
@@ -67,11 +66,11 @@ final class SubscriptionService
         $sub = $this->stripe->get('subscriptions/'.$customer->stripe_subscription_id);
         $items = $sub['items']['data'] ?? [];
         $platformItem = collect($items)->first(fn ($i) => $i['id'] !== $customer->stripe_agent_item_id);
-        $agentPrice = $this->billing->monthlyPrice('agent', $contract->per_agent_fee_cents);
+        [$platformPrice, $agentPrice] = $this->prices($contract);
 
         $this->stripe->post('subscriptions/'.$customer->stripe_subscription_id, [
             'items' => array_values(array_filter([
-                $platformItem ? ['id' => $platformItem['id'], 'price' => $this->billing->monthlyPrice('platform', $contract->platform_fee_cents), 'quantity' => 1] : null,
+                $platformItem ? ['id' => $platformItem['id'], 'price' => $platformPrice, 'quantity' => 1] : null,
                 ['id' => $customer->stripe_agent_item_id, 'price' => $agentPrice, 'quantity' => max($contract->min_agents, $customer->agent_count)],
             ])),
             'proration_behavior' => 'none',
@@ -89,5 +88,13 @@ final class SubscriptionService
     public function firstChargeAt(Customer $customer): Carbon
     {
         return Carbon::parse($customer->go_live_date->toDateString().' 09:00', BusinessClock::timezone())->addDays(30);
+    }
+
+    /** Stripe prices for this agreement: monthly, or yearly less the annual discount. @return array{0: string, 1: string} */
+    private function prices(Contract $contract): array
+    {
+        return $contract->isAnnual()
+            ? [$this->billing->recurringPrice('platform', $contract->platformYearCents(), 'year'), $this->billing->recurringPrice('agent', $contract->perAgentYearCents(), 'year')]
+            : [$this->billing->monthlyPrice('platform', $contract->platform_fee_cents), $this->billing->monthlyPrice('agent', $contract->per_agent_fee_cents)];
     }
 }

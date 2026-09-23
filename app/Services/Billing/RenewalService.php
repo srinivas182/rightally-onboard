@@ -173,6 +173,8 @@ final class RenewalService
             'min_agents' => $previous->min_agents,
             'agent_count' => max($previous->min_agents, $customer->agent_count),
             'term_months' => 12,
+            'billing_interval' => $previous->billing_interval, // yearly clients renew yearly
+            'annual_discount_percent' => $previous->billing_interval === 'year' ? (float) $this->settings->get('pricing', 'annual_discount_percent') : 0,
             'starts_on' => $starts->toDateString(),
             'ends_on' => $starts->copy()->addMonthsNoOverflow(12)->subDay()->toDateString(),
             'company_legal_name' => $company['legal_name'], 'company_dba' => $company['dba'], 'company_address' => $company['address'],

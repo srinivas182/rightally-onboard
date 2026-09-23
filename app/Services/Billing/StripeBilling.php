@@ -95,17 +95,24 @@ final class StripeBilling
     /** A monthly recurring Stripe price for an amount, created once and found again by lookup key. */
     public function monthlyPrice(string $kind, int $amountCents): string
     {
-        $key = "rightally_{$kind}_monthly_{$amountCents}";
+        return $this->recurringPrice($kind, $amountCents, 'month');
+    }
+
+    /** A reusable Stripe price for a platform or per-agent fee, billed monthly or yearly. */
+    public function recurringPrice(string $kind, int $amountCents, string $interval): string
+    {
+        $key = $interval === 'year' ? "rightally_{$kind}_yearly_{$amountCents}" : "rightally_{$kind}_monthly_{$amountCents}";
         $found = $this->stripe->get('prices', ['lookup_keys' => [$key], 'active' => 'true', 'limit' => 1]);
         if (! empty($found['data'][0]['id'])) {
             return $found['data'][0]['id'];
         }
 
-        $name = $kind === 'agent' ? 'RightAlly per agent ('.Money::format($amountCents).'/agent/month)' : 'RightAlly platform fee ('.Money::format($amountCents).'/month)';
+        $per = $interval === 'year' ? 'year' : 'month';
+        $name = $kind === 'agent' ? 'RightAlly per agent ('.Money::format($amountCents)."/agent/{$per})" : 'RightAlly platform fee ('.Money::format($amountCents)."/{$per})";
         $price = $this->stripe->post('prices', [
             'currency' => 'usd',
             'unit_amount' => $amountCents,
-            'recurring' => ['interval' => 'month'],
+            'recurring' => ['interval' => $per],
             'product_data' => ['name' => $name, 'tax_code' => TaxService::TAX_CODE],
             'tax_behavior' => 'exclusive',
             'lookup_key' => $key,

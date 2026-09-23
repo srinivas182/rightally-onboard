@@ -33,7 +33,9 @@ final class EarlyTerminationService
     public function quote(Customer $customer): array
     {
         $contract = $this->contract($customer);
-        $issued = $customer->invoices()->where('type', InvoiceType::Monthly)->where('contract_id', $contract->id)->count();
+        // Months already billed: each monthly invoice covers 1, each annual invoice 12.
+        $billedInvoices = $customer->invoices()->where('contract_id', $contract->id)->whereNotIn('status', [InvoiceStatus::Void]);
+        $issued = (clone $billedInvoices)->where('type', InvoiceType::Monthly)->count() + 12 * (clone $billedInvoices)->where('type', InvoiceType::Annual)->count();
         $months = max(0, $contract->term_months + $contract->paused_months - $issued); // pauses extend the term
         $monthly = $contract->monthlyFeeCents($customer->agent_count);
 

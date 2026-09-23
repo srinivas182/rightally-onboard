@@ -127,6 +127,9 @@ final class ContractRenderer
                 ["Per agent per month (minimum {$v['min_agents']})", $v['per_agent_fee']],
                 ["<b>Monthly fee at {$v['agent_count']} agents</b>", '<b>'.e($v['monthly_fee']).'</b>'],
             ];
+            if ($contract->isAnnual()) {
+                $rows[] = ["<b>Billed yearly in advance ({$v['annual_discount']}% discount)</b>", '<b>'.e(Money::format($contract->annualFeeCents())).' a year</b>'];
+            }
 
             return $this->feeRows('Renewal fees', $rows);
         }

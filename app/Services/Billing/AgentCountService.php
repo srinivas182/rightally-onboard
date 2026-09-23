@@ -11,7 +11,7 @@ use App\Models\Customer;
 use App\Services\Audit\AuditLogger;
 use App\Services\Email\EmailSender;
 use App\Services\Stripe\StripeException;
-use App\Support\BusinessClock;
+use App\Support\BillingDates;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Throwable;
@@ -108,13 +108,11 @@ final class AgentCountService
         if ($automatic && $customer->agents_notified_at && $customer->agents_notified_at->gt(now()->subDay())) {
             return;
         }
-        $next = $customer->go_live_date ? BusinessClock::date($customer->go_live_date)->addDays(30) : null;
-        while ($next && $next->lt(BusinessClock::today())) {
-            $next->addMonthNoOverflow();
-        }
+        $contract = $customer->contracts()->where('status', ContractStatus::Signed)->latest('signed_at')->first();
+        $next = BillingDates::nextCharge($customer, $contract);
         $this->email->toCustomer('agents_changed', $customer, null, [], [
             'old_agent_count' => (string) $old,
-            'effective_date' => $next?->format('F j, Y') ?? 'your next monthly charge',
+            'effective_date' => $next?->format('F j, Y') ?? 'your next charge',
         ]);
         $customer->forceFill(['agents_notified_at' => now()])->save();
     }

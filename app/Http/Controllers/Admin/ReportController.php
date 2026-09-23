@@ -37,9 +37,9 @@ class ReportController extends Controller
                     fputcsv($out, [$r['group'], $r['started'], $r['signed'], $r['paid'], $r['live'], $r['started'] ? round($r['live'] / $r['started'] * 100, 1) : 0]);
                 }
             } else {
-                fputcsv($out, ['Month', 'Deposits', 'Go-live balances', 'Monthly fees', 'Early termination', 'Total (net of refunds and tax)']);
+                fputcsv($out, ['Month', 'Deposits', 'Go-live balances', 'Monthly fees', 'Yearly fees', 'Early termination', 'Total (net of refunds and tax)']);
                 foreach ($stats->revenueByMonth() as $r) {
-                    fputcsv($out, [$r['month'], ...array_map(fn ($c) => number_format($c / 100, 2, '.', ''), [$r['deposit'], $r['balance'], $r['monthly'], $r['early_termination'], $r['total']])]);
+                    fputcsv($out, [$r['month'], ...array_map(fn ($c) => number_format($c / 100, 2, '.', ''), [$r['deposit'], $r['balance'], $r['monthly'], $r['annual'], $r['early_termination'], $r['total']])]);
                 }
             }
             fclose($out);

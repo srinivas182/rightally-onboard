@@ -12,6 +12,7 @@ use App\Models\Invoice;
 use App\Services\Audit\AuditLogger;
 use App\Services\Billing\InvoicePdf;
 use App\Services\Email\EmailSender;
+use App\Support\BillingDates;
 use App\Support\BusinessClock;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -105,7 +106,7 @@ class InvoiceController extends Controller
 
         Customer::with(['contracts' => fn ($q) => $q->where('status', ContractStatus::Signed)])
             ->whereIn('status', [CustomerStatus::AwaitingGoLive, CustomerStatus::Live, CustomerStatus::PaymentFailed])->get()
-            ->each(function (Customer $c) use ($today, $until, $rows) {
+            ->each(function (Customer $c) use ($until, $rows) {
                 $contract = $c->contracts->sortByDesc('signed_at')->first();
                 if (! $contract || ! $c->go_live_date) {
                     return;
@@ -118,12 +119,9 @@ class InvoiceController extends Controller
 
                     return;
                 }
-                $next = BusinessClock::date($c->go_live_date)->addDays(30);
-                while ($next->lt($today)) {
-                    $next->addMonthNoOverflow();
-                }
-                if ($next->lte($until)) {
-                    $rows->push(['date' => $next, 'customer' => $c, 'type' => "Monthly, {$c->agent_count} agents", 'amount' => $contract->monthlyFeeCents($c->agent_count)]);
+                $next = BillingDates::nextCharge($c, $contract);
+                if ($next && $next->lte($until)) {
+                    $rows->push(['date' => $next, 'customer' => $c, 'type' => ($contract->isAnnual() ? 'Yearly' : 'Monthly').", {$c->agent_count} agents", 'amount' => $contract->recurringFeeCents($c->agent_count)]);
                 }
             });
 

@@ -35,6 +35,7 @@
         \App\Enums\InvoiceType::Deposit => 'Implementation deposit ('.rtrim(rtrim((string) $invoice->contract?->deposit_percent, '0'), '.').'% of implementation fee)',
         \App\Enums\InvoiceType::Balance => 'Implementation fee balance, due at go-live',
         \App\Enums\InvoiceType::Monthly => 'RightAlly subscription',
+        \App\Enums\InvoiceType::Annual => 'RightAlly subscription, 12 months',
         \App\Enums\InvoiceType::EarlyTermination => 'Early termination: remaining months of the minimum term (Agreement Section 7)',
     };
 @endphp
@@ -65,6 +66,10 @@
         @php $agents = (int) ($invoice->agents_billed ?? $invoice->contract->agent_count); $platform = $invoice->contract->platform_fee_cents; @endphp
         <tr><td>Platform fee<div class="muted">{{ $invoice->period_start?->format('M j') }} to {{ $invoice->period_end?->format('M j, Y') }}</div></td><td class="r">{{ $m($platform) }}</td></tr>
         <tr><td>Agents: {{ $agents }} × {{ $m($invoice->contract->per_agent_fee_cents) }}<div class="muted">Minimum {{ $invoice->contract->min_agents }} agents</div></td><td class="r">{{ $m($invoice->amount_cents - $platform) }}</td></tr>
+    @elseif ($invoice->type === \App\Enums\InvoiceType::Annual && $invoice->contract)
+        @php $agents = (int) ($invoice->agents_billed ?? $invoice->contract->agent_count); $platform = $invoice->contract->platformYearCents(); @endphp
+        <tr><td>Platform fee, 12 months<div class="muted">{{ $invoice->period_start?->format('M j, Y') }} to {{ $invoice->period_end?->format('M j, Y') }}, {{ rtrim(rtrim((string) $invoice->contract->annual_discount_percent, '0'), '.') }}% yearly discount applied</div></td><td class="r">{{ $m($platform) }}</td></tr>
+        <tr><td>Agents: {{ $agents }} × {{ $m($invoice->contract->perAgentYearCents()) }} a year<div class="muted">Minimum {{ $invoice->contract->min_agents }} agents</div></td><td class="r">{{ $m($invoice->amount_cents - $platform) }}</td></tr>
     @else
         <tr><td>{{ $desc }}@if ($invoice->contract?->coupon_code && $invoice->type === \App\Enums\InvoiceType::Deposit)<div class="muted">Coupon {{ $invoice->contract->coupon_code }} applied to the implementation fee</div>@endif</td><td class="r">{{ $m($invoice->amount_cents) }}</td></tr>
     @endif

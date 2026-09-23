@@ -41,7 +41,7 @@
 
 <div class="tab-pane fade" id="revenue" role="tabpanel">
     <div class="row g-3 mb-3">
-        <div class="col-6 col-lg-3"><div class="kpi"><div class="l">Monthly recurring revenue</div><div class="v num">{{ $m($mrr['mrr']) }}</div><div class="small text-slate">{{ $mrr['customers'] }} live {{ Str::plural('customer', $mrr['customers']) }}</div></div></div>
+        <div class="col-6 col-lg-3"><div class="kpi"><div class="l">Monthly recurring revenue</div><div class="v num">{{ $m($mrr['mrr']) }}</div><div class="small text-slate">{{ $mrr['customers'] }} live {{ Str::plural('customer', $mrr['customers']) }}; yearly plans counted as 1/12</div></div></div>
         <div class="col-6 col-lg-3"><div class="kpi"><div class="l">Annual run rate</div><div class="v num">{{ $m($mrr['mrr'] * 12) }}</div><div class="small text-slate">MRR × 12</div></div></div>
         <div class="col-6 col-lg-3"><div class="kpi"><div class="l">New this month</div><div class="v num {{ $mrr['new_mrr'] ? 'text-success' : '' }}">{{ $mrr['new_mrr'] ? '+' : '' }}{{ $m($mrr['new_mrr']) }}</div><div class="small text-slate">{{ $mrr['new'] }} went live</div></div></div>
         <div class="col-6 col-lg-3"><div class="kpi"><div class="l">Churned this month</div><div class="v num {{ $mrr['churned_mrr'] ? 'text-danger' : '' }}">{{ $mrr['churned_mrr'] ? '-' : '' }}{{ $m($mrr['churned_mrr']) }}</div><div class="small text-slate">{{ $mrr['churned'] }} cancelled or ended</div></div></div>
@@ -50,9 +50,9 @@
         <div class="col-xl-8"><div class="panel">
             <div class="panel-h"><h2>Revenue by month</h2><a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.reports.export', ['report' => 'revenue']) }}">CSV</a></div>
             <div class="table-responsive"><table class="table">
-                <thead><tr><th>Month</th><th class="text-end">Deposits</th><th class="text-end">Balances</th><th class="text-end">Monthly</th><th class="text-end">Early term.</th><th class="text-end">Total</th></tr></thead>
+                <thead><tr><th>Month</th><th class="text-end">Deposits</th><th class="text-end">Balances</th><th class="text-end">Subscriptions</th><th class="text-end">Early term.</th><th class="text-end">Total</th></tr></thead>
                 <tbody>@foreach ($revenue->reverse() as $r)
-                    <tr><td>{{ \Illuminate\Support\Carbon::parse($r['month'].'-01')->format('M Y') }}</td><td class="text-end num">{{ $m($r['deposit']) }}</td><td class="text-end num">{{ $m($r['balance']) }}</td><td class="text-end num">{{ $m($r['monthly']) }}</td><td class="text-end num">{{ $m($r['early_termination']) }}</td><td class="text-end num fw-semibold">{{ $m($r['total']) }}</td></tr>
+                    <tr><td>{{ \Illuminate\Support\Carbon::parse($r['month'].'-01')->format('M Y') }}</td><td class="text-end num">{{ $m($r['deposit']) }}</td><td class="text-end num">{{ $m($r['balance']) }}</td><td class="text-end num">{{ $m($r['monthly'] + $r['annual']) }}</td><td class="text-end num">{{ $m($r['early_termination']) }}</td><td class="text-end num fw-semibold">{{ $m($r['total']) }}</td></tr>
                 @endforeach</tbody>
             </table></div>
             <div class="p-3 small text-slate border-top">Money settled in each month, less refunds and sales tax. Open chargebacks are excluded.</div>
@@ -62,7 +62,7 @@
             <div class="table-responsive"><table class="table">
                 <thead><tr><th>Month</th><th class="text-end">Expected</th></tr></thead>
                 <tbody>@foreach ($forecast as $f)
-                    <tr><td>{{ $f['month'] }}<div class="small text-slate">{{ $m($f['monthly']) }} monthly + {{ $m($f['balances']) }} go-live balances</div></td><td class="text-end num fw-semibold">{{ $m($f['total']) }}</td></tr>
+                    <tr><td>{{ $f['month'] }}<div class="small text-slate">{{ $m($f['monthly']) }} subscriptions + {{ $m($f['balances']) }} go-live balances</div></td><td class="text-end num fw-semibold">{{ $m($f['total']) }}</td></tr>
                 @endforeach</tbody>
             </table></div>
             <div class="p-3 small text-slate border-top">At today’s agent counts, assuming every charge succeeds. Excludes new sign-ups.</div>
