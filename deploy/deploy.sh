@@ -23,8 +23,15 @@ echo "==> Backup before deploy"
 ./deploy/backup.sh
 
 echo "==> Code ($REF)"
+# cPanel's MultiPHP Manager adds a PHP-version handler block to public/.htaccess.
+# Keep it across updates, otherwise the site could fall back to an older PHP.
+CPANEL_BLOCK="$(sed -n '/# php -- BEGIN cPanel-generated handler/,/# php -- END cPanel-generated handler/p' public/.htaccess 2>/dev/null || true)"
 git fetch --tags --prune origin
 if git show-ref --verify --quiet "refs/remotes/origin/$REF"; then git checkout -q "$REF" && git reset -q --hard "origin/$REF"; else git checkout -q "tags/$REF"; fi
+if [[ -n "$CPANEL_BLOCK" ]] && ! grep -q "BEGIN cPanel-generated handler" public/.htaccess; then
+  printf '\n%s\n' "$CPANEL_BLOCK" >> public/.htaccess
+  git update-index --assume-unchanged public/.htaccess
+fi
 
 echo "==> Dependencies and assets"
 "${COMPOSER[@]}" install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
