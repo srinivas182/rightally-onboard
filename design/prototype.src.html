@@ -206,10 +206,10 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
     <div class="ledger" aria-live="polite">
       <h6>Your agreement</h6>
       <div class="row-l"><span>Set-up fee</span><b>$3,000.00</b></div>
-      <div class="row-l disc d-none" data-disc><span>Coupon <span data-code></span></span><b>−$300.00</b></div>
+      <div class="row-l disc d-none" data-disc><span>Coupon <span data-code></span></span><b data-damt></b></div>
       <div class="row-l"><span>Implementation fee</span><b data-impl>$3,000.00</b></div>
       <div class="row-l"><span>Due at go-live</span><b data-bal>$2,700.00</b></div>
-      <div class="row-l"><span>Monthly from go-live + 30 days</span><b>from $600.00</b></div>
+      <div class="row-l"><span>Monthly, <span data-agtxt>8 agents</span></span><b data-mo>$660.00</b></div>
       <div class="today"><span>Due today</span><strong data-dep>$300.00</strong></div>
     </div>
     <div class="rail-foot"><svg class="ic"><use href="#i-lock"/></svg>Payments processed securely by Stripe. We never see your card number.</div>
@@ -237,6 +237,14 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
               <div class="input-group"><span class="input-group-text">🇺🇸 +1</span><input type="tel" class="form-control" id="ph" required value="(305) 555-0148" autocomplete="tel-national"></div></div>
           </div>
         </fieldset>
+        <fieldset class="mb-4"><legend>Your team</legend>
+          <div class="row g-3 align-items-start">
+            <div class="col-sm-6"><label class="form-label" for="agn">Number of agents</label>
+              <div class="input-group"><button class="btn btn-outline-secondary" type="button" data-agstep="-1" aria-label="Fewer agents">−</button><input type="number" class="form-control text-center" id="agn" min="1" max="5000" value="8" inputmode="numeric"><button class="btn btn-outline-secondary" type="button" data-agstep="1" aria-label="More agents">+</button></div>
+              <div class="form-text" id="agHelp">Agents who will use RightAlly. You can change this later.</div></div>
+            <div class="col-sm-6"><div class="panel p-3 small"><div class="text-slate">Your monthly fee</div><div class="fs-4 fw-semibold num" data-mo>$660.00</div><div class="text-slate">$500 platform + $20 × <span data-agn>8</span> agents</div></div></div>
+          </div>
+        </fieldset>
         <fieldset class="mb-4"><legend>Business address</legend>
           <div class="row g-3">
             <div class="col-12"><label class="form-label" for="st">Street address</label><input class="form-control" id="st" required value="1200 Brickell Ave, Suite 410" autocomplete="street-address"></div>
@@ -248,7 +256,7 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
         </fieldset>
         <fieldset class="mb-4"><legend>Coupon <span class="fw-normal text-slate">(optional)</span></legend>
           <div class="input-group" style="max-width:420px"><input class="form-control text-uppercase" id="cp" placeholder="Enter code" aria-describedby="cpMsg"><button class="btn btn-outline-primary" type="button" id="cpBtn">Apply</button></div>
-          <div id="cpMsg" class="mt-2 small text-slate">Try <b>WELCOME10</b> in this prototype.</div>
+          <div id="cpMsg" class="mt-2 small text-slate">Try <b>WELCOME10</b> or <b>NAR2026</b>. A link like <span class="font-monospace">onboard.rightally.io/?coupon=NAR2026</span> fills this in automatically.</div>
         </fieldset>
         <div class="d-flex align-items-center gap-3 mb-3 small text-slate"><svg class="ic"><use href="#i-shield"/></svg>Protected by Cloudflare Turnstile</div>
         <button class="btn btn-primary btn-lg w-100 w-sm-auto px-5" type="button" data-next="2">Continue to agreement</button>
@@ -270,11 +278,11 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
         <div class="fee-box" id="s-fees"><div class="hd">Your fees at a glance</div>
           <table class="table table-sm"><tbody>
             <tr><td>Set-up fee</td><td>$3,000.00</td></tr>
-            <tr class="d-none" data-disc><td>Discount (<span data-code></span>, 10%)</td><td>−$300.00</td></tr>
+            <tr class="d-none" data-disc><td>Discount (<span data-code></span>, <span data-pct></span>%)</td><td data-damt></td></tr>
             <tr><td><b>Implementation fee</b></td><td><b data-impl>$3,000.00</b></td></tr>
             <tr><td>Deposit today (10%)</td><td data-dep>$300.00</td></tr>
             <tr><td>Balance on go-live date (Oct 23, 2026)</td><td data-bal>$2,700.00</td></tr>
-            <tr><td>Monthly: $500 platform + $20 per agent (minimum 5 agents)</td><td>from $600.00</td></tr>
+            <tr><td>Monthly: $500 platform + $20 × <span data-agn>8</span> agents (minimum 5)</td><td data-mo>$660.00</td></tr>
           </tbody></table></div>
         <h3>1. Services</h3><p>RightAlly will configure and deploy a dedicated instance of the RightAlly platform for you, and after the go-live date provide access to it on a monthly subscription.</p>
         <h3>2. Fees</h3><p>The fees in the summary above form part of this agreement. The monthly fee is based on the number of agents on your account on each billing date, with a minimum of five.</p>
@@ -322,7 +330,7 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
       <ol class="tl mb-4">
         <li class="now"><span class="n">1</span><div class="d-flex justify-content-between flex-wrap gap-2"><div><b>Today, Sep 23, 2026</b><div class="text-slate small">Deposit: 10% of your implementation fee</div></div><div class="amt" data-dep>$300.00</div></div></li>
         <li><span class="n">2</span><div class="d-flex justify-content-between flex-wrap gap-2"><div><b>Go-live date, Oct 23, 2026</b><div class="text-slate small">Remaining implementation fee, charged automatically. If go-live moves, this date moves with it and we’ll tell you at least 2 days ahead.</div></div><div class="amt" data-bal>$2,700.00</div></div></li>
-        <li><span class="n">3</span><div class="d-flex justify-content-between flex-wrap gap-2"><div><b>First monthly charge, Nov 22, 2026</b><div class="text-slate small">$500 platform fee + $20 × 5 agents. Then every month, based on your agent count on the billing date.</div></div><div class="amt">$600.00</div></div></li>
+        <li><span class="n">3</span><div class="d-flex justify-content-between flex-wrap gap-2"><div><b>First monthly charge, Nov 22, 2026</b><div class="text-slate small">$500 platform fee + $20 × <span data-agn>8</span> agents. Then every month, based on your agent count on the billing date (minimum 5).</div></div><div class="amt" data-mo>$660.00</div></div></li>
       </ol>
       <div class="panel p-3 mb-4 small"><b>Minimum term:</b> 12 months from go-live. Renewal is never automatic; we’ll send a renewal agreement 45 days before your term ends.</div>
       <div class="d-flex flex-column flex-sm-row gap-2"><button class="btn btn-primary btn-lg px-5" type="button" data-next="4">Continue to payment</button><button class="btn btn-link" type="button" data-next="2">Back</button></div>
@@ -372,11 +380,11 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
   <div class="offcanvas-header"><h5 class="offcanvas-title" id="ledgerSheetT">Your agreement</h5><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div>
   <div class="offcanvas-body pt-0"><table class="table num"><tbody>
     <tr><td>Set-up fee</td><td class="text-end">$3,000.00</td></tr>
-    <tr class="d-none" data-disc><td>Coupon <span data-code></span></td><td class="text-end text-success">−$300.00</td></tr>
+    <tr class="d-none" data-disc><td>Coupon <span data-code></span></td><td class="text-end text-success" data-damt></td></tr>
     <tr><td>Implementation fee</td><td class="text-end" data-impl>$3,000.00</td></tr>
     <tr><td>Due today</td><td class="text-end fw-semibold" data-dep>$300.00</td></tr>
     <tr><td>Due at go-live</td><td class="text-end" data-bal>$2,700.00</td></tr>
-    <tr><td>Monthly from go-live + 30 days</td><td class="text-end">from $600.00</td></tr>
+    <tr><td>Monthly, <span data-agtxt>8 agents</span></td><td class="text-end" data-mo>$660.00</td></tr>
   </tbody></table></div>
 </div>
 </section>
@@ -390,10 +398,11 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
     <div class="brand-inv"><img src="__ICON__" alt="">RightAlly <span class="badge text-bg-primary fw-medium ms-1" style="font-size:.65rem">Admin</span></div>
     <a class="nav-a on" href="#" data-ap="dash"><svg class="ic"><use href="#i-home"/></svg>Dashboard</a>
     <a class="nav-a" href="#" data-ap="cust"><svg class="ic"><use href="#i-users"/></svg>Customers</a>
-    <a class="nav-a" href="#" data-ap="cust-d"><svg class="ic"><use href="#i-file"/></svg>Contracts</a>
+    <a class="nav-a" href="#" data-ap="ctr"><svg class="ic"><use href="#i-file"/></svg>Contracts</a>
     <a class="nav-a" href="#" data-ap="inv"><svg class="ic"><use href="#i-receipt"/></svg>Invoices<span class="badge rounded-pill text-bg-danger">3</span></a>
     <a class="nav-a" href="#" data-ap="coup"><svg class="ic"><use href="#i-tag"/></svg>Coupons</a>
     <div class="grp">Administration</div>
+    <a class="nav-a" href="#" data-ap="etpl"><svg class="ic"><use href="#i-mail"/></svg>Email templates</a>
     <a class="nav-a" href="#" data-ap="roles"><svg class="ic"><use href="#i-shield"/></svg>Admins and roles</a>
     <a class="nav-a" href="#" data-ap="set"><svg class="ic"><use href="#i-gear"/></svg>Settings</a>
     <a class="nav-a mt-auto" href="#"><svg class="ic"><use href="#i-out"/></svg>Sign out</a>
@@ -409,59 +418,69 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
     <div class="offcanvas offcanvas-start" tabindex="-1" id="admMenu" style="background:var(--ra-navy);width:270px"><div class="offcanvas-body d-flex flex-column" id="admMenuBody"></div></div>
 
     <div class="main">
-    <!-- Dashboard -->
+    <!-- ================= Dashboard ================= -->
     <div class="apage on" data-apage="dash">
       <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-4"><div><h1 class="h3 mb-1">Dashboard</h1><div class="text-slate">Wednesday, Sep 23, 2026</div></div>
-        <div class="btn-group seg" role="group" aria-label="Revenue range"><button class="btn btn-outline-secondary">Today</button><button class="btn btn-outline-secondary active">Month</button><button class="btn btn-outline-secondary">Year</button><button class="btn btn-outline-secondary"><svg class="ic"><use href="#i-cal"/></svg> Range</button></div></div>
+        <div class="btn-group seg" role="group" aria-label="Revenue range" id="rangeSeg"><button class="btn btn-outline-secondary" data-r="day">Today</button><button class="btn btn-outline-secondary active" data-r="month">Month</button><button class="btn btn-outline-secondary" data-r="year">Year</button><button class="btn btn-outline-secondary" data-r="range"><svg class="ic"><use href="#i-cal"/></svg> Range</button></div></div>
+      <div class="d-none mb-3 panel p-3" id="rangePick"><div class="row g-2 align-items-end"><div class="col-sm-4"><label class="form-label small">From</label><input type="date" class="form-control form-control-sm" value="2026-07-01"></div><div class="col-sm-4"><label class="form-label small">To</label><input type="date" class="form-control form-control-sm" value="2026-09-23"></div><div class="col-sm-4"><button class="btn btn-primary btn-sm w-100">Apply range</button></div></div></div>
       <div class="row g-3 mb-4">
         <div class="col-6 col-xl-2"><a class="kpi" href="#" data-ap="cust"><div class="l">Customers onboarded</div><div class="v">24</div><div class="small text-success">+4 this month</div></a></div>
-        <div class="col-6 col-xl-2"><a class="kpi" href="#" data-ap="inv"><div class="l">Revenue received</div><div class="v">$38,420</div><div class="small text-slate">September</div></a></div>
-        <div class="col-6 col-xl-2"><a class="kpi alert-k" href="#" data-ap="inv"><div class="l">Failed payments</div><div class="v text-danger">3</div><div class="small text-slate">$2,030 outstanding</div></a></div>
-        <div class="col-6 col-xl-2"><a class="kpi" href="#" data-ap="cust"><div class="l">Go-lives next 7 days</div><div class="v">2</div><div class="small text-slate">$5,130 to charge</div></a></div>
+        <div class="col-6 col-xl-2"><a class="kpi" href="#" data-ap="inv" data-tab="#iv-paid"><div class="l">Revenue received</div><div class="v" id="revV">$38,420</div><div class="small text-slate" id="revL">September</div></a></div>
+        <div class="col-6 col-xl-2"><a class="kpi alert-k" href="#" data-ap="inv" data-tab="#iv-fail"><div class="l">Failed payments</div><div class="v text-danger">3</div><div class="small text-slate">$2,030 outstanding</div></a></div>
+        <div class="col-6 col-xl-2"><a class="kpi" href="#" data-ap="inv" data-tab="#iv-up"><div class="l">Go-lives next 7 days</div><div class="v">2</div><div class="small text-slate">$5,130 to charge</div></a></div>
         <div class="col-6 col-xl-2"><a class="kpi" href="#" data-ap="cust"><div class="l">Suspended</div><div class="v">1</div><div class="small text-slate">31 days overdue</div></a></div>
-        <div class="col-6 col-xl-2"><a class="kpi" href="#" data-ap="cust"><div class="l">Renewals due</div><div class="v">2</div><div class="small text-slate">next 45 days</div></a></div>
+        <div class="col-6 col-xl-2"><a class="kpi" href="#" data-ap="ctr"><div class="l">Renewals due</div><div class="v">2</div><div class="small text-slate">next 45 days</div></a></div>
       </div>
       <div class="row g-3">
         <div class="col-xl-8"><div class="panel h-100"><div class="panel-h"><h2>Revenue received</h2><span class="small text-slate">Deposits, balances and monthly fees, 2026</span></div><div class="p-3" style="height:300px"><canvas id="revChart" aria-label="Revenue by month bar chart"></canvas></div></div></div>
         <div class="col-xl-4"><div class="panel h-100"><div class="panel-h"><h2>Needs attention</h2></div>
           <div class="mob-cards">
-            <div class="mc d-flex gap-2"><svg class="ic text-danger mt-1"><use href="#i-alert"/></svg><div><b>Keystone Homes</b> monthly charge failed<div class="small text-slate">Card declined, Sep 20. Link resent Sep 21.</div></div></div>
-            <div class="mc d-flex gap-2"><svg class="ic text-primary mt-1"><use href="#i-cal"/></svg><div><b>Harbor Point Realty</b> goes live Sep 26<div class="small text-slate">$2,430 balance charges automatically. Date locks in 1 day.</div></div></div>
-            <div class="mc d-flex gap-2"><svg class="ic text-warning mt-1"><use href="#i-file"/></svg><div><b>Coastal Keys Brokerage</b> renewal unsigned<div class="small text-slate">Term ends Oct 31. Reminder goes out Oct 16.</div></div></div>
+            <a href="#" data-ap="inv" data-tab="#iv-fail" class="mc d-flex gap-2 text-reset text-decoration-none"><svg class="ic text-danger mt-1"><use href="#i-alert"/></svg><div><b>Keystone Homes</b> monthly charge failed<div class="small text-slate">Card declined, Sep 20. Link resent Sep 21.</div></div></a>
+            <a href="#" data-ap="cust-d" class="mc d-flex gap-2 text-reset text-decoration-none"><svg class="ic text-primary mt-1"><use href="#i-cal"/></svg><div><b>Harbor Point Realty</b> goes live Sep 26<div class="small text-slate">$2,430 balance charges automatically. Date locks in 1 day.</div></div></a>
+            <a href="#" data-ap="ctr" class="mc d-flex gap-2 text-reset text-decoration-none"><svg class="ic text-warning mt-1"><use href="#i-file"/></svg><div><b>Coastal Keys Brokerage</b> renewal unsigned<div class="small text-slate">Term ends Oct 31. Reminder goes out Oct 16.</div></div></a>
           </div></div></div>
       </div>
     </div>
 
-    <!-- Customers list -->
+    <!-- ================= Customers list ================= -->
     <div class="apage" data-apage="cust">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4"><h1 class="h3 mb-0">Customers</h1><button class="btn btn-outline-secondary btn-sm"><svg class="ic me-1"><use href="#i-down"/></svg>Export CSV</button></div>
       <div class="panel">
-        <div class="panel-h"><div class="d-flex gap-2 flex-wrap"><input class="form-control form-control-sm" style="width:220px" placeholder="Search name, email, company"><select class="form-select form-select-sm" style="width:170px"><option>All statuses</option><option>Awaiting go-live</option><option>Live</option><option>Payment failed</option><option>Suspended</option><option>Cancelled</option></select></div><span class="small text-slate">24 customers</span></div>
-        <div class="table-responsive"><table class="table table-hover"><thead><tr><th>Customer</th><th>Status</th><th>Go-live</th><th class="text-end">Agents</th><th class="text-end">Monthly</th><th></th></tr></thead><tbody>
-          <tr><td><b>Sunline Realty Group</b><div class="small text-slate">Maria Alvarez, Miami FL</div></td><td><span class="st st-wait">Awaiting go-live</span></td><td class="num">Oct 23, 2026</td><td class="text-end num">5</td><td class="text-end num">$600.00</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
-          <tr><td><b>Harbor Point Realty</b><div class="small text-slate">James Okafor, Tampa FL</div></td><td><span class="st st-wait">Awaiting go-live</span></td><td class="num">Sep 26, 2026</td><td class="text-end num">12</td><td class="text-end num">$740.00</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
-          <tr><td><b>Keystone Homes</b><div class="small text-slate">Dana Pruitt, Austin TX</div></td><td><span class="st st-fail">Payment failed</span></td><td class="num">Jun 02, 2026</td><td class="text-end num">31</td><td class="text-end num">$1,120.00</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
-          <tr><td><b>Coastal Keys Brokerage</b><div class="small text-slate">Liam Chen, San Diego CA</div></td><td><span class="st st-live">Live</span></td><td class="num">Oct 31, 2025</td><td class="text-end num">48</td><td class="text-end num">$1,460.00</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
-          <tr><td><b>Mesa Verde Properties</b><div class="small text-slate">Ana Ruiz, Phoenix AZ</div></td><td><span class="st st-susp">Suspended</span></td><td class="num">Mar 15, 2026</td><td class="text-end num">9</td><td class="text-end num">$680.00</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
+        <div class="panel-h"><div class="d-flex gap-2 flex-wrap"><input class="form-control form-control-sm" style="width:220px" placeholder="Search name, email, company" id="custQ"><select class="form-select form-select-sm" style="width:170px" id="custS"><option value="">All statuses</option><option>Awaiting go-live</option><option>Live</option><option>Payment failed</option><option>Suspended</option></select></div><span class="small text-slate" id="custN">5 customers</span></div>
+        <div class="table-responsive"><table class="table table-hover" id="custT"><thead><tr><th>Customer</th><th>Status</th><th>Go-live</th><th class="text-end">Agents</th><th class="text-end">Monthly</th><th>Source</th><th></th></tr></thead><tbody>
+          <tr><td><b>Sunline Realty Group</b><div class="small text-slate">Maria Alvarez, Miami FL</div></td><td><span class="st st-wait">Awaiting go-live</span></td><td class="num">Oct 23, 2026</td><td class="text-end num">8</td><td class="text-end num">$660.00</td><td class="small">NAR2026 link</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
+          <tr><td><b>Harbor Point Realty</b><div class="small text-slate">James Okafor, Tampa FL</div></td><td><span class="st st-wait">Awaiting go-live</span></td><td class="num">Sep 26, 2026</td><td class="text-end num">12</td><td class="text-end num">$740.00</td><td class="small">Facebook ad</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
+          <tr><td><b>Keystone Homes</b><div class="small text-slate">Dana Pruitt, Austin TX</div></td><td><span class="st st-fail">Payment failed</span></td><td class="num">Jun 02, 2026</td><td class="text-end num">31</td><td class="text-end num">$1,120.00</td><td class="small">Direct</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
+          <tr><td><b>Coastal Keys Brokerage</b><div class="small text-slate">Liam Chen, San Diego CA</div></td><td><span class="st st-live">Live</span></td><td class="num">Oct 31, 2025</td><td class="text-end num">48</td><td class="text-end num">$1,460.00</td><td class="small">Referral</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
+          <tr><td><b>Mesa Verde Properties</b><div class="small text-slate">Ana Ruiz, Phoenix AZ</div></td><td><span class="st st-susp">Suspended</span></td><td class="num">Mar 15, 2026</td><td class="text-end num">9</td><td class="text-end num">$680.00</td><td class="small">Facebook ad</td><td class="text-end"><a href="#" data-ap="cust-d" class="btn btn-sm btn-outline-primary">Open</a></td></tr>
         </tbody></table></div>
       </div>
     </div>
 
-    <!-- Customer detail -->
+    <!-- ================= Customer detail ================= -->
     <div class="apage" data-apage="cust-d">
       <a href="#" data-ap="cust" class="small text-decoration-none d-inline-flex align-items-center gap-1 mb-2"><svg class="ic"><use href="#i-arrow"/></svg>Customers</a>
       <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
         <div><h1 class="h3 mb-1">Sunline Realty Group</h1><div class="text-slate">Maria Alvarez, Managing Broker, maria@sunlinerealty.com, (305) 555-0148</div></div>
         <div class="d-flex gap-2 align-items-center"><span class="st st-wait">Awaiting go-live</span>
-          <div class="dropdown"><button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Actions</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#">Resend contract email</a></li><li><a class="dropdown-item" href="#">Suspend account</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#">Early termination…</a></li></ul></div></div>
+          <div class="dropdown"><button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">Actions</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#">Send email from template…</a></li><li><a class="dropdown-item" href="#">Resend signed agreement</a></li><li><a class="dropdown-item" href="#">Suspend account</a></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item text-danger" href="#">Early termination…</a></li></ul></div></div>
       </div>
-      <ul class="nav nav-tabs tabs-scroll mb-4"><li class="nav-item"><a class="nav-link active" href="#">Overview</a></li><li class="nav-item"><a class="nav-link" href="#">Invoices</a></li><li class="nav-item"><a class="nav-link" href="#">Contracts</a></li><li class="nav-item"><a class="nav-link" href="#">Agent count history</a></li><li class="nav-item"><a class="nav-link" href="#">Activity</a></li></ul>
+      <ul class="nav nav-tabs tabs-scroll mb-4" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#cd-ov">Overview</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#cd-inv">Invoices</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#cd-ctr">Contracts</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#cd-ag">Agent count history</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#cd-em">Emails</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#cd-act">Activity</a></li>
+      </ul>
+      <div class="tab-content">
+      <div class="tab-pane fade show active" id="cd-ov">
       <div class="row g-3">
         <div class="col-xl-7">
           <div class="panel mb-3"><div class="panel-h"><h2>Go-live and billing</h2></div><div class="p-3 p-md-4">
             <div class="row g-3">
               <div class="col-sm-6"><label class="form-label" for="gl">Go-live date</label><input type="date" class="form-control" id="gl" value="2026-10-23" min="2026-09-25"><div class="lock-note mt-2"><svg class="ic mt-1"><use href="#i-lock"/></svg>Can be changed until Oct 21, 2026. Moving it emails the client and moves the balance charge.</div></div>
-              <div class="col-sm-6"><label class="form-label" for="ag">Agents billed</label><input type="number" class="form-control" id="ag" value="5" min="5"><div class="form-text">Minimum 5. Changes apply from the next monthly charge.</div></div>
+              <div class="col-sm-6"><label class="form-label" for="ag">Agents billed</label><input type="number" class="form-control" id="ag" value="8" min="5"><div class="form-text">Client entered 8 at onboarding. Minimum 5. Changes apply from the next monthly charge.</div></div>
               <div class="col-sm-6"><label class="form-label" for="lu">Live URL</label><input class="form-control" id="lu" placeholder="https://sunline.rightally.io"></div>
               <div class="col-sm-6"><label class="form-label" for="lh">Live host</label><input class="form-control" id="lh" placeholder="sunline.rightally.io"></div>
               <div class="col-12"><label class="form-label">Agent count API token</label><div class="input-group"><input class="form-control font-monospace" value="ra_live_••••••••••••••3f9c" readonly><button class="btn btn-outline-secondary" type="button"><svg class="ic me-1"><use href="#i-key"/></svg>Regenerate</button></div><div class="form-text">Daily sync: not connected yet. The customer’s RightAlly instance can also report its count to us.</div></div>
@@ -472,81 +491,200 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
         <div class="col-xl-5">
           <div class="panel"><div class="panel-h"><h2>Billing timeline</h2></div><div class="p-3 p-md-4">
             <ol class="tl">
-              <li class="now"><span class="n">1</span><div class="d-flex justify-content-between"><div><b>Deposit</b><div class="small text-slate">Sep 23, 2026, card ending 4242</div></div><div class="text-end"><div class="num fw-semibold">$300.00</div><span class="st st-live">Paid</span></div></div></li>
-              <li><span class="n">2</span><div class="d-flex justify-content-between"><div><b>Balance</b><div class="small text-slate">Scheduled Oct 23, 2026</div></div><div class="text-end"><div class="num fw-semibold">$2,700.00</div><span class="st st-draft">Scheduled</span></div></div></li>
-              <li><span class="n">3</span><div class="d-flex justify-content-between"><div><b>Monthly</b><div class="small text-slate">From Nov 22, 2026</div></div><div class="text-end"><div class="num fw-semibold">$600.00</div><span class="st st-draft">Not started</span></div></div></li>
+              <li class="now"><span class="n">1</span><div class="d-flex justify-content-between"><div><b>Deposit</b><div class="small text-slate">Sep 23, 2026, card ending 4242</div></div><div class="text-end"><div class="num fw-semibold">$255.00</div><span class="st st-live">Paid</span></div></div></li>
+              <li><span class="n">2</span><div class="d-flex justify-content-between"><div><b>Balance</b><div class="small text-slate">Scheduled Oct 23, 2026</div></div><div class="text-end"><div class="num fw-semibold">$2,295.00</div><span class="st st-draft">Scheduled</span></div></div></li>
+              <li><span class="n">3</span><div class="d-flex justify-content-between"><div><b>Monthly</b><div class="small text-slate">From Nov 22, 2026</div></div><div class="text-end"><div class="num fw-semibold">$660.00</div><span class="st st-draft">Not started</span></div></div></li>
             </ol>
-            <hr><div class="small"><b>Contract:</b> v1.0, signed Sep 23, 2026. Term Oct 23, 2026 to Oct 22, 2027. <a href="#" data-go="v-pdf">Download PDF</a></div>
+            <hr><div class="small"><b>Coupon:</b> NAR2026 (15%), via onboarding link. <b>Contract:</b> template v1.0, signed Sep 23, 2026. <a href="#" data-go="v-pdf">Download PDF</a></div>
           </div></div>
         </div>
+      </div></div>
+      <div class="tab-pane fade" id="cd-inv"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Invoice</th><th>Type</th><th class="text-end">Amount</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>
+        <tr><td class="num">INV-2026-0311</td><td>Deposit</td><td class="text-end num">$255.00</td><td>Sep 23, 2026</td><td><span class="st st-live">Paid</span></td><td class="text-end"><a href="#" class="btn btn-sm btn-outline-secondary">Receipt</a></td></tr>
+        <tr><td class="num">Scheduled</td><td>Balance</td><td class="text-end num">$2,295.00</td><td>Oct 23, 2026</td><td><span class="st st-draft">Scheduled</span></td><td></td></tr>
+      </tbody></table></div></div></div>
+      <div class="tab-pane fade" id="cd-ctr"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Agreement</th><th>Type</th><th>Template</th><th>Signed</th><th>Term</th><th></th></tr></thead><tbody>
+        <tr><td class="num">RA-2026-0024</td><td>Initial</td><td>v1.0</td><td>Sep 23, 2026, 10:42 AM ET</td><td>Oct 23, 2026 to Oct 22, 2027</td><td class="text-end"><a href="#" data-go="v-pdf" class="btn btn-sm btn-outline-primary"><svg class="ic me-1"><use href="#i-down"/></svg>PDF</a></td></tr>
+      </tbody></table></div><div class="p-3 small text-slate border-top">Signature record: IP 73.214.18.92, Chrome 129 on macOS, SHA-256 9f2c4e…b71a0d. <a href="#">Verify document hash</a></div></div></div>
+      <div class="tab-pane fade" id="cd-ag"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th class="text-end">From</th><th class="text-end">To</th><th>Source</th><th>By</th></tr></thead><tbody>
+        <tr><td>Sep 23, 2026</td><td class="text-end">—</td><td class="text-end">8</td><td>Onboarding form</td><td>Maria Alvarez</td></tr>
+      </tbody></table></div><div class="p-3 small text-slate border-top">Future changes from admin edits, the daily sync and the customer’s RightAlly instance appear here.</div></div></div>
+      <div class="tab-pane fade" id="cd-em"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Sent</th><th>Template</th><th>To</th><th>Status</th></tr></thead><tbody>
+        <tr><td>Sep 23, 10:43 AM</td><td>Agreement signed</td><td>maria@sunlinerealty.com, CC 2</td><td><span class="st st-live">Delivered</span></td></tr>
+        <tr><td>Sep 23, 10:47 AM</td><td>Deposit receipt</td><td>maria@sunlinerealty.com, CC 2</td><td><span class="st st-live">Opened</span></td></tr>
+      </tbody></table></div></div></div>
+      <div class="tab-pane fade" id="cd-act"><div class="panel p-3 p-md-4"><ol class="tl">
+        <li><span class="n">3</span><b>Deposit paid</b> by card ending 4242<div class="small text-slate">Sep 23, 10:47 AM, Stripe</div></li>
+        <li><span class="n">2</span><b>Agreement signed</b><div class="small text-slate">Sep 23, 10:42 AM, Maria Alvarez</div></li>
+        <li><span class="n">1</span><b>Onboarding started</b> from the NAR2026 link<div class="small text-slate">Sep 23, 10:31 AM</div></li>
+      </ol></div></div>
       </div>
     </div>
 
-    <!-- Invoices -->
+    <!-- ================= Contracts ================= -->
+    <div class="apage" data-apage="ctr">
+      <h1 class="h3 mb-4">Contracts</h1>
+      <ul class="nav nav-tabs tabs-scroll mb-3" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#ct-signed">Signed</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ct-ren">Renewals <span class="badge text-bg-warning">2</span></a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ct-tpl">Templates</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="ct-signed"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Agreement</th><th>Customer</th><th>Signed</th><th>Term ends</th><th>Template</th><th></th></tr></thead><tbody>
+          <tr><td class="num">RA-2026-0024</td><td><b>Sunline Realty Group</b></td><td>Sep 23, 2026</td><td>Oct 22, 2027</td><td>v1.0</td><td class="text-end"><a href="#" data-go="v-pdf" class="btn btn-sm btn-outline-primary"><svg class="ic me-1"><use href="#i-down"/></svg>PDF</a></td></tr>
+          <tr><td class="num">RA-2026-0021</td><td><b>Harbor Point Realty</b></td><td>Aug 27, 2026</td><td>Sep 25, 2027</td><td>v1.0</td><td class="text-end"><a href="#" data-go="v-pdf" class="btn btn-sm btn-outline-primary"><svg class="ic me-1"><use href="#i-down"/></svg>PDF</a></td></tr>
+          <tr><td class="num">RA-2025-0007</td><td><b>Coastal Keys Brokerage</b></td><td>Oct 01, 2025</td><td>Oct 30, 2026</td><td>v0.9</td><td class="text-end"><a href="#" data-go="v-pdf" class="btn btn-sm btn-outline-primary"><svg class="ic me-1"><use href="#i-down"/></svg>PDF</a></td></tr>
+        </tbody></table></div></div></div>
+        <div class="tab-pane fade" id="ct-ren"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Customer</th><th>Term ends</th><th>Renewal sent</th><th>Reminder</th><th>Status</th><th></th></tr></thead><tbody>
+          <tr><td><b>Coastal Keys Brokerage</b></td><td>Oct 30, 2026</td><td>Sep 15, 2026</td><td>Oct 15, 2026</td><td><span class="st st-wait">Awaiting signature</span></td><td class="text-end"><button class="btn btn-sm btn-outline-primary"><svg class="ic me-1"><use href="#i-send"/></svg>Resend</button></td></tr>
+          <tr><td><b>Bayside Realty Co.</b></td><td>Nov 04, 2026</td><td>Sep 20, 2026</td><td>Oct 20, 2026</td><td><span class="st st-wait">Awaiting signature</span></td><td class="text-end"><button class="btn btn-sm btn-outline-primary"><svg class="ic me-1"><use href="#i-send"/></svg>Resend</button></td></tr>
+        </tbody></table></div></div></div>
+        <div class="tab-pane fade" id="ct-tpl"><div class="panel"><div class="panel-h"><h2>Agreement templates</h2><button class="btn btn-primary btn-sm"><svg class="ic me-1"><use href="#i-plus"/></svg>New version</button></div><div class="table-responsive"><table class="table"><thead><tr><th>Version</th><th>Type</th><th>Published</th><th>Used by</th><th>Status</th><th></th></tr></thead><tbody>
+          <tr><td>v1.0</td><td>Initial agreement</td><td>Sep 20, 2026</td><td class="num">6</td><td><span class="st st-live">Active</span></td><td class="text-end"><button class="btn btn-sm btn-outline-secondary">View</button></td></tr>
+          <tr><td>v1.0</td><td>Renewal agreement</td><td>Sep 20, 2026</td><td class="num">2</td><td><span class="st st-live">Active</span></td><td class="text-end"><button class="btn btn-sm btn-outline-secondary">View</button></td></tr>
+          <tr><td>v0.9</td><td>Initial agreement</td><td>Jan 12, 2025</td><td class="num">18</td><td><span class="st st-draft">Retired</span></td><td class="text-end"><button class="btn btn-sm btn-outline-secondary">View</button></td></tr>
+        </tbody></table></div><div class="p-3 small text-slate border-top">Published versions can’t be edited, so every signed agreement matches its template exactly. To change wording, create a new version.</div></div></div>
+      </div>
+    </div>
+
+    <!-- ================= Invoices ================= -->
     <div class="apage" data-apage="inv">
       <h1 class="h3 mb-4">Invoices</h1>
-      <ul class="nav nav-tabs tabs-scroll mb-3"><li class="nav-item"><a class="nav-link" href="#">Paid</a></li><li class="nav-item"><a class="nav-link active" href="#">Failed <span class="badge text-bg-danger">3</span></a></li><li class="nav-item"><a class="nav-link" href="#">Upcoming</a></li></ul>
-      <div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Customer</th><th>Type</th><th class="text-end">Amount</th><th>Failed</th><th>Reason</th><th>Link sent</th><th></th></tr></thead><tbody>
-        <tr><td><b>Keystone Homes</b></td><td>Monthly, Sep</td><td class="text-end num">$1,120.00</td><td class="num">Sep 20</td><td>Card declined</td><td class="num">Sep 21</td><td class="text-end"><button class="btn btn-sm btn-outline-primary"><svg class="ic me-1"><use href="#i-send"/></svg>Resend link</button></td></tr>
-        <tr><td><b>Mesa Verde Properties</b></td><td>Monthly, Aug</td><td class="text-end num">$680.00</td><td class="num">Aug 22</td><td>Insufficient funds</td><td class="num">Sep 15</td><td class="text-end"><button class="btn btn-sm btn-outline-primary"><svg class="ic me-1"><use href="#i-send"/></svg>Resend link</button></td></tr>
-        <tr><td><b>Pine Hollow Realty</b></td><td>Balance</td><td class="text-end num">$230.00</td><td class="num">Sep 18</td><td>Bank account closed (ACH)</td><td class="num">—</td><td class="text-end"><button class="btn btn-sm btn-outline-primary"><svg class="ic me-1"><use href="#i-send"/></svg>Send link</button></td></tr>
-      </tbody></table></div></div>
+      <ul class="nav nav-tabs tabs-scroll mb-3" role="tablist" id="invTabs">
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#iv-paid">Paid</a></li>
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#iv-fail">Failed <span class="badge text-bg-danger">3</span></a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#iv-up">Upcoming</a></li>
+      </ul>
+      <div class="tab-content">
+      <div class="tab-pane fade" id="iv-paid"><div class="panel"><div class="panel-h"><div class="d-flex gap-2"><select class="form-select form-select-sm" style="width:150px"><option>All types</option><option>Deposit</option><option>Balance</option><option>Monthly</option></select><select class="form-select form-select-sm" style="width:150px"><option>This month</option><option>Last month</option><option>This year</option></select></div><button class="btn btn-outline-secondary btn-sm"><svg class="ic me-1"><use href="#i-down"/></svg>Export CSV</button></div><div class="table-responsive"><table class="table"><thead><tr><th>Invoice</th><th>Customer</th><th>Type</th><th class="text-end">Amount</th><th>Paid</th><th>Method</th></tr></thead><tbody>
+        <tr><td class="num">INV-2026-0311</td><td><b>Sunline Realty Group</b></td><td>Deposit</td><td class="text-end num">$255.00</td><td>Sep 23</td><td>Card 4242</td></tr>
+        <tr><td class="num">INV-2026-0309</td><td><b>Coastal Keys Brokerage</b></td><td>Monthly, Sep</td><td class="text-end num">$1,460.00</td><td>Sep 22</td><td>ACH 6789</td></tr>
+        <tr><td class="num">INV-2026-0305</td><td><b>Harbor Point Realty</b></td><td>Deposit</td><td class="text-end num">$270.00</td><td>Aug 27</td><td>Card 1881</td></tr>
+      </tbody></table></div></div></div>
+      <div class="tab-pane fade show active" id="iv-fail"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Customer</th><th>Type</th><th class="text-end">Amount</th><th>Failed</th><th>Reason</th><th>Link sent</th><th></th></tr></thead><tbody>
+        <tr><td><b>Keystone Homes</b></td><td>Monthly, Sep</td><td class="text-end num">$1,120.00</td><td class="num">Sep 20</td><td>Card declined</td><td class="num" data-sent>Sep 21</td><td class="text-end"><button class="btn btn-sm btn-outline-primary" data-resend><svg class="ic me-1"><use href="#i-send"/></svg>Resend link</button></td></tr>
+        <tr><td><b>Mesa Verde Properties</b></td><td>Monthly, Aug</td><td class="text-end num">$680.00</td><td class="num">Aug 22</td><td>Insufficient funds</td><td class="num" data-sent>Sep 15</td><td class="text-end"><button class="btn btn-sm btn-outline-primary" data-resend><svg class="ic me-1"><use href="#i-send"/></svg>Resend link</button></td></tr>
+        <tr><td><b>Pine Hollow Realty</b></td><td>Balance</td><td class="text-end num">$230.00</td><td class="num">Sep 18</td><td>Bank account closed (ACH)</td><td class="num" data-sent>—</td><td class="text-end"><button class="btn btn-sm btn-outline-primary" data-resend><svg class="ic me-1"><use href="#i-send"/></svg>Send link</button></td></tr>
+      </tbody></table></div><div class="p-3 small text-slate border-top">The link opens a secure Stripe page where the client updates their card or bank and pays. The new method is saved for future charges.</div></div></div>
+      <div class="tab-pane fade" id="iv-up"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Customer</th><th>Type</th><th class="text-end">Amount</th><th>Method</th></tr></thead><tbody>
+        <tr><td>Sep 26</td><td><b>Harbor Point Realty</b></td><td>Balance at go-live</td><td class="text-end num">$2,430.00</td><td>Card 1881</td></tr>
+        <tr><td>Sep 29</td><td><b>Riverstone Realty</b></td><td>Balance at go-live</td><td class="text-end num">$2,700.00</td><td>ACH 3321</td></tr>
+        <tr><td>Oct 01</td><td><b>Coastal Keys Brokerage</b></td><td>Monthly, 48 agents</td><td class="text-end num">$1,460.00</td><td>ACH 6789</td></tr>
+        <tr><td>Oct 23</td><td><b>Sunline Realty Group</b></td><td>Balance at go-live</td><td class="text-end num">$2,295.00</td><td>Card 4242</td></tr>
+      </tbody></table></div></div></div>
+      </div>
     </div>
 
-    <!-- Coupons -->
+    <!-- ================= Coupons ================= -->
     <div class="apage" data-apage="coup">
-      <div class="d-flex justify-content-between align-items-center mb-4"><h1 class="h3 mb-0">Coupons</h1><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#coupModal"><svg class="ic me-1"><use href="#i-plus"/></svg>New coupon</button></div>
-      <div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Code</th><th>Name</th><th class="text-end">Discount</th><th>Expires</th><th class="text-end">Used</th><th>Status</th></tr></thead><tbody>
-        <tr><td class="font-monospace fw-semibold">WELCOME10</td><td>Launch offer</td><td class="text-end">10%</td><td>Dec 31, 2026</td><td class="text-end num">7</td><td><span class="st st-live">Active</span></td></tr>
-        <tr><td class="font-monospace fw-semibold">NAR2026</td><td>NAR conference</td><td class="text-end">15%</td><td>Nov 15, 2026</td><td class="text-end num">3</td><td><span class="st st-live">Active</span></td></tr>
-        <tr><td class="font-monospace fw-semibold">SUMMER25</td><td>Summer promotion</td><td class="text-end">25%</td><td>Aug 31, 2026</td><td class="text-end num">5</td><td><span class="st st-draft">Expired</span></td></tr>
-      </tbody></table></div></div>
-      <div class="modal fade" id="coupModal" tabindex="-1" aria-labelledby="coupT"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="coupT">New coupon</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body">
-        <div class="mb-3"><label class="form-label">Coupon code</label><input class="form-control text-uppercase" placeholder="e.g. SPRING20"></div>
-        <div class="mb-3"><label class="form-label">Name</label><input class="form-control" placeholder="Internal name"></div>
-        <div class="row g-3"><div class="col-6"><label class="form-label">Discount</label><div class="input-group"><input type="number" class="form-control" min="1" max="100"><span class="input-group-text">%</span></div></div><div class="col-6"><label class="form-label">Expiry date</label><input type="date" class="form-control"></div></div>
+      <div class="d-flex justify-content-between align-items-center mb-4"><h1 class="h3 mb-0">Coupons</h1><button class="btn btn-primary" data-coupon-new><svg class="ic me-1"><use href="#i-plus"/></svg>New coupon</button></div>
+      <div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Code</th><th>Name</th><th class="text-end">Discount</th><th>Expires</th><th class="text-end">Used</th><th>Share link</th><th>Status</th><th></th></tr></thead><tbody id="coupT">
+        <tr data-c='{"code":"WELCOME10","name":"Launch offer","pct":10,"exp":"","used":7,"active":true}'></tr>
+        <tr data-c='{"code":"NAR2026","name":"NAR conference","pct":15,"exp":"2026-11-15","used":3,"active":true}'></tr>
+        <tr data-c='{"code":"SUMMER25","name":"Summer promotion","pct":25,"exp":"2026-08-31","used":5,"active":true}'></tr>
+      </tbody></table></div><div class="p-3 small text-slate border-top">Used codes can’t be renamed, because signed agreements refer to them. Discount changes apply to new sign-ups only.</div></div>
+      <div class="modal fade" id="coupModal" tabindex="-1" aria-labelledby="coupT2"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="coupT2">New coupon</h5><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body">
+        <div class="mb-3"><label class="form-label" for="cCode">Coupon code</label><input class="form-control text-uppercase" id="cCode" placeholder="e.g. SPRING20"><div class="form-text d-none" id="cCodeLock">This code has been used, so it can’t be renamed.</div></div>
+        <div class="mb-3"><label class="form-label" for="cName">Name</label><input class="form-control" id="cName" placeholder="Internal name"></div>
+        <div class="row g-3"><div class="col-6"><label class="form-label" for="cPct">Discount</label><div class="input-group"><input type="number" class="form-control" id="cPct" min="1" max="100"><span class="input-group-text">%</span></div></div>
+          <div class="col-6"><label class="form-label" for="cExp">Expiry date</label><input type="date" class="form-control" id="cExp"></div></div>
+        <div class="form-check form-switch mt-3"><input class="form-check-input" type="checkbox" id="cNever"><label class="form-check-label" for="cNever">Never expires</label></div>
+        <div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" id="cAct" checked><label class="form-check-label" for="cAct">Active</label></div>
         <div class="form-text mt-2">Applies to the implementation fee only.</div></div>
-        <div class="modal-footer"><button class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Save coupon</button></div></div></div></div>
+        <div class="modal-footer"><button class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" id="cSave">Save coupon</button></div></div></div></div>
     </div>
 
-    <!-- Roles -->
+    <!-- ================= Email templates ================= -->
+    <div class="apage" data-apage="etpl">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4"><h1 class="h3 mb-0">Email templates</h1><button class="btn btn-primary" data-ap="etpl-edit" data-new-tpl><svg class="ic me-1"><use href="#i-plus"/></svg>New custom template</button></div>
+      <ul class="nav nav-tabs tabs-scroll mb-3" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#et-sys">Automatic emails</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#et-cus">Custom emails</a></li>
+      </ul>
+      <div class="tab-content">
+      <div class="tab-pane fade show active" id="et-sys"><div class="panel"><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Email</th><th>Sent when</th><th>CC team</th><th>Last edited</th><th></th></tr></thead><tbody id="sysTpl"></tbody></table></div><div class="p-3 small text-slate border-top">Automatic emails are sent by the system at a set moment, so they can be edited or switched off but not deleted.</div></div></div>
+      <div class="tab-pane fade" id="et-cus"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Email</th><th>Purpose</th><th>Last edited</th><th></th></tr></thead><tbody>
+        <tr><td><b>Kick-off call scheduling</b></td><td>Sent manually from a customer page</td><td>Sep 18, 2026</td><td class="text-end"><a href="#" data-ap="etpl-edit" class="btn btn-sm btn-outline-primary">Edit</a></td></tr>
+        <tr><td><b>Go-live checklist</b></td><td>Sent manually from a customer page</td><td>Sep 12, 2026</td><td class="text-end"><a href="#" data-ap="etpl-edit" class="btn btn-sm btn-outline-primary">Edit</a></td></tr>
+      </tbody></table></div><div class="p-3 small text-slate border-top">Custom emails are for one-off messages. Send them from a customer’s Actions menu.</div></div></div>
+      </div>
+    </div>
+
+    <div class="apage" data-apage="etpl-edit">
+      <a href="#" data-ap="etpl" class="small text-decoration-none d-inline-flex align-items-center gap-1 mb-2"><svg class="ic"><use href="#i-arrow"/></svg>Email templates</a>
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4"><div><h1 class="h3 mb-1" id="etTitle">Agreement signed</h1><div class="text-slate small" id="etWhen">Sent when a client signs their agreement. Signed PDF attached automatically.</div></div>
+        <div class="d-flex gap-2"><button class="btn btn-outline-secondary btn-sm">Reset to default</button><button class="btn btn-outline-primary btn-sm"><svg class="ic me-1"><use href="#i-send"/></svg>Send test to me</button></div></div>
+      <div class="row g-3">
+        <div class="col-xl-6"><div class="panel p-3 p-md-4">
+          <div class="mb-3"><label class="form-label" for="etSubj">Subject</label><input class="form-control" id="etSubj" value="Your RightAlly agreement is signed"></div>
+          <div class="mb-2"><label class="form-label" for="etBody">Message</label>
+            <div class="btn-toolbar gap-1 mb-2" role="toolbar" aria-label="Formatting"><button class="btn btn-sm btn-light fw-bold" type="button">B</button><button class="btn btn-sm btn-light fst-italic" type="button">I</button><button class="btn btn-sm btn-light" type="button">Link</button><button class="btn btn-sm btn-light" type="button">Button</button><button class="btn btn-sm btn-light" type="button">Fee table</button></div>
+            <textarea class="form-control" id="etBody" rows="11">Welcome aboard, {first_name}
+
+Thanks for choosing RightAlly for {company_name}. Your agreement is signed and your deposit of {deposit_amount} is paid. The signed agreement is attached to this email.
+
+{fee_table}
+
+Your implementation lead will contact you within 2 business days to schedule a kick-off call.
+
+{button:Download your agreement|{agreement_link}}
+
+Srini
+Co-Founder, RightAlly</textarea></div>
+          <div class="small text-slate mb-2">Click to insert:</div>
+          <div class="d-flex flex-wrap gap-1 mb-3" id="phChips"></div>
+          <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="etCc" checked><label class="form-check-label" for="etCc">CC team (m.sunil@rightally.io, srini@rightally.io)</label></div>
+          <div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" id="etOn" checked><label class="form-check-label" for="etOn">Send this email</label></div>
+          <button class="btn btn-primary mt-4">Save template</button>
+        </div></div>
+        <div class="col-xl-6"><div class="panel"><div class="panel-h"><h2>Preview</h2><span class="small text-slate">With sample data</span></div><div class="p-3" style="background:#EEF2F8">
+          <div class="email" style="max-width:100%"><div class="eh" style="padding:18px 22px"><img src="__LOGO__" alt="RightAlly" style="height:24px"></div><div class="eb" style="padding:22px" id="etPrev"></div><div class="ef" style="padding:14px 22px">Mayura Consultancy Services LLC d/b/a RightAlly, 66 West Flagler Street, Suite 900, Miami, FL 33130</div></div>
+        </div></div></div>
+      </div>
+    </div>
+
+    <!-- ================= Admins and roles ================= -->
     <div class="apage" data-apage="roles">
-      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2"><h1 class="h3 mb-0">Admins and roles</h1><div class="d-flex gap-2"><button class="btn btn-outline-primary">Invite admin</button><button class="btn btn-primary"><svg class="ic me-1"><use href="#i-plus"/></svg>New role</button></div></div>
-      <div class="panel"><div class="panel-h"><h2>Menu access by role</h2><span class="small text-slate">Super admin always has full access</span></div>
-      <div class="table-responsive"><table class="table perm"><thead><tr><th>Menu</th><th>Super admin</th><th>Billing</th><th>Sales</th><th>Viewer</th></tr></thead><tbody>
-        <tr><td>Dashboard</td><td>✓</td><td><input class="form-check-input" type="checkbox" checked aria-label="Billing: Dashboard"></td><td><input class="form-check-input" type="checkbox" checked aria-label="Sales: Dashboard"></td><td><input class="form-check-input" type="checkbox" checked aria-label="Viewer: Dashboard"></td></tr>
-        <tr><td>Customers</td><td>✓</td><td><input class="form-check-input" type="checkbox" checked aria-label="Billing: Customers"></td><td><input class="form-check-input" type="checkbox" checked aria-label="Sales: Customers"></td><td><input class="form-check-input" type="checkbox" checked aria-label="Viewer: Customers"></td></tr>
-        <tr><td>Contracts</td><td>✓</td><td><input class="form-check-input" type="checkbox" checked aria-label="Billing: Contracts"></td><td><input class="form-check-input" type="checkbox" checked aria-label="Sales: Contracts"></td><td><input class="form-check-input" type="checkbox" aria-label="Viewer: Contracts"></td></tr>
-        <tr><td>Invoices</td><td>✓</td><td><input class="form-check-input" type="checkbox" checked aria-label="Billing: Invoices"></td><td><input class="form-check-input" type="checkbox" aria-label="Sales: Invoices"></td><td><input class="form-check-input" type="checkbox" aria-label="Viewer: Invoices"></td></tr>
-        <tr><td>Coupons</td><td>✓</td><td><input class="form-check-input" type="checkbox" aria-label="Billing: Coupons"></td><td><input class="form-check-input" type="checkbox" checked aria-label="Sales: Coupons"></td><td><input class="form-check-input" type="checkbox" aria-label="Viewer: Coupons"></td></tr>
-        <tr><td>Settings</td><td>✓</td><td><input class="form-check-input" type="checkbox" aria-label="Billing: Settings"></td><td><input class="form-check-input" type="checkbox" aria-label="Sales: Settings"></td><td><input class="form-check-input" type="checkbox" aria-label="Viewer: Settings"></td></tr>
-      </tbody></table></div></div>
+      <h1 class="h3 mb-4">Admins and roles</h1>
+      <ul class="nav nav-tabs tabs-scroll mb-3" role="tablist">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#rl-adm">Admins</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#rl-roles">Roles and menu access</a></li>
+      </ul>
+      <div class="tab-content">
+      <div class="tab-pane fade show active" id="rl-adm"><div class="panel"><div class="panel-h"><span class="small text-slate">3 admins</span><button class="btn btn-primary btn-sm"><svg class="ic me-1"><use href="#i-plus"/></svg>Invite admin</button></div><div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Role</th><th>Two-factor</th><th>Last sign-in</th><th>Status</th><th></th></tr></thead><tbody>
+        <tr><td><b>Srini</b><div class="small text-slate">srini@rightally.io</div></td><td>Super admin</td><td><span class="st st-live">On</span></td><td>Today, 9:12 AM</td><td><span class="st st-live">Active</span></td><td class="text-end"><button class="btn btn-sm btn-outline-secondary" disabled>Edit</button></td></tr>
+        <tr><td><b>Sunil M</b><div class="small text-slate">m.sunil@rightally.io</div></td><td>Billing</td><td><span class="st st-live">On</span></td><td>Yesterday</td><td><span class="st st-live">Active</span></td><td class="text-end"><button class="btn btn-sm btn-outline-secondary">Edit</button></td></tr>
+        <tr><td><b>Priya K</b><div class="small text-slate">priya@rightally.io</div></td><td>Sales</td><td><span class="st st-fail">Not set up</span></td><td>—</td><td><span class="st st-wait">Invited</span></td><td class="text-end"><button class="btn btn-sm btn-outline-secondary">Resend invite</button></td></tr>
+      </tbody></table></div><div class="p-3 small text-slate border-top">Every admin must set up two-factor authentication at first sign-in.</div></div></div>
+      <div class="tab-pane fade" id="rl-roles"><div class="panel"><div class="panel-h"><h2>Menu access by role</h2><button class="btn btn-primary btn-sm"><svg class="ic me-1"><use href="#i-plus"/></svg>New role</button></div>
+      <div class="table-responsive"><table class="table perm"><thead><tr><th>Menu</th><th>Super admin</th><th>Billing</th><th>Sales</th><th>Viewer</th></tr></thead><tbody id="permT"></tbody></table></div><div class="p-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2"><span class="small text-slate">Super admin always has full access.</span><button class="btn btn-primary btn-sm">Save access</button></div></div></div>
+      </div>
     </div>
 
-    <!-- Settings -->
+    <!-- ================= Settings ================= -->
     <div class="apage" data-apage="set">
       <h1 class="h3 mb-4">Settings</h1>
       <ul class="nav nav-tabs tabs-scroll mb-4" role="tablist">
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#t-co">Company</a></li>
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#t-co">Company</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#t-pr">Pricing</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#t-rn">Renewal pricing</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#t-sg">Signature</a></li>
-        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#t-st">Stripe</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#t-st">Stripe</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#t-em">Email</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#t-tx">Tax</a></li>
         <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#t-me">My account</a></li>
       </ul>
       <div class="tab-content panel p-3 p-md-4" style="max-width:820px">
-        <div class="tab-pane fade" id="t-co"><div class="row g-3"><div class="col-sm-6"><label class="form-label">Legal name</label><input class="form-control" value="Mayura Consultancy Services LLC"></div><div class="col-sm-6"><label class="form-label">Doing business as</label><input class="form-control" value="RightAlly"></div><div class="col-12"><label class="form-label">Registered address</label><input class="form-control" value="66 West Flagler Street, Suite 900, Miami, FL 33130"></div><div class="col-sm-6"><label class="form-label">Phone</label><input class="form-control"></div><div class="col-sm-6"><label class="form-label">Support email</label><input class="form-control" value="support@rightally.io"></div></div></div>
-        <div class="tab-pane fade" id="t-pr"><div class="row g-3"><div class="col-sm-4"><label class="form-label">Set-up fee</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" value="3000.00"></div></div><div class="col-sm-4"><label class="form-label">Deposit</label><div class="input-group"><input class="form-control" value="10"><span class="input-group-text">%</span></div></div><div class="col-sm-4"><label class="form-label">Go-live after</label><div class="input-group"><input class="form-control" value="30"><span class="input-group-text">days</span></div></div><div class="col-sm-4"><label class="form-label">Platform fee / month</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" value="500.00"></div></div><div class="col-sm-4"><label class="form-label">Per agent / month</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" value="20.00"></div></div><div class="col-sm-4"><label class="form-label">Minimum agents</label><input class="form-control" value="5"></div></div><div class="form-text mt-3">Changes apply to new agreements only. Signed agreements keep their original prices.</div></div>
-        <div class="tab-pane fade" id="t-rn"><p class="text-slate">Used for renewal agreements. Leave blank to renew at each customer’s original contract rates.</p><div class="row g-3"><div class="col-sm-6"><label class="form-label">Renewal platform fee / month</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" placeholder="Original rate"></div></div><div class="col-sm-6"><label class="form-label">Renewal per agent / month</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" placeholder="Original rate"></div></div></div></div>
-        <div class="tab-pane fade" id="t-sg"><div class="row g-3"><div class="col-sm-6"><label class="form-label">Signatory name</label><input class="form-control" value="Srini"></div><div class="col-sm-6"><label class="form-label">Title</label><input class="form-control" value="Co-Founder"></div><div class="col-12"><label class="form-label">Signature image</label><input type="file" class="form-control" accept="image/png"><div class="form-text">Transparent PNG, at least 600 px wide.</div></div></div></div>
-        <div class="tab-pane fade show active" id="t-st">
+        <div class="tab-pane fade show active" id="t-co"><div class="row g-3"><div class="col-sm-6"><label class="form-label">Legal name</label><input class="form-control" value="Mayura Consultancy Services LLC"></div><div class="col-sm-6"><label class="form-label">Doing business as</label><input class="form-control" value="RightAlly"></div><div class="col-12"><label class="form-label">Registered address</label><input class="form-control" value="66 West Flagler Street, Suite 900, Miami, FL 33130"></div><div class="col-sm-6"><label class="form-label">Phone</label><input class="form-control"></div><div class="col-sm-6"><label class="form-label">Support email</label><input class="form-control" value="support@rightally.io"></div></div><button class="btn btn-primary mt-4">Save</button></div>
+        <div class="tab-pane fade" id="t-pr"><div class="row g-3"><div class="col-sm-4"><label class="form-label">Set-up fee</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" value="3000.00"></div></div><div class="col-sm-4"><label class="form-label">Deposit</label><div class="input-group"><input class="form-control" value="10"><span class="input-group-text">%</span></div></div><div class="col-sm-4"><label class="form-label">Go-live after</label><div class="input-group"><input class="form-control" value="30"><span class="input-group-text">days</span></div></div><div class="col-sm-4"><label class="form-label">Platform fee / month</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" value="500.00"></div></div><div class="col-sm-4"><label class="form-label">Per agent / month</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" value="20.00"></div></div><div class="col-sm-4"><label class="form-label">Minimum agents</label><input class="form-control" value="5"></div></div><div class="form-text mt-3">Changes apply to new agreements only. Signed agreements keep their original prices.</div><button class="btn btn-primary mt-4">Save</button></div>
+        <div class="tab-pane fade" id="t-rn"><p class="text-slate">Used for renewal agreements. Leave blank to renew at each customer’s original contract rates.</p><div class="row g-3"><div class="col-sm-6"><label class="form-label">Renewal platform fee / month</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" placeholder="Original rate"></div></div><div class="col-sm-6"><label class="form-label">Renewal per agent / month</label><div class="input-group"><span class="input-group-text">$</span><input class="form-control" placeholder="Original rate"></div></div></div><button class="btn btn-primary mt-4">Save</button></div>
+        <div class="tab-pane fade" id="t-sg"><p class="text-slate">Applied automatically to RightAlly’s side of every agreement. Nobody at RightAlly needs to sign each one.</p><div class="row g-3"><div class="col-sm-6"><label class="form-label">Signatory name</label><input class="form-control" value="Srini"></div><div class="col-sm-6"><label class="form-label">Title</label><input class="form-control" value="Co-Founder"></div><div class="col-12"><label class="form-label">Signature style</label><div class="d-flex gap-3 flex-wrap"><div class="form-check"><input class="form-check-input" type="radio" name="sgs" id="sgF" checked><label class="form-check-label" for="sgF">Name in signature font</label></div><div class="form-check"><input class="form-check-input" type="radio" name="sgs" id="sgI"><label class="form-check-label" for="sgI">Upload an image</label></div></div></div><div class="col-12"><div class="co-sig"><div class="small text-slate">Preview</div><div class="sig-font" style="color:#0839B2">Srini</div><div class="small">Srini, Co-Founder</div></div></div></div><button class="btn btn-primary mt-4">Save</button></div>
+        <div class="tab-pane fade" id="t-st">
           <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3"><div><b>Mode</b><div class="small text-slate">Test mode uses test keys. No real money moves.</div></div><div class="btn-group" role="group"><input type="radio" class="btn-check" name="mode" id="mT" checked><label class="btn btn-outline-warning" for="mT">Test</label><input type="radio" class="btn-check" name="mode" id="mL"><label class="btn btn-outline-success" for="mL">Live</label></div></div>
           <h3 class="h6 mt-4">Test keys</h3><div class="row g-3"><div class="col-12"><label class="form-label">Publishable key</label><input class="form-control font-monospace" value="pk_test_51P••••••••••••••••" ></div><div class="col-12"><label class="form-label">Secret key</label><input type="password" class="form-control font-monospace" value="sk_test_secretvalue"><div class="form-text">Stored encrypted. Only the last 4 characters are ever shown.</div></div><div class="col-12"><label class="form-label">Webhook signing secret</label><input type="password" class="form-control font-monospace" value="whsec_secretvalue"></div></div>
           <h3 class="h6 mt-4">Live keys</h3><div class="text-slate small mb-2">Not set</div>
           <div class="d-flex gap-2 mt-3"><button class="btn btn-primary">Save Stripe settings</button><button class="btn btn-outline-secondary">Test connection</button></div></div>
-        <div class="tab-pane fade" id="t-em"><div class="row g-3"><div class="col-12"><label class="form-label">Brevo API key</label><input type="password" class="form-control" value="xkeysib-secret"></div><div class="col-sm-6"><label class="form-label">From name</label><input class="form-control" value="RightAlly"></div><div class="col-sm-6"><label class="form-label">From email</label><input class="form-control" value="no-reply@rightally.io"></div><div class="col-12"><label class="form-label">Always CC</label><input class="form-control" value="m.sunil@rightally.io, srini@rightally.io"></div></div><a href="#" class="d-inline-block mt-3">Edit email templates</a></div>
+        <div class="tab-pane fade" id="t-em"><div class="row g-3"><div class="col-12"><label class="form-label">Brevo API key</label><input type="password" class="form-control" value="xkeysib-secret"></div><div class="col-sm-6"><label class="form-label">From name</label><input class="form-control" value="RightAlly"></div><div class="col-sm-6"><label class="form-label">From email</label><input class="form-control" value="no-reply@rightally.io"></div><div class="col-12"><label class="form-label">Team CC addresses</label><input class="form-control" value="m.sunil@rightally.io, srini@rightally.io"><div class="form-text">Each template chooses whether to CC the team.</div></div></div><div class="d-flex gap-2 mt-4"><button class="btn btn-primary">Save</button><a href="#" data-ap="etpl" class="btn btn-outline-secondary">Manage email templates</a></div></div>
         <div class="tab-pane fade" id="t-tx"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="tx"><label class="form-check-label" for="tx">Charge sales tax (Stripe Tax)</label></div><div class="form-text">Off. When on, tax is calculated from the customer’s address.</div></div>
         <div class="tab-pane fade" id="t-me"><div class="row g-3"><div class="col-sm-6"><label class="form-label">New password</label><input type="password" class="form-control"></div><div class="col-sm-6"><label class="form-label">Confirm password</label><input type="password" class="form-control"></div></div><div class="d-flex justify-content-between align-items-center mt-4 p-3 border rounded"><div><b>Two-factor authentication</b><div class="small text-slate">On, using an authenticator app</div></div><button class="btn btn-outline-secondary btn-sm">Show recovery codes</button></div></div>
       </div>
@@ -554,7 +692,9 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
     </div>
   </div>
 </div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3"><div class="toast align-items-center text-bg-dark border-0" id="toast" role="status"><div class="d-flex"><div class="toast-body" id="toastB"></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button></div></div></div>
 </section>
+
 
 <!-- =========================================================
      EMAIL PREVIEW
@@ -567,9 +707,9 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
       <p style="font-size:20px;font-weight:600;margin:0 0 16px">Welcome aboard, Maria</p>
       <p>Thanks for choosing RightAlly for Sunline Realty Group. Your agreement is signed and your deposit is paid. The signed agreement is attached to this email.</p>
       <table width="100%" style="border:1px solid #DFE5EF;border-radius:8px;border-collapse:separate;margin:20px 0;font-size:14px"><tbody>
-        <tr><td style="padding:10px 14px;border-bottom:1px solid #DFE5EF">Paid today</td><td style="padding:10px 14px;border-bottom:1px solid #DFE5EF;text-align:right"><b>$270.00</b></td></tr>
-        <tr><td style="padding:10px 14px;border-bottom:1px solid #DFE5EF">Due on go-live, Oct 23, 2026</td><td style="padding:10px 14px;border-bottom:1px solid #DFE5EF;text-align:right">$2,430.00</td></tr>
-        <tr><td style="padding:10px 14px">Monthly from Nov 22, 2026</td><td style="padding:10px 14px;text-align:right">$600.00</td></tr>
+        <tr><td style="padding:10px 14px;border-bottom:1px solid #DFE5EF">Paid today</td><td style="padding:10px 14px;border-bottom:1px solid #DFE5EF;text-align:right"><b>$255.00</b></td></tr>
+        <tr><td style="padding:10px 14px;border-bottom:1px solid #DFE5EF">Due on go-live, Oct 23, 2026</td><td style="padding:10px 14px;border-bottom:1px solid #DFE5EF;text-align:right">$2,295.00</td></tr>
+        <tr><td style="padding:10px 14px">Monthly from Nov 22, 2026 (8 agents)</td><td style="padding:10px 14px;text-align:right">$660.00</td></tr>
       </tbody></table>
       <p>Your implementation lead will contact you within 2 business days to schedule a kick-off call.</p>
       <p style="margin:24px 0"><a href="#" style="background:#1457EC;color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:600;display:inline-block">Download your agreement</a></p>
@@ -588,8 +728,8 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
     <h1 style="font-size:22px;font-weight:600;margin-bottom:6px">RightAlly Platform Subscription and Implementation Agreement</h1>
     <p>This Agreement is made on September 23, 2026 between <b>Mayura Consultancy Services LLC</b>, a Florida limited liability company doing business as <b>RightAlly</b>, 66 West Flagler Street, Suite 900, Miami, FL 33130 (“RightAlly”), and <b>Sunline Realty Group</b>, 1200 Brickell Ave, Suite 410, Miami, FL 33131, represented by Maria Alvarez, Managing Broker (“Client”).</p>
     <div class="fee-box"><div class="hd">Fee summary</div><table class="table table-sm"><tbody>
-      <tr><td>Set-up fee</td><td>$3,000.00</td></tr><tr><td>Discount (WELCOME10, 10%)</td><td>−$300.00</td></tr><tr><td><b>Implementation fee</b></td><td><b>$2,700.00</b></td></tr>
-      <tr><td>Deposit on signing (10%)</td><td>$270.00</td></tr><tr><td>Balance on go-live date (target Oct 23, 2026)</td><td>$2,430.00</td></tr><tr><td>Monthly: $500.00 platform + $20.00 per agent, minimum 5 agents</td><td>from $600.00</td></tr></tbody></table></div>
+      <tr><td>Set-up fee</td><td>$3,000.00</td></tr><tr><td>Discount (NAR2026, 15%)</td><td>−$450.00</td></tr><tr><td><b>Implementation fee</b></td><td><b>$2,550.00</b></td></tr>
+      <tr><td>Deposit on signing (10%)</td><td>$255.00</td></tr><tr><td>Balance on go-live date (target Oct 23, 2026)</td><td>$2,295.00</td></tr><tr><td>Monthly: $500.00 platform + $20.00 × 8 agents (minimum 5)</td><td>$660.00</td></tr></tbody></table></div>
     <h3>1. Services</h3><p>RightAlly will configure and deploy a dedicated instance of the RightAlly platform for Client and, after the Go-Live Date, provide access to it on a subscription basis.</p>
     <h3>2. Fees</h3><p>The fees in the Fee Summary form part of this Agreement…</p>
     <p class="text-center" style="color:#8795ad;font-size:12px;margin:24px 0">Sections 3 to 16 continue as in the approved contract text.</p>
@@ -608,68 +748,146 @@ fieldset legend{font-size:1rem;font-weight:600;margin-bottom:.9rem}
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@5.0.4/dist/signature_pad.umd.min.js"></script>
 <script>
 (function(){
-  // theme: follow viewer preference for Bootstrap components too
   const root=document.documentElement;
   const mq=matchMedia('(prefers-color-scheme: dark)');
   function applyTheme(){const t=root.dataset.theme||(mq.matches?'dark':'light');root.setAttribute('data-bs-theme',t)}
   applyTheme();mq.addEventListener&&mq.addEventListener('change',applyTheme);
+  const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+  const hasBS=()=>!!window.bootstrap;
 
-  // view switcher
-  const views=document.querySelectorAll('.view');
-  function go(id){views.forEach(v=>v.classList.toggle('on',v.id===id));document.querySelectorAll('.proto-bar [data-go]').forEach(b=>b.classList.toggle('active',b.dataset.go===id));window.scrollTo(0,0);if(id==='v-admin')drawChart();}
+  // ---------- view switcher ----------
+  function go(id){$$('.view').forEach(v=>v.classList.toggle('on',v.id===id));$$('.proto-bar [data-go]').forEach(b=>b.classList.toggle('active',b.dataset.go===id));window.scrollTo(0,0);if(id==='v-admin')drawChart();}
   document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){e.preventDefault();go(g.dataset.go)}});
 
-  // states (50 + DC)
+  // ---------- states ----------
   const S={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',DC:'District of Columbia',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
-  const sel=document.getElementById('sa');sel.innerHTML='<option value="">Choose a state</option>'+Object.entries(S).map(([k,v])=>`<option value="${k}"${k==='FL'?' selected':''}>${v}</option>`).join('');
+  $('#sa').innerHTML='<option value="">Choose a state</option>'+Object.entries(S).map(([k,v])=>`<option value="${k}"${k==='FL'?' selected':''}>${v}</option>`).join('');
 
-  // money
+  // ---------- pricing ----------
   const fmt=n=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  let pct=0,code='';
-  function render(){const impl=3000*(1-pct/100),dep=impl*.10,bal=impl-dep;
-    document.querySelectorAll('[data-impl]').forEach(e=>e.textContent=fmt(impl));
-    document.querySelectorAll('[data-dep]').forEach(e=>e.textContent=fmt(dep));
-    document.querySelectorAll('[data-bal]').forEach(e=>e.textContent=fmt(bal));
-    document.querySelectorAll('[data-disc]').forEach(e=>e.classList.toggle('d-none',!pct));
-    document.querySelectorAll('[data-code]').forEach(e=>e.textContent=code);}
-  document.getElementById('cpBtn').addEventListener('click',()=>{const v=document.getElementById('cp').value.trim().toUpperCase();const m=document.getElementById('cpMsg');
-    if(v==='WELCOME10'){pct=10;code=v;m.className='mt-2 coupon-ok';m.textContent='WELCOME10 applied. 10% off your implementation fee.'}
-    else if(!v){m.className='mt-2 small text-danger';m.textContent='Enter a coupon code, or leave this blank.'}
-    else{pct=0;code='';m.className='mt-2 small text-danger';m.textContent=`${v} isn’t a valid code. Check the spelling, or continue without a coupon.`}render();});
+  const COUPONS={WELCOME10:{pct:10,exp:null},NAR2026:{pct:15,exp:'2026-11-15'},SUMMER25:{pct:25,exp:'2026-08-31'}};
+  const TODAY='2026-09-23';
+  let pct=0,code='',agents=8;
+  const setT=(sel,v)=>$$(sel).forEach(e=>e.textContent=v);
+  function render(){
+    const impl=3000*(1-pct/100),dep=impl*.10,bal=impl-dep,billed=Math.max(5,agents),mo=500+20*billed;
+    setT('[data-impl]',fmt(impl));setT('[data-dep]',fmt(dep));setT('[data-bal]',fmt(bal));setT('[data-mo]',fmt(mo));
+    setT('[data-damt]','−'+fmt(3000*pct/100));setT('[data-pct]',pct);setT('[data-code]',code);setT('[data-agn]',billed);
+    setT('[data-agtxt]',billed+' agents');
+    $$('[data-disc]').forEach(e=>e.classList.toggle('d-none',!pct));
+    const h=$('#agHelp');
+    if(agents<5){h.innerHTML='<span class="text-warning-emphasis">Billed at the 5-agent minimum.</span> You can add agents any time.';}
+    else h.textContent='Agents who will use RightAlly. You can change this later.';
+  }
+  const ag=$('#agn');
+  ag.addEventListener('input',()=>{agents=Math.max(1,parseInt(ag.value||'1',10)||1);render()});
+  $$('[data-agstep]').forEach(b=>b.addEventListener('click',()=>{agents=Math.max(1,agents+ +b.dataset.agstep);ag.value=agents;render()}));
 
-  // steps
-  const names=['Your details','Review and sign','Payment schedule','Payment method','All set'];
-  function step(n){document.querySelectorAll('.step').forEach(s=>s.classList.toggle('on',+s.dataset.step===n));
-    document.querySelectorAll('#railSteps li').forEach((li,i)=>{li.className=i+1<n?'done':i+1===n?'cur':'';li.querySelector('.dot').innerHTML=i+1<n?'✓':i+1});
-    document.getElementById('mStep').textContent=`Step ${n} of 5`;document.getElementById('mBar').style.width=(n*20)+'%';
-    document.getElementById('mLedger').style.display=n===5?'none':'';window.scrollTo(0,0);if(n===2)setTimeout(sizePad,30);}
-  document.addEventListener('click',e=>{const b=e.target.closest('[data-next]');if(b){step(+b.dataset.next)}});
+  function applyCoupon(raw,fromLink){
+    const v=(raw||'').trim().toUpperCase(),m=$('#cpMsg'),c=COUPONS[v];
+    if(!v){pct=0;code='';m.className='mt-2 small text-danger';m.textContent='Enter a coupon code, or leave this blank.';}
+    else if(!c){pct=0;code='';m.className='mt-2 small text-danger';m.textContent=`${v} isn’t a valid code. Check the spelling, or continue without a coupon.`;}
+    else if(c.exp&&c.exp<TODAY){pct=0;code='';m.className='mt-2 small text-danger';m.textContent=`${v} expired on ${new Date(c.exp+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}. You can continue without a coupon.`;}
+    else{pct=c.pct;code=v;m.className='mt-2 coupon-ok';m.textContent=`${v} applied${fromLink?' from your link':''}. ${pct}% off your implementation fee.`;}
+    render();
+  }
+  $('#cpBtn').addEventListener('click',()=>applyCoupon($('#cp').value,false));
+  const urlCoupon=new URLSearchParams(location.search).get('coupon');
+  if(urlCoupon){$('#cp').value=urlCoupon.toUpperCase();applyCoupon(urlCoupon,true)}
 
-  // signature pad
-  const canvas=document.getElementById('pad');let pad=null;
-  function sizePad(){const r=Math.max(window.devicePixelRatio||1,1);const w=canvas.offsetWidth,h=canvas.offsetHeight;if(!w)return;canvas.width=w*r;canvas.height=h*r;canvas.getContext('2d').scale(r,r);if(window.SignaturePad){pad=pad||new SignaturePad(canvas,{penColor:'#0839B2'});pad.clear()}}
-  window.addEventListener('resize',()=>{if(document.querySelector('[data-step="2"].on'))sizePad()});
-  document.getElementById('padClear').addEventListener('click',()=>pad&&pad.clear());
-  const tn=document.getElementById('tn');tn.addEventListener('input',()=>document.getElementById('tnPrev').textContent=tn.value);
-  document.getElementById('signBtn').addEventListener('click',()=>{const err=document.getElementById('signErr');const probs=[];
-    if(!document.getElementById('consent').checked)probs.push('Tick the box to agree to sign electronically.');
+  // ---------- steps ----------
+  function step(n){$$('.step').forEach(s=>s.classList.toggle('on',+s.dataset.step===n));
+    $$('#railSteps li').forEach((li,i)=>{li.className=i+1<n?'done':i+1===n?'cur':'';li.querySelector('.dot').innerHTML=i+1<n?'✓':i+1});
+    $('#mStep').textContent=`Step ${n} of 5`;$('#mBar').style.width=(n*20)+'%';
+    $('#mLedger').style.display=n===5?'none':'';window.scrollTo(0,0);if(n===2)setTimeout(sizePad,30);}
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-next]');if(b)step(+b.dataset.next)});
+
+  // ---------- signature pad ----------
+  const canvas=$('#pad');let pad=null;
+  function sizePad(){const r=Math.max(window.devicePixelRatio||1,1),w=canvas.offsetWidth,h=canvas.offsetHeight;if(!w)return;canvas.width=w*r;canvas.height=h*r;canvas.getContext('2d').scale(r,r);if(window.SignaturePad){pad=pad||new SignaturePad(canvas,{penColor:'#0839B2'});pad.clear()}}
+  window.addEventListener('resize',()=>{if($('[data-step="2"].on'))sizePad()});
+  $('#padClear').addEventListener('click',()=>pad&&pad.clear());
+  const tn=$('#tn');tn.addEventListener('input',()=>$('#tnPrev').textContent=tn.value);
+  $('#signBtn').addEventListener('click',()=>{const err=$('#signErr'),probs=[];
+    if(!$('#consent').checked)probs.push('Tick the box to agree to sign electronically.');
     if(!tn.value.trim())probs.push('Type your full legal name.');
     if(!pad||pad.isEmpty())probs.push('Draw your signature in the box.');
     if(probs.length){err.innerHTML=probs.join('<br>');err.classList.remove('d-none');return}
-    err.classList.add('d-none');document.getElementById('signActions').classList.add('d-none');document.getElementById('signedBox').classList.remove('d-none');});
+    err.classList.add('d-none');$('#signActions').classList.add('d-none');$('#signedBox').classList.remove('d-none');});
 
-  // payment method tabs
-  document.querySelectorAll('[data-pm]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-pm]').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('pmCard').classList.toggle('d-none',b.dataset.pm!=='card');document.getElementById('pmAch').classList.toggle('d-none',b.dataset.pm!=='ach')}));
+  $$('[data-pm]').forEach(b=>b.addEventListener('click',()=>{$$('[data-pm]').forEach(x=>x.classList.toggle('active',x===b));$('#pmCard').classList.toggle('d-none',b.dataset.pm!=='card');$('#pmAch').classList.toggle('d-none',b.dataset.pm!=='ach')}));
 
-  // admin pages + mobile menu clone
-  document.getElementById('admMenuBody').innerHTML=document.getElementById('sideNav').innerHTML;
-  function ap(p){document.querySelectorAll('.apage').forEach(x=>x.classList.toggle('on',x.dataset.apage===p));
-    document.querySelectorAll('.nav-a[data-ap]').forEach(a=>a.classList.toggle('on',a.dataset.ap===p));
-    const oc=bootstrap.Offcanvas.getInstance(document.getElementById('admMenu'));oc&&oc.hide();window.scrollTo(0,0)}
-  document.addEventListener('click',e=>{const a=e.target.closest('[data-ap]');if(a){e.preventDefault();ap(a.dataset.ap)}});
+  // ---------- admin navigation ----------
+  $('#admMenuBody').innerHTML=$('#sideNav').innerHTML;
+  const NAV_OF={'cust-d':'cust','etpl-edit':'etpl'};
+  function ap(p,tab){$$('.apage').forEach(x=>x.classList.toggle('on',x.dataset.apage===p));
+    const n=NAV_OF[p]||p;$$('.nav-a[data-ap]').forEach(a=>a.classList.toggle('on',a.dataset.ap===n));
+    if(hasBS()){const oc=bootstrap.Offcanvas.getInstance($('#admMenu'));oc&&oc.hide();
+      if(tab){const t=document.querySelector(`[data-apage="${p}"] [href="${tab}"]`);t&&bootstrap.Tab.getOrCreateInstance(t).show()}}
+    window.scrollTo(0,0)}
+  document.addEventListener('click',e=>{const a=e.target.closest('[data-ap]');if(a){e.preventDefault();if(a.hasAttribute('data-new-tpl'))openTpl(null);ap(a.dataset.ap,a.dataset.tab)}});
+  function toast(msg){$('#toastB').textContent=msg;hasBS()&&bootstrap.Toast.getOrCreateInstance($('#toast')).show()}
 
-  let chart;function drawChart(){if(chart||!window.Chart)return;const c=document.getElementById('revChart');const css=getComputedStyle(root);
-    chart=new Chart(c,{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Revenue',data:[6200,9800,14100,12400,18900,22600,27300,31800,38420],backgroundColor:'#1457EC',borderRadius:6,maxBarThickness:36}]},
+  // dashboard range
+  const RV={day:['$255','Today'],month:['$38,420','September'],year:['$181,520','2026 so far'],range:['$97,520','Jul 1 to Sep 23']};
+  $$('#rangeSeg [data-r]').forEach(b=>b.addEventListener('click',()=>{$$('#rangeSeg .btn').forEach(x=>x.classList.toggle('active',x===b));$('#revV').textContent=RV[b.dataset.r][0];$('#revL').textContent=RV[b.dataset.r][1];$('#rangePick').classList.toggle('d-none',b.dataset.r!=='range')}));
+
+  // customer filter
+  function filterCust(){const q=$('#custQ').value.toLowerCase(),st=$('#custS').value;let n=0;
+    $$('#custT tbody tr').forEach(r=>{const ok=r.textContent.toLowerCase().includes(q)&&(!st||r.querySelector('.st').textContent===st);r.style.display=ok?'':'none';n+=ok});$('#custN').textContent=n+' customers'}
+  $('#custQ').addEventListener('input',filterCust);$('#custS').addEventListener('change',filterCust);
+
+  // resend links
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-resend]');if(!b)return;b.closest('tr').querySelector('[data-sent]').textContent='Sep 23';b.innerHTML='<svg class="ic me-1"><use href="#i-check"/></svg>Sent';b.disabled=true;toast('Payment link emailed to the client, CC team.')});
+
+  // ---------- coupons ----------
+  const dfmt=d=>d?new Date(d+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'Never';
+  let editRow=null;
+  function paintCoupon(tr){const c=JSON.parse(tr.dataset.c);const expired=c.exp&&c.exp<TODAY;
+    const st=!c.active?'<span class="st st-draft">Off</span>':expired?'<span class="st st-susp">Expired</span>':'<span class="st st-live">Active</span>';
+    tr.innerHTML=`<td class="font-monospace fw-semibold">${c.code}</td><td>${c.name}</td><td class="text-end">${c.pct}%</td><td>${dfmt(c.exp)}</td><td class="text-end num">${c.used}</td><td><button class="btn btn-sm btn-link p-0" data-copy="${c.code}">Copy link</button></td><td>${st}</td><td class="text-end"><button class="btn btn-sm btn-outline-primary" data-cedit>Edit</button></td>`}
+  $$('#coupT tr').forEach(paintCoupon);
+  function openCoupon(tr){editRow=tr;const c=tr?JSON.parse(tr.dataset.c):{code:'',name:'',pct:'',exp:'',used:0,active:true};
+    $('#coupT2').textContent=tr?'Edit coupon':'New coupon';$('#cCode').value=c.code;$('#cCode').readOnly=c.used>0;$('#cCodeLock').classList.toggle('d-none',!(c.used>0));
+    $('#cName').value=c.name;$('#cPct').value=c.pct;$('#cExp').value=c.exp;$('#cNever').checked=!c.exp&&!!tr;$('#cExp').disabled=$('#cNever').checked;$('#cAct').checked=c.active;
+    hasBS()&&bootstrap.Modal.getOrCreateInstance($('#coupModal')).show()}
+  $('#cNever').addEventListener('change',()=>{$('#cExp').disabled=$('#cNever').checked;if($('#cNever').checked)$('#cExp').value=''});
+  document.addEventListener('click',e=>{
+    if(e.target.closest('[data-coupon-new]'))openCoupon(null);
+    const ed=e.target.closest('[data-cedit]');if(ed)openCoupon(ed.closest('tr'));
+    const cp=e.target.closest('[data-copy]');if(cp){const url='https://onboard.rightally.io/?coupon='+cp.dataset.copy;navigator.clipboard&&navigator.clipboard.writeText(url).catch(()=>{});toast('Copied '+url)}});
+  $('#cSave').addEventListener('click',()=>{const old=editRow?JSON.parse(editRow.dataset.c):{used:0};
+    const c={code:$('#cCode').value.trim().toUpperCase(),name:$('#cName').value.trim(),pct:+$('#cPct').value,exp:$('#cNever').checked?'':$('#cExp').value,used:old.used,active:$('#cAct').checked};
+    if(!c.code||!c.name||!(c.pct>=1&&c.pct<=100)){toast('Enter a code, a name and a discount between 1 and 100%.');return}
+    if(!c.exp&&!$('#cNever').checked){toast('Choose an expiry date, or turn on Never expires.');return}
+    const tr=editRow||document.createElement('tr');tr.dataset.c=JSON.stringify(c);paintCoupon(tr);if(!editRow)$('#coupT').prepend(tr);
+    COUPONS[c.code]={pct:c.pct,exp:c.exp||null};
+    hasBS()&&bootstrap.Modal.getInstance($('#coupModal')).hide();toast(`Coupon ${c.code} saved.`)});
+
+  // ---------- email templates ----------
+  const SYS=[['Agreement signed','A client signs their agreement',1],['Deposit receipt','The deposit is paid',1],['Go-live date changed','An admin moves the go-live date',1],['Balance reminder','3 days before the go-live charge',0],['Balance paid','The go-live charge succeeds',1],['Balance failed','The go-live charge fails',1],['Subscription started','The first monthly charge is scheduled',0],['Monthly receipt','A monthly charge succeeds',0],['Payment failed','A monthly charge fails',1],['Account suspended','A payment is 30 days overdue',1],['Renewal offer','45 days before the term ends',1],['Renewal reminder','15 days before the term ends',1],['Agreement expired','The term ends without renewal',1],['Early termination invoice','An admin records early termination',1],['Admin invite','An admin is invited',0],['Password reset','An admin requests a reset',0]];
+  $('#sysTpl').innerHTML=SYS.map((t,i)=>`<tr><td><b>${t[0]}</b></td><td class="small">${t[1]}</td><td>${t[2]?'<span class="st st-live">Yes</span>':'<span class="st st-draft">No</span>'}</td><td class="small">Sep ${20-(i%5)}, 2026</td><td class="text-end"><a href="#" class="btn btn-sm btn-outline-primary" data-ap="etpl-edit" data-tpl="${i}">Edit</a></td></tr>`).join('');
+  document.addEventListener('click',e=>{const t=e.target.closest('[data-tpl]');if(t){const x=SYS[+t.dataset.tpl];$('#etTitle').textContent=x[0];$('#etWhen').textContent='Sent when: '+x[1].charAt(0).toLowerCase()+x[1].slice(1)+'.';$('#etCc').checked=!!x[2]}});
+  function openTpl(){$('#etTitle').textContent='New custom email';$('#etWhen').textContent='Sent manually from a customer’s Actions menu.';$('#etSubj').value='';$('#etBody').value='Hi {first_name},\n\n';prev()}
+  const PH={first_name:'Maria',last_name:'Alvarez',company_name:'Sunline Realty Group',deposit_amount:'$255.00',balance_amount:'$2,295.00',monthly_amount:'$660.00',agent_count:'8',go_live_date:'Oct 23, 2026',agreement_link:'#',payment_link:'#',term_end_date:'Oct 22, 2027'};
+  $('#phChips').innerHTML=Object.keys(PH).concat(['fee_table']).map(k=>`<button type="button" class="btn btn-sm btn-light font-monospace" data-ph="${k}">{${k}}</button>`).join('');
+  const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  function prev(){let b=esc($('#etBody').value);
+    b=b.replace(/\{button:([^|]+)\|\{[a-z_]+\}\}/g,(m,l)=>`<a href="#" style="background:#1457EC;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;display:inline-block">${l}</a>`);
+    b=b.replace(/\{fee_table\}/g,'<table width="100%" style="border:1px solid #DFE5EF;border-radius:8px;border-collapse:separate;font-size:13px"><tr><td style="padding:8px 12px;border-bottom:1px solid #DFE5EF">Paid today</td><td style="padding:8px 12px;border-bottom:1px solid #DFE5EF;text-align:right"><b>$255.00</b></td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #DFE5EF">Due on go-live, Oct 23, 2026</td><td style="padding:8px 12px;border-bottom:1px solid #DFE5EF;text-align:right">$2,295.00</td></tr><tr><td style="padding:8px 12px">Monthly from Nov 22, 2026</td><td style="padding:8px 12px;text-align:right">$660.00</td></tr></table>');
+    b=b.replace(/\{([a-z_]+)\}/g,(m,k)=>PH[k]??m);
+    $('#etPrev').innerHTML=b.split(/\n{2,}/).map((p,i)=>i===0?`<p style="font-size:18px;font-weight:600">${p}</p>`:`<p>${p.replace(/\n/g,'<br>')}</p>`).join('')}
+  $('#etBody').addEventListener('input',prev);prev();
+  document.addEventListener('click',e=>{const c=e.target.closest('[data-ph]');if(!c)return;const ta=$('#etBody'),s=ta.selectionStart,t='{'+c.dataset.ph+'}';ta.value=ta.value.slice(0,s)+t+ta.value.slice(ta.selectionEnd);ta.focus();ta.selectionStart=ta.selectionEnd=s+t.length;prev()});
+
+  // ---------- roles ----------
+  const MENUS=['Dashboard','Customers','Contracts','Invoices','Coupons','Email templates','Admins and roles','Settings'];
+  const DEF={Billing:[1,1,1,1,0,1,0,0],Sales:[1,1,1,0,1,0,0,0],Viewer:[1,1,0,0,0,0,0,0]};
+  $('#permT').innerHTML=MENUS.map((m,i)=>`<tr><td>${m}</td><td>✓</td>${Object.keys(DEF).map(r=>`<td><input class="form-check-input" type="checkbox" ${DEF[r][i]?'checked':''} aria-label="${r}: ${m}"></td>`).join('')}</tr>`).join('');
+
+  // ---------- chart ----------
+  let chart;function drawChart(){if(chart||!window.Chart)return;const css=getComputedStyle(root);
+    chart=new Chart($('#revChart'),{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'],datasets:[{label:'Revenue',data:[6200,9800,14100,12400,18900,22600,27300,31800,38420],backgroundColor:'#1457EC',borderRadius:6,maxBarThickness:36}]},
     options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:x=>fmt(x.parsed.y)}}},scales:{y:{ticks:{callback:v=>'$'+(v/1000)+'k',color:css.getPropertyValue('--ra-slate')},grid:{color:css.getPropertyValue('--ra-line')}},x:{ticks:{color:css.getPropertyValue('--ra-slate')},grid:{display:false}}}}})}
   render();
 })();
