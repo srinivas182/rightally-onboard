@@ -32,7 +32,7 @@ final class RenewalService
         private readonly AuditLogger $audit,
     ) {}
 
-    private const ACTIVE = [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended];
+    private const ACTIVE = [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended, CustomerStatus::Paused];
 
     /** The agreement currently in force for each customer that is live. */
     private function currentAgreements()

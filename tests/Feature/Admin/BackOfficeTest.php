@@ -121,7 +121,14 @@ class BackOfficeTest extends TestCase
         $this->assertSame(CustomerStatus::Live, $c->fresh()->status);
 
         $this->post("/admin/customers/{$c->uuid}/terminate", ['reason' => 'Closing', 'confirm' => 'Coastal Keys Brokerage'])->assertSessionHas('success');
+        $this->assertSame(CustomerStatus::Live, $c->fresh()->status); // waits for a second admin
+        $approval = \App\Models\Approval::firstOrFail();
+
+        $this->post("/admin/approvals/{$approval->id}/approve")->assertSessionHasErrors('approval'); // not your own request
+        $second = Admin::factory()->superAdmin()->withTwoFactor()->create();
+        $this->actingAs($second, 'admin')->post("/admin/approvals/{$approval->id}/approve")->assertSessionHas('success');
         $this->assertSame(CustomerStatus::Cancelled, $c->fresh()->status);
+        $this->assertSame('approved', $approval->fresh()->status);
     }
 
     public function test_custom_email_can_be_sent_from_the_customer_page(): void

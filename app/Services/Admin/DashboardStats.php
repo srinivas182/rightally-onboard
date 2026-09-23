@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
 /** Figures for the admin dashboard. Revenue is money that has settled (bank payments count once they clear). */
 final class DashboardStats
 {
-    public const ONBOARDED = [CustomerStatus::AwaitingGoLive, CustomerStatus::BalanceFailed, CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended, CustomerStatus::Cancelled, CustomerStatus::Expired];
+    public const ONBOARDED = [CustomerStatus::AwaitingGoLive, CustomerStatus::BalanceFailed, CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended, CustomerStatus::Paused, CustomerStatus::Cancelled, CustomerStatus::Expired];
 
     /** @return array{0: Carbon, 1: Carbon, 2: string} start, end (business time zone), label */
     public function range(string $range, ?string $from = null, ?string $to = null): array
@@ -75,7 +75,7 @@ final class DashboardStats
             'suspended' => Customer::where('status', CustomerStatus::Suspended)->count(),
             'renewals' => Contract::where('status', ContractStatus::Signed)
                 ->whereBetween('ends_on', [$today->toDateString(), $today->copy()->addDays(45)->toDateString()])
-                ->whereHas('customer', fn ($q) => $q->whereIn('status', [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended]))
+                ->whereHas('customer', fn ($q) => $q->whereIn('status', [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended, CustomerStatus::Paused]))
                 ->whereDoesntHave('renewals', fn ($q) => $q->where('status', ContractStatus::Signed))
                 ->count(),
         ];

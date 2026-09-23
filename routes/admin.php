@@ -86,6 +86,10 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::post('{customer}/suspend', [CustomerController::class, 'suspend'])->name('suspend');
         Route::post('{customer}/reactivate', [CustomerController::class, 'reactivate'])->name('reactivate');
         Route::post('{customer}/terminate', [CustomerController::class, 'terminate'])->name('terminate');
+        Route::post('{customer}/invoices/{invoice}/refund', [CustomerController::class, 'refund'])->name('refund');
+        Route::post('{customer}/credit', [CustomerController::class, 'credit'])->name('credit');
+        Route::post('{customer}/pause', [CustomerController::class, 'pause'])->name('pause');
+        Route::post('{customer}/resume', [CustomerController::class, 'resume'])->name('resume');
     });
 
     Route::middleware('can:menu.invoices')->prefix('invoices')->name('invoices.')->group(function () {
@@ -93,6 +97,12 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::get('export', [InvoiceController::class, 'export'])->name('export');
         Route::post('{invoice}/resend', [InvoiceController::class, 'resend'])->middleware('throttle:20,1')->name('resend');
         Route::get('{invoice}/pdf', [InvoiceController::class, 'pdf'])->name('pdf');
+    });
+
+    Route::middleware('can:menu.invoices')->prefix('approvals')->name('approvals.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\ApprovalController::class, 'index'])->name('index');
+        Route::post('{approval}/approve', [\App\Http\Controllers\Admin\ApprovalController::class, 'approve'])->name('approve');
+        Route::post('{approval}/reject', [\App\Http\Controllers\Admin\ApprovalController::class, 'reject'])->name('reject');
     });
 
     Route::middleware('can:menu.reports')->group(function () {

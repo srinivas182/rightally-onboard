@@ -49,6 +49,8 @@ class Customer extends Model
             'agent_count_synced_at' => 'datetime',
             'agents_notified_at' => 'datetime',
             'suspended_at' => 'datetime',
+            'paused_until' => 'date',
+            'email_bounced_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];
     }

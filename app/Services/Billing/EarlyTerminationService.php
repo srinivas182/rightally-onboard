@@ -34,7 +34,7 @@ final class EarlyTerminationService
     {
         $contract = $this->contract($customer);
         $issued = $customer->invoices()->where('type', InvoiceType::Monthly)->where('contract_id', $contract->id)->count();
-        $months = max(0, $contract->term_months - $issued);
+        $months = max(0, $contract->term_months + $contract->paused_months - $issued); // pauses extend the term
         $monthly = $contract->monthlyFeeCents($customer->agent_count);
 
         // Monthly invoices already issued but unpaid stay due separately.
@@ -45,7 +45,7 @@ final class EarlyTerminationService
 
     public function terminate(Customer $customer, Admin $admin, string $reason): ?Invoice
     {
-        if (! in_array($customer->status, [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended], true)) {
+        if (! in_array($customer->status, [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended, CustomerStatus::Paused], true)) {
             throw ValidationException::withMessages(['status' => 'Early termination applies to customers who are live.']);
         }
         $contract = $this->contract($customer);

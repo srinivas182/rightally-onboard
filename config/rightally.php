@@ -22,6 +22,9 @@ return [
     // with a reminder at the second value.
     'renewal_notice_days' => [45, 15],
 
+    // Refunds and credits above this amount (cents) need a second admin's approval. Early terminations always do.
+    'approval_threshold_cents' => 50000,
+
     // Days a payment can stay unpaid before the account is suspended.
     'suspend_after_days' => 30,
 

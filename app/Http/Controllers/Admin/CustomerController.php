@@ -14,6 +14,10 @@ use App\Models\EmailTemplate;
 use App\Models\Invoice;
 use App\Services\Audit\AuditLogger;
 use App\Services\Billing\AgentCountService;
+use App\Services\Billing\ApprovalService;
+use App\Services\Billing\CreditService;
+use App\Services\Billing\PauseService;
+use App\Services\Billing\RefundService;
 use App\Services\Billing\EarlyTerminationService;
 use App\Services\Billing\GoLiveService;
 use App\Services\Email\EmailSender;
@@ -22,6 +26,7 @@ use App\Support\Money;
 use App\Support\UsPhone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -60,12 +65,12 @@ class CustomerController extends Controller
         }, 'rightally-customers-'.BusinessClock::today()->toDateString().'.csv', ['Content-Type' => 'text/csv']);
     }
 
-    public function show(Customer $customer, GoLiveService $goLive, EarlyTerminationService $termination): View
+    public function show(Customer $customer, GoLiveService $goLive, EarlyTerminationService $termination, PauseService $pauses, RefundService $refunds): View
     {
         $customer->load(['contracts' => fn ($q) => $q->latest('id'), 'contracts.template', 'invoices' => fn ($q) => $q->latest('id'),
             'agentCountLogs' => fn ($q) => $q->latest('id'), 'emailLogs' => fn ($q) => $q->latest('id')->limit(50), 'coupon']);
         $contract = $customer->contracts->where('status', ContractStatus::Signed)->sortByDesc('signed_at')->first();
-        $canTerminate = in_array($customer->status, [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended], true);
+        $canTerminate = in_array($customer->status, [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended, CustomerStatus::Paused], true);
 
         return view('admin.customers.show', [
             'customer' => $customer,
@@ -80,6 +85,11 @@ class CustomerController extends Controller
                 ->latest('id')->limit(100)->get(),
             'customEmails' => EmailTemplate::where('is_system', false)->where('is_enabled', true)->orderBy('name')->get(),
             'newToken' => session('agent_token'),
+            'pauseProblem' => $pauses->canPause($customer),
+            'refundable' => $customer->invoices->mapWithKeys(fn ($i) => [$i->id => $i->status === \App\Enums\InvoiceStatus::Paid ? $refunds->refundable($i) : 0]),
+            'credits' => \App\Models\Credit::with('creator')->where('customer_id', $customer->id)->latest('id')->get(),
+            'pendingApprovals' => \App\Models\Approval::with('requester')->where('customer_id', $customer->id)->where('status', 'pending')->get(),
+            'threshold' => ApprovalService::threshold(),
         ]);
     }
 
@@ -163,15 +173,62 @@ class CustomerController extends Controller
         return back()->with('success', "{$customer->company_name} is reactivated ({$status->label()}).");
     }
 
-    public function terminate(Request $request, Customer $customer, EarlyTerminationService $termination): RedirectResponse
+    /** Early termination always goes to a second admin for approval. */
+    public function terminate(Request $request, Customer $customer, EarlyTerminationService $termination, ApprovalService $approvals): RedirectResponse
     {
         $data = $request->validate(['reason' => ['required', 'string', 'max:250'], 'confirm' => ['required', 'in:'.$customer->company_name]],
             ['confirm.in' => 'Type the company name exactly to confirm.']);
-        $invoice = $termination->terminate($customer, $request->user('admin'), $data['reason']);
+        $quote = $termination->quote($customer);
+        $approvals->request('early_termination', $customer, $quote['amount_cents'], $quote, $data['reason'], $request->user('admin'));
 
-        return back()->with('success', $invoice
-            ? "Agreement terminated. Early termination invoice {$invoice->number} for ".Money::format($invoice->amount_cents).' has been issued and emailed.'
-            : 'Agreement terminated. No remaining months were due.');
+        return back()->with('success', 'Early termination sent for approval. Another admin must approve it in Approvals before anything is charged.');
+    }
+
+    public function refund(Request $request, Customer $customer, \App\Models\Invoice $invoice, RefundService $refunds, ApprovalService $approvals): RedirectResponse
+    {
+        abort_unless($invoice->customer_id === $customer->id, 404);
+        $data = $request->validateWithBag('refund', ['amount' => ['required', 'numeric', 'min:0.01'], 'reason' => ['required', 'string', 'max:250']]);
+        $cents = Money::toCents($data['amount']);
+        if ($cents > $refunds->refundable($invoice)) {
+            return back()->withErrors(['amount' => 'The most you can refund on this invoice is '.Money::format($refunds->refundable($invoice)).'.'], 'refund');
+        }
+        if ($approvals->needsApproval('refund', $cents)) {
+            $approvals->request('refund', $customer, $cents, ['invoice_id' => $invoice->id, 'invoice' => $invoice->number], $data['reason'], $request->user('admin'));
+
+            return back()->with('success', 'Refunds over '.Money::format(ApprovalService::threshold()).' need a second admin. Sent for approval.');
+        }
+        $refunds->refund($invoice, $cents, $data['reason'], $request->user('admin'));
+
+        return back()->with('success', 'Refunded '.Money::format($cents).' on '.$invoice->number.'. The client has been emailed.');
+    }
+
+    public function credit(Request $request, Customer $customer, CreditService $credits, ApprovalService $approvals): RedirectResponse
+    {
+        $data = $request->validateWithBag('credit', ['amount' => ['required', 'numeric', 'min:0.01', 'max:100000'], 'reason' => ['required', 'string', 'max:250']]);
+        $cents = Money::toCents($data['amount']);
+        if ($approvals->needsApproval('credit', $cents)) {
+            $approvals->request('credit', $customer, $cents, [], $data['reason'], $request->user('admin'));
+
+            return back()->with('success', 'Credits over '.Money::format(ApprovalService::threshold()).' need a second admin. Sent for approval.');
+        }
+        $credits->credit($customer, $cents, $data['reason'], $request->user('admin'));
+
+        return back()->with('success', 'Credit of '.Money::format($cents).' added. It comes off the next charge.');
+    }
+
+    public function pause(Request $request, Customer $customer, PauseService $pauses): RedirectResponse
+    {
+        $data = $request->validateWithBag('pause', ['months' => ['required', 'integer', 'min:1', 'max:'.PauseService::MAX_MONTHS], 'reason' => ['required', 'string', 'max:250']]);
+        $pause = $pauses->pause($customer, (int) $data['months'], $data['reason'], $request->user('admin'));
+
+        return back()->with('success', "Paused until {$pause->ends_on->format('M j, Y')}. No monthly charges until then; the term is extended by {$pause->months} ".Str::plural('month', $pause->months).'.');
+    }
+
+    public function resume(Request $request, Customer $customer, PauseService $pauses): RedirectResponse
+    {
+        $pauses->resume($customer, $request->user('admin'));
+
+        return back()->with('success', "{$customer->company_name} is active again. Monthly charges restart on the next billing date.");
     }
 
     private function query(Request $request)

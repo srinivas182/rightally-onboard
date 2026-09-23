@@ -31,12 +31,27 @@
                 @elseif ($isActive)
                     <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#suspendModal">Suspend account…</button></li>
                 @endif
+                @if ($customer->stripe_customer_id)<li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#creditModal">Add a credit…</button></li>@endif
+                @if ($customer->status === \App\Enums\CustomerStatus::Paused)
+                    <li><form method="post" action="{{ route('admin.customers.resume', $customer) }}">@csrf<button class="dropdown-item" data-confirm="Resume now? Monthly charges restart on the next billing date.">Resume subscription now</button></form></li>
+                @elseif (! $pauseProblem)
+                    <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#pauseModal">Pause subscription…</button></li>
+                @endif
                 @if ($termination)<li><button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#terminateModal">Early termination…</button></li>@endif
             </ul>
         </div>
     </div>
 </div>
 
+@foreach ($pendingApprovals as $pa)
+    <div class="alert alert-warning small d-flex justify-content-between align-items-center flex-wrap gap-2"><div><b>Waiting for approval:</b> {{ $pa->label() }} of {{ \App\Support\Money::format($pa->amount_cents) }}, requested by {{ $pa->requester->name }}.</div><a class="btn btn-sm btn-outline-dark" href="{{ route('admin.approvals.index') }}">Open approvals</a></div>
+@endforeach
+@if ($customer->status === \App\Enums\CustomerStatus::Paused)
+    <div class="alert alert-secondary small">Paused until {{ $customer->paused_until?->format('M j, Y') }}. No monthly charges until then; the minimum term has been extended.</div>
+@endif
+@if ($customer->email_bounced_at)
+    <div class="alert alert-danger small"><b>Emails to {{ $customer->email }} are bouncing</b> ({{ $customer->email_bounce_reason }}, {{ $customer->email_bounced_at->setTimezone($tz)->format('M j') }}). Payment and renewal emails aren’t reaching them: call to get a working address, then update it.</div>
+@endif
 @if ($newToken)
     <div class="alert alert-warning" role="alert">
         <b>New agent API token</b>, shown once. Give it to whoever configures {{ $customer->company_name }}’s RightAlly site.
@@ -143,6 +158,7 @@
                 <td class="text-end text-nowrap">
                     @if ($canInvoices)<a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.invoices.pdf', $inv) }}" target="_blank" rel="noopener">PDF</a>@endif
                     @if ($inv->hosted_invoice_url)<a class="btn btn-sm btn-outline-secondary" href="{{ $inv->hosted_invoice_url }}" target="_blank" rel="noopener">Stripe page</a>@endif
+                    @if (($refundable[$inv->id] ?? 0) > 0)<button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#refund{{ $inv->id }}">Refund</button>@endif
                     @if ($canInvoices && $inv->status->value === 'failed' && $inv->hosted_invoice_url)<form method="post" action="{{ route('admin.invoices.resend', $inv) }}" class="d-inline">@csrf<button class="btn btn-sm btn-outline-primary">Resend link</button></form>@endif
                 </td></tr>
         @endforeach</tbody>
@@ -197,6 +213,49 @@
 </div></div>
 </div>
 
+{{-- Refund modals --}}
+@foreach ($customer->invoices as $inv)
+    @if (($refundable[$inv->id] ?? 0) > 0)
+    <div class="modal fade" id="refund{{ $inv->id }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="post" action="{{ route('admin.customers.refund', [$customer, $inv]) }}">@csrf
+            <div class="modal-header"><h2 class="modal-title h5">Refund {{ $inv->number }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body">
+                <label class="form-label">Amount (up to {{ $m($refundable[$inv->id]) }})</label>
+                <div class="input-group mb-3"><span class="input-group-text">$</span><input type="number" step="0.01" min="0.01" max="{{ $refundable[$inv->id] / 100 }}" class="form-control" name="amount" value="{{ number_format($refundable[$inv->id] / 100, 2, '.', '') }}" required></div>
+                <label class="form-label">Reason (the client sees this)</label><input class="form-control" name="reason" required maxlength="250">
+                <div class="form-text">Goes back to {{ $customer->payment_method_label ?? 'the original payment method' }}. Over {{ $m($threshold) }} needs a second admin.</div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Refund</button></div>
+        </form></div></div>
+    @endif
+@endforeach
+
+{{-- Credit --}}
+<div class="modal fade" id="creditModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{{ route('admin.customers.credit', $customer) }}">@csrf
+        <div class="modal-header"><h2 class="modal-title h5">Add a credit</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+            <label class="form-label">Amount</label><div class="input-group mb-3"><span class="input-group-text">$</span><input type="number" step="0.01" min="0.01" class="form-control" name="amount" required></div>
+            <label class="form-label">Reason (the client sees this)</label><input class="form-control" name="reason" required maxlength="250" placeholder="e.g. Service outage on Oct 3">
+            <div class="form-text">Taken off the next charge automatically. Over {{ $m($threshold) }} needs a second admin.</div>
+            @if ($credits->isNotEmpty())<div class="small mt-3"><b>Earlier credits:</b> @foreach ($credits as $c){{ $m($c->amount_cents) }} ({{ $c->created_at->setTimezone($tz)->format('M j') }}, {{ $c->reason }})@if (! $loop->last); @endif @endforeach</div>@endif
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Add credit</button></div>
+    </form></div></div>
+
+{{-- Pause --}}
+<div class="modal fade" id="pauseModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{{ route('admin.customers.pause', $customer) }}">@csrf
+        <div class="modal-header"><h2 class="modal-title h5">Pause subscription</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+            <p class="small text-slate">Up to {{ \App\Services\Billing\PauseService::MAX_MONTHS }} months, once in any 12 months. No monthly charges during the pause, their RightAlly site is told the account is paused, and the minimum term is extended by the pause. The client is emailed.</p>
+            <label class="form-label">Length</label>
+            <select class="form-select mb-3" name="months">@for ($i = 1; $i <= \App\Services\Billing\PauseService::MAX_MONTHS; $i++)<option value="{{ $i }}">{{ $i }} {{ Str::plural('month', $i) }}, until {{ \App\Support\BusinessClock::today()->addMonthsNoOverflow($i)->format('M j, Y') }}</option>@endfor</select>
+            <label class="form-label">Reason</label><input class="form-control" name="reason" required maxlength="250" placeholder="e.g. Seasonal closure agreed with the client">
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Pause</button></div>
+    </form></div></div>
+
 {{-- Send custom email --}}
 <div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
     <form class="modal-content" method="post" action="{{ route('admin.customers.send-email', $customer) }}">@csrf
@@ -231,13 +290,16 @@
                 <tr><td class="fw-semibold">Charged now</td><td class="text-end fw-semibold">{{ $m($termination['amount_cents']) }}</td></tr>
             </tbody></table>
             @if ($termination['unpaid_cents'])<div class="alert alert-warning small py-2">Unpaid invoices of {{ $m($termination['unpaid_cents']) }} stay due on top of this. Their payment links remain active.</div>@endif
-            <p class="small text-slate">The subscription ends immediately, the amount is charged to {{ $customer->payment_method_label ?? 'the saved payment method' }}, and the client is emailed the invoice. This can’t be undone.</p>
+            <p class="small text-slate">This goes to a second admin for approval. When approved, the subscription ends immediately, the amount is charged to {{ $customer->payment_method_label ?? 'the saved payment method' }}, and the client is emailed the invoice. This can’t be undone.</p>
             <div class="mb-3"><label class="form-label" for="treason">Reason</label><input class="form-control" id="treason" name="reason" maxlength="250" required placeholder="e.g. Client asked to cancel on Sep 30"></div>
             <label class="form-label" for="confirm">Type <b>{{ $customer->company_name }}</b> to confirm</label><input class="form-control @error('confirm') is-invalid @enderror" id="confirm" name="confirm" required autocomplete="off">
             @error('confirm')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger">Terminate and charge {{ $m($termination['amount_cents']) }}</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger">Request approval to charge {{ $m($termination['amount_cents']) }}</button></div>
     </form></div></div>
 @endif
+@foreach (['refund' => null, 'credit' => '#creditModal', 'pause' => '#pauseModal'] as $bag => $modal)
+    @if ($errors->$bag->any())<div class="alert alert-danger small">{{ $errors->$bag->first() }}</div>@if ($modal)<div data-open-modal="{{ $modal }}" hidden></div>@endif @endif
+@endforeach
 @if ($errors->has('confirm') || $errors->has('reason'))<div data-open-modal="{{ $errors->has('confirm') ? '#terminateModal' : '#suspendModal' }}" hidden></div>@endif
 @endsection

@@ -27,6 +27,8 @@ final class Webhooks
         'customer.live' => 'Went live (balance paid)',
         'payment.failed' => 'A payment failed',
         'customer.suspended' => 'Account suspended',
+        'customer.paused' => 'Subscription paused',
+        'customer.resumed' => 'Subscription resumed after a pause',
         'customer.reactivated' => 'Account back in good standing',
         'customer.cancelled' => 'Cancelled (early termination)',
         'customer.expired' => 'Agreement ended without renewal',
@@ -34,7 +36,7 @@ final class Webhooks
     ];
 
     /** Events the customer's own RightAlly site receives (to allow or block access). */
-    public const SITE_EVENTS = ['customer.live', 'customer.suspended', 'customer.reactivated', 'customer.cancelled', 'customer.expired'];
+    public const SITE_EVENTS = ['customer.live', 'customer.suspended', 'customer.reactivated', 'customer.paused', 'customer.resumed', 'customer.cancelled', 'customer.expired'];
 
     public const SITE_PATH = '/api/rightally/account-status';
 
@@ -71,6 +73,7 @@ final class Webhooks
     {
         return match ($customer->status) {
             CustomerStatus::Suspended => 'suspended',
+            CustomerStatus::Paused => 'paused',
             CustomerStatus::Cancelled, CustomerStatus::Expired => 'ended',
             default => 'active',
         };

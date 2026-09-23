@@ -11,6 +11,7 @@ enum CustomerStatus: string
     case Live = 'live';
     case PaymentFailed = 'payment_failed';
     case Suspended = 'suspended';
+    case Paused = 'paused';          // subscription paused by agreement; no charges
     case Cancelled = 'cancelled';
     case Expired = 'expired';               // term ended without renewal
 
@@ -24,6 +25,7 @@ enum CustomerStatus: string
             self::Live => 'Live',
             self::PaymentFailed => 'Payment failed',
             self::Suspended => 'Suspended',
+            self::Paused => 'Paused',
             self::Cancelled => 'Cancelled',
             self::Expired => 'Expired',
         };
@@ -37,6 +39,7 @@ enum CustomerStatus: string
             self::AwaitingGoLive, self::ContractSigned => 'st-wait',
             self::BalanceFailed, self::PaymentFailed => 'st-fail',
             self::Suspended => 'st-susp',
+            self::Paused => 'st-draft',
             default => 'st-draft',
         };
     }

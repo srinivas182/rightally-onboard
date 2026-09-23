@@ -35,6 +35,8 @@ class CustomerObserver
             $to === S::Live && in_array($from, [S::AwaitingGoLive, S::BalanceFailed], true) => 'customer.live',
             in_array($to, [S::PaymentFailed, S::BalanceFailed], true) => 'payment.failed',
             $to === S::Suspended => 'customer.suspended',
+            $to === S::Paused => 'customer.paused',
+            $from === S::Paused && $to === S::Live => 'customer.resumed',
             $from === S::Suspended || ($from === S::PaymentFailed && $to === S::Live) => 'customer.reactivated',
             $to === S::Cancelled => 'customer.cancelled',
             $to === S::Expired => 'customer.expired',
