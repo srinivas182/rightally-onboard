@@ -46,7 +46,13 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(5)->by(strtolower((string) $request->input('email')).'|'.$request->ip()),
             Limit::perMinute(20)->by($request->ip()),
         ]);
-        RateLimiter::for('admin-2fa', fn (Request $request) => Limit::perMinute(5)->by($request->session()->getId()));
+        // Keyed by the admin being verified, not the session: starting a new
+        // session must not reset the count of wrong codes for that admin.
+        RateLimiter::for('admin-2fa', function (Request $request) {
+            $key = '2fa|'.($request->session()->get('admin.2fa.id') ?? $request->user('admin')?->id ?? $request->ip());
+
+            return [Limit::perMinute(5)->by($key), Limit::perHour(20)->by($key)];
+        });
 
         View::composer('layouts.admin', function ($view) {
             $admin = auth('admin')->user();

@@ -127,4 +127,22 @@ class AuthenticationTest extends TestCase
         $this->post('/admin/logout');
         $this->get('/admin/invitation/'.$admin->id)->assertForbidden();
     }
+
+    public function test_two_factor_attempts_are_limited_per_admin_even_with_a_new_session(): void
+    {
+        $admin = Admin::factory()->superAdmin()->withTwoFactor(self::SECRET)->create();
+
+        $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password']);
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/admin/two-factor/challenge', ['code' => '000000']);
+        }
+
+        // A fresh session must not reset the counter for this admin.
+        $this->flushSession();
+        $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password'])
+            ->assertRedirect('/admin/two-factor/challenge');
+        $this->post('/admin/two-factor/challenge', ['code' => app(Google2FA::class)->getCurrentOtp(self::SECRET)])
+            ->assertStatus(429);
+        $this->assertGuest('admin');
+    }
 }

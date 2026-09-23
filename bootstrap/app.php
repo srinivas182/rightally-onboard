@@ -22,7 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(['admin.2fa' => RequireTwoFactor::class]);
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
-        $middleware->trustProxies(at: '*');
+        // Only trust forwarding headers from our own reverse proxy. Trusting
+        // every proxy would let a visitor fake the IP recorded on signed
+        // agreements and in the audit log. Set TRUSTED_PROXIES on the server
+        // (e.g. Cloudflare ranges) if a CDN sits in front of Nginx.
+        $middleware->trustProxies(at: array_filter(explode(',', (string) (getenv('TRUSTED_PROXIES') ?: '127.0.0.1,::1'))));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
