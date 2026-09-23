@@ -13,8 +13,11 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailTemplateController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\QuoteController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\WebhookController;
 use App\Http\Controllers\LegalPageController;
 use Illuminate\Support\Facades\Route;
 
@@ -93,14 +96,14 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
     });
 
     Route::middleware('can:menu.reports')->group(function () {
-        Route::get('reports', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');
-        Route::get('reports/{report}.csv', [\App\Http\Controllers\Admin\ReportController::class, 'export'])->whereIn('report', ['funnel', 'revenue'])->name('reports.export');
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('reports/{report}.csv', [ReportController::class, 'export'])->whereIn('report', ['funnel', 'revenue'])->name('reports.export');
     });
 
     Route::middleware('can:menu.quotes')->prefix('quotes')->name('quotes.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\QuoteController::class, 'index'])->name('index');
-        Route::post('/', [\App\Http\Controllers\Admin\QuoteController::class, 'store'])->name('store');
-        Route::post('{quote}/void', [\App\Http\Controllers\Admin\QuoteController::class, 'void'])->name('void');
+        Route::get('/', [QuoteController::class, 'index'])->name('index');
+        Route::post('/', [QuoteController::class, 'store'])->name('store');
+        Route::post('{quote}/void', [QuoteController::class, 'void'])->name('void');
     });
 
     Route::middleware('can:menu.coupons')->group(function () {
@@ -133,11 +136,11 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
     });
 
     Route::middleware('can:menu.settings')->group(function () {
-        Route::post('webhooks', [\App\Http\Controllers\Admin\WebhookController::class, 'store'])->name('webhooks.store');
-        Route::put('webhooks/{endpoint}', [\App\Http\Controllers\Admin\WebhookController::class, 'update'])->name('webhooks.update');
-        Route::delete('webhooks/{endpoint}', [\App\Http\Controllers\Admin\WebhookController::class, 'destroy'])->name('webhooks.destroy');
-        Route::post('webhooks/{endpoint}/test', [\App\Http\Controllers\Admin\WebhookController::class, 'test'])->middleware('throttle:10,1')->name('webhooks.test');
-        Route::post('webhook-deliveries/{delivery}/retry', [\App\Http\Controllers\Admin\WebhookController::class, 'retry'])->name('webhooks.retry');
+        Route::post('webhooks', [WebhookController::class, 'store'])->name('webhooks.store');
+        Route::put('webhooks/{endpoint}', [WebhookController::class, 'update'])->name('webhooks.update');
+        Route::delete('webhooks/{endpoint}', [WebhookController::class, 'destroy'])->name('webhooks.destroy');
+        Route::post('webhooks/{endpoint}/test', [WebhookController::class, 'test'])->middleware('throttle:10,1')->name('webhooks.test');
+        Route::post('webhook-deliveries/{delivery}/retry', [WebhookController::class, 'retry'])->name('webhooks.retry');
         Route::get('legal/{page}', [LegalPageController::class, 'edit'])->name('legal.edit');
         Route::put('legal/{page}', [LegalPageController::class, 'update'])->name('legal.update');
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');

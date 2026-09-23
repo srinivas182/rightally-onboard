@@ -9,6 +9,7 @@ use App\Enums\CustomerStatus;
 use App\Models\AgentCountLog;
 use App\Models\Contract;
 use App\Models\Coupon;
+use App\Models\Quote;
 use App\Services\Audit\AuditLogger;
 use App\Services\Settings\SettingsService;
 use App\Support\BusinessClock;
@@ -94,7 +95,7 @@ final class ContractSigner
             ]);
 
             if ($customer->quote_id) {
-                \App\Models\Quote::whereKey($customer->quote_id)->whereNull('used_at')->update(['used_at' => now(), 'customer_id' => $customer->id]);
+                Quote::whereKey($customer->quote_id)->whereNull('used_at')->update(['used_at' => now(), 'customer_id' => $customer->id]);
             }
             if ($contract->coupon_id) {
                 Coupon::whereKey($contract->coupon_id)->increment('times_used');

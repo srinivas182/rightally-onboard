@@ -12,6 +12,7 @@ use App\Http\Requests\Onboarding\SignRequest;
 use App\Models\Contract;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\Quote;
 use App\Services\Audit\AuditLogger;
 use App\Services\Billing\DepositService;
 use App\Services\Contracts\ContractRenderer;
@@ -31,6 +32,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use RuntimeException;
@@ -101,7 +103,7 @@ class OnboardingController extends Controller
         }
         $code = old('coupon', $customer->coupon?->code ?? '');
 
-        $custom = $customer->quote_id ? \App\Models\Quote::find($customer->quote_id) : null;
+        $custom = $customer->quote_id ? Quote::find($customer->quote_id) : null;
 
         return view('onboarding.details', $this->detailsViewData($customer, $custom ? '' : $code, $custom ? ['coupon' => null, 'message' => null] : $this->coupons->check($code), $custom) + [
             'action' => route('onboarding.details.update', $customer),
@@ -310,7 +312,7 @@ class OnboardingController extends Controller
         ];
     }
 
-    private function detailsViewData(?Customer $customer, string $code, array $check, ?\App\Models\Quote $custom = null): array
+    private function detailsViewData(?Customer $customer, string $code, array $check, ?Quote $custom = null): array
     {
         $agents = (int) old('agents', $customer?->agent_count_entered ?? ($custom?->min_agents ?? $this->settings->get('pricing', 'min_agents')));
         $quote = $this->quotes->quote(max(1, $agents), $check['coupon'], $custom);
@@ -360,13 +362,13 @@ class OnboardingController extends Controller
     }
 
     /** A usable custom quote from ?quote= (remembered in the session for the rest of step 1). */
-    private function sessionQuote(Request $request): ?\App\Models\Quote
+    private function sessionQuote(Request $request): ?Quote
     {
         if ($request->filled('quote')) {
             $request->session()->put('onboarding.quote', (string) $request->query('quote'));
         }
         $token = $request->session()->get('onboarding.quote');
-        $quote = $token && \Illuminate\Support\Str::isUuid($token) ? \App\Models\Quote::where('token', $token)->first() : null;
+        $quote = $token && Str::isUuid($token) ? Quote::where('token', $token)->first() : null;
 
         return $quote?->isUsable() ? $quote : null;
     }

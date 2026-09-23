@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Models\Admin;
+use App\Models\Customer;
+use App\Observers\CustomerObserver;
 use App\Services\Settings\SettingsService;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -24,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
-        \App\Models\Customer::observe(\App\Observers\CustomerObserver::class);
+        Customer::observe(CustomerObserver::class);
 
         // Password reset emails point at the admin reset screen.
         ResetPassword::createUrlUsing(fn (Admin $admin, string $token) => route('admin.password.reset', [

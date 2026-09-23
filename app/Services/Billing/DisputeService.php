@@ -5,6 +5,7 @@ namespace App\Services\Billing;
 use App\Models\Payment;
 use App\Services\Audit\AuditLogger;
 use App\Services\Email\EmailSender;
+use App\Services\Integrations\TeamAlerts;
 use App\Support\BusinessClock;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
@@ -55,7 +56,7 @@ final class DisputeService
             'customer_link' => route('admin.customers.show', $customer),
         ]);
         // Slack too, if set up (the email above always goes out).
-        app(\App\Services\Integrations\TeamAlerts::class)->send('chargebacks', "Chargeback: {$customer->company_name}",
+        app(TeamAlerts::class)->send('chargebacks', "Chargeback: {$customer->company_name}",
             'Disputed '.Money::format((int) ($dispute['amount'] ?? $payment->amount_cents))." on {$payment->invoice->number}. Respond in Stripe".($due ? ' by '.$due->format('M j') : '').'.',
             route('admin.customers.show', $customer), email: false);
     }
