@@ -1,18 +1,58 @@
 # RightAlly Onboarding
 
-Client onboarding, electronic contract signing and Stripe billing for RightAlly (Mayura Consultancy Services LLC d/b/a RightAlly).
+Client onboarding, electronic agreement signing and Stripe billing for RightAlly
+(Mayura Consultancy Services LLC d/b/a RightAlly).
 
-Stack: Laravel (latest stable), PHP 8.3, MySQL 8, Bootstrap 5.3, Stripe, Brevo.
+**Stack:** Laravel 13, PHP 8.3, MySQL 8, Bootstrap 5.3 (Sass, Vite), Stripe, Brevo.
 
 ## Sprints
+
 | Sprint | Scope | Status |
 |---|---|---|
-| 0 | Brand, design system, clickable prototype | In review |
-| 1 | Foundation: scaffold, database, admin auth + 2FA, roles, settings | Planned |
-| 2 | Onboarding and contract signing | Planned |
-| 3 | Payments and email | Planned |
-| 4 | Billing engine | Planned |
-| 5 | Admin back office | Planned |
-| 6 | QA, security and go-live | Planned |
+| 0 | Brand, design system, clickable prototype | Approved |
+| 1 | Foundation: database, admin sign-in with two-factor, roles, settings | In review |
+| 2 | Client onboarding and agreement signing, coupons | Planned |
+| 3 | Payments (Stripe) and email (Brevo, templates) | Planned |
+| 4 | Billing engine: go-live charge, subscriptions, agent counts, suspension, renewals | Planned |
+| 5 | Admin back office: dashboard, customers, contracts, invoices | Planned |
+| 6 | QA, security hardening, VPS go-live | Planned |
 
-See `docs/` for design decisions.
+## Local setup
+
+Requirements: PHP 8.3 with `mbstring`, `pdo_mysql`, `gd`, `intl`, `bcmath`; Composer 2; Node 22; MySQL 8.
+
+```bash
+git clone https://github.com/srinivas182/rightally-onboard.git
+cd rightally-onboard
+composer install
+cp .env.example .env
+php artisan key:generate
+# edit .env: DB_* and SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD (12+ characters)
+php artisan migrate --seed
+npm install && npm run build
+php artisan serve
+```
+
+Open `http://localhost:8000/admin`, sign in with the super admin from `.env`, and set up
+two-factor with an authenticator app. Then remove `SUPER_ADMIN_PASSWORD` from `.env`.
+
+Run tests with `php artisan test` (uses in-memory SQLite). GitHub Actions runs them on every push.
+
+## Where things live
+
+| Path | What |
+|---|---|
+| `config/rightally.php` | Menus (= permissions), business time zone, billing constants |
+| `app/Services/Settings` | Admin-editable settings; secrets encrypted with `APP_KEY` |
+| `app/Services/Auth/TwoFactorService.php` | Authenticator-app two-factor and recovery codes |
+| `app/Services/Audit/AuditLogger.php` | Audit trail (`activity_logs`) |
+| `routes/admin.php` | Back office routes (`/admin`) |
+| `resources/scss` | Bootstrap theme from the RightAlly logo |
+| `docs/` | Design system and sprint notes |
+| `design/prototype.html` | Approved clickable prototype |
+
+## Important
+
+- `APP_KEY` encrypts Stripe and Brevo keys and two-factor secrets. Back it up; losing it means re-entering keys and resetting two-factor for every admin.
+- Money is stored in integer cents.
+- Signed agreements keep the prices they were signed with; changing Settings affects new agreements only.

@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Providers;
+
+use App\Models\Admin;
+use App\Services\Settings\SettingsService;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
+
+class AppServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->app->singleton(SettingsService::class);
+    }
+
+    public function boot(): void
+    {
+        Paginator::useBootstrapFive();
+
+        // Password reset emails point at the admin reset screen.
+        ResetPassword::createUrlUsing(fn (Admin $admin, string $token) => route('admin.password.reset', [
+            'token' => $token,
+            'email' => $admin->email,
+        ]));
+
+        // Strong passwords for admins in production.
+        Password::defaults(fn () => $this->app->isProduction()
+            ? Password::min(12)->mixedCase()->numbers()->symbols()->uncompromised()
+            : Password::min(8));
+
+        // One gate per admin menu. Super admins pass every gate.
+        Gate::before(fn (Admin $admin) => $admin->isSuperAdmin() ? true : null);
+        foreach (array_keys(config('rightally.menus')) as $menu) {
+            Gate::define("menu.{$menu}", fn (Admin $admin) => $admin->hasMenu($menu));
+        }
+
+        RateLimiter::for('admin-login', fn (Request $request) => [
+            Limit::perMinute(5)->by(strtolower((string) $request->input('email')).'|'.$request->ip()),
+            Limit::perMinute(20)->by($request->ip()),
+        ]);
+        RateLimiter::for('admin-2fa', fn (Request $request) => Limit::perMinute(5)->by($request->session()->getId()));
+
+        View::composer('layouts.admin', function ($view) {
+            $admin = auth('admin')->user();
+            $menus = collect(config('rightally.menus'))
+                ->filter(fn ($m, $key) => $admin?->can("menu.{$key}"));
+            $view->with('navMenus', $menus);
+        });
+    }
+}
