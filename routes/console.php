@@ -6,6 +6,8 @@ use App\Services\Admin\SystemHealth;
 use App\Services\Billing\AgentCountService;
 use App\Services\Billing\BalanceService;
 use App\Services\Billing\CardExpiryWarnings;
+use App\Services\Integrations\TeamAlerts;
+use App\Services\Billing\CardExpiryWarnings;
 use App\Services\Billing\RenewalService;
 use App\Services\Billing\SuspensionService;
 use App\Services\Onboarding\DepositReminders;
@@ -24,18 +26,24 @@ use Illuminate\Support\Facades\Schedule;
 | Monthly charges themselves are made by Stripe's subscription; their
 | results arrive by webhook.
 */
-Artisan::command('billing:daily', function (BalanceService $balance, SuspensionService $suspension, RenewalService $renewals, CardExpiryWarnings $cards) {
+Artisan::command('billing:daily', function (BalanceService $balance, SuspensionService $suspension, RenewalService $renewals, CardExpiryWarnings $cards, TeamAlerts $alerts) {
     $this->info('Billing run for '.BusinessClock::today()->toDateString());
 
+    $summary = [];
     foreach ($balance->due() as $customer) {
         try {
             $balance->charge($customer);
+            $customer->refresh();
+            $amount = (int) $customer->invoices()->where('type', 'balance')->latest('id')->value('amount_cents');
+            $summary[] = ['company' => $customer->company_name, 'amount' => $amount, 'ok' => $customer->status === CustomerStatus::Live];
             $this->line("Balance charged: {$customer->company_name}");
         } catch (Throwable $e) {
             report($e);
+            $summary[] = ['company' => $customer->company_name, 'amount' => 0, 'ok' => false];
             $this->error("Balance charge failed to run for {$customer->company_name}: {$e->getMessage()}");
         }
     }
+    $alerts->goLiveSummary($summary);
     $this->line('Balance reminders sent: '.$balance->sendReminders());
     $this->line('Renewals started: '.$renewals->activate());
     $this->line('Renewal offers sent: '.$renewals->sendOffers());

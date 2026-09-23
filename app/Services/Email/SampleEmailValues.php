@@ -20,6 +20,7 @@ final class SampleEmailValues
             'stripe_link' => 'https://dashboard.stripe.com/disputes', 'customer_link' => url('/admin/customers'),
             'account_link' => url('/account'), 'card_expiry' => '10/2026', 'old_agent_count' => '8', 'effective_date' => 'November 22, 2026',
             'signer_name' => 'Robert Alvarez', 'requested_by' => 'Maria Alvarez', 'signing_link' => url('/'),
+            'alert_title' => 'New signing: Sunline Realty Group', 'alert_text' => 'Maria Alvarez (Miami, FL) signed for 8 agents. Source: NAR2026 link.', 'alert_link' => url('/admin'),
             'fee_table' => [['Paid today', '$255.00'], ['Due on go-live, Oct 23, 2026', '$2,295.00'], ['Monthly from Nov 22, 2026', '$660.00']],
             'receipt_details' => [['Receipt', 'INV-2026-0311'], ['Date', 'Sep 23, 2026'], ['For', 'Deposit'], ['Paid with', 'Visa ending 4242'], ['Amount', '$255.00']],
         ];

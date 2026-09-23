@@ -50,6 +50,11 @@ class SettingsController extends Controller
         if ($group === 'tax') {
             $request->merge(['enabled' => $request->boolean('enabled') ? '1' : '0']);
         }
+        if ($group === 'alerts') {
+            foreach (['email', 'new_signing', 'payment_failed', 'go_lives', 'chargebacks'] as $flag) {
+                $request->merge([$flag => $request->boolean($flag) ? '1' : '0']);
+            }
+        }
         if ($group === 'stripe' && $request->input('mode') === 'live') {
             $this->requireLiveKeys($request);
         }

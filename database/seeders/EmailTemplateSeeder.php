@@ -54,6 +54,8 @@ class EmailTemplateSeeder extends Seeder
                 "Hi {first_name},\n\nThe number of agents billed for {company_name} changed from {old_agent_count} to {agent_count}. Your monthly fee is now {monthly_amount}, from your next charge on {effective_date}.\n\nIf this doesn’t look right, reply to this email before then.\n\n{button:View your account|{account_link}}".$sign],
             'signature_request' => ['Signature request', 'Someone filling in the onboarding asks another person to sign', false, '{requested_by} asked you to sign the RightAlly agreement',
                 "Hi {signer_name},\n\n{requested_by} has set up RightAlly for {company_name} and asked you to review and sign the agreement.\n\n{button:Review and sign|{signing_link}}\n\nThe link works for 7 days.".$sign],
+            'team_alert' => ['Team alert', 'Alerts you switch on in Settings > Alerts. Sent to the team CC addresses', false, '[RightAlly] {alert_title}',
+                "{alert_title}\n\n{alert_text}\n\n{button:Open in admin|{alert_link}}"],
             'go_live_changed' => ['Go-live date changed', 'An admin moves the go-live date', true, 'Your RightAlly go-live date is now {go_live_date}',
                 "Hi {first_name},\n\nYour go-live date has moved to {go_live_date}. The remaining implementation fee of {balance_amount} will be charged on that date instead.".$sign],
             'balance_reminder' => ['Balance reminder', '3 days before the go-live charge', false, 'You go live on {go_live_date}',

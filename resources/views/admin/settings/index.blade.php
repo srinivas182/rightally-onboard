@@ -4,7 +4,7 @@
 @section('content')
 <h1 class="h3 mb-4">Settings</h1>
 <ul class="nav nav-tabs tabs-scroll mb-4" role="tablist" data-remember-tab="settings">
-    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'security' => 'Security', 'tax' => 'Tax', 'legal' => 'Legal pages'] as $tab => $label)
+    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'security' => 'Security', 'alerts' => 'Alerts and integrations', 'tax' => 'Tax', 'legal' => 'Legal pages'] as $tab => $label)
         <li class="nav-item"><a class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab" href="#t-{{ $tab }}">{{ $label }}</a></li>
     @endforeach
 </ul>
@@ -145,6 +145,60 @@
         </form>
     </div>
 
+    {{-- Alerts and integrations --}}
+    <div class="tab-pane fade" id="t-alerts" role="tabpanel">
+        <form method="post" action="{{ route('admin.settings.update', 'alerts') }}">@csrf @method('put')
+            <h3 class="h6">Team alerts</h3>
+            <p class="text-slate small">Sent to the team CC addresses (Settings &gt; Email) and/or a Slack channel.</p>
+            <div class="form-check form-switch mb-2"><input class="form-check-input" type="checkbox" role="switch" id="al_email" name="email" value="1" @checked($v['alerts']['email'] === '1')><label class="form-check-label" for="al_email">Send alerts by email</label></div>
+            <div class="row g-2 mb-3">
+                @foreach (\App\Services\Integrations\TeamAlerts::KINDS as $k => $label)
+                    <div class="col-sm-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="al_{{ $k }}" name="{{ $k }}" value="1" @checked($v['alerts'][$k] === '1')><label class="form-check-label" for="al_{{ $k }}">{{ $label }}</label></div></div>
+                @endforeach
+            </div>
+            @include('admin.settings._field', ['group' => 'alerts', 'key' => 'slack_webhook_url', 'label' => 'Slack incoming webhook URL', 'value' => $v['alerts']['slack_webhook_url'], 'col' => 'col-12', 'secret' => true, 'placeholder' => 'https://hooks.slack.com/services/…', 'help' => 'Optional. In Slack: Apps > Incoming Webhooks > Add to a channel, then paste the URL here.'])
+            <button class="btn btn-primary mt-3" type="submit">Save alerts</button>
+        </form>
+
+        <hr class="my-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <h3 class="h6 mb-0">Webhooks (CRM, Zapier)</h3>
+            <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#webhookNew"><svg class="ic me-1" aria-hidden="true"><use href="#i-plus"/></svg>Add webhook</button>
+        </div>
+        <p class="text-slate small">We POST a signed JSON event to each address when something happens to a customer. For GoHighLevel or any CRM, use a Zapier “Catch Hook” URL or the CRM’s inbound webhook. Customers’ own RightAlly sites are notified automatically about live, suspended, reactivated, cancelled and ended accounts (see docs/integration-rightally-sites.md).</p>
+        @php $endpoints = \App\Models\WebhookEndpoint::orderBy('name')->get(); @endphp
+        @forelse ($endpoints as $ep)
+            <div class="border rounded p-3 mb-2">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div><b>{{ $ep->name }}</b> @if ($ep->is_active)<span class="st st-live">On</span>@else<span class="st st-draft">Off</span>@endif
+                        <div class="small text-slate text-break">{{ $ep->url }}</div>
+                        <div class="small text-slate">{{ implode(', ', $ep->events) }}</div></div>
+                    <div class="d-flex gap-2">
+                        <form method="post" action="{{ route('admin.webhooks.test', $ep) }}">@csrf<button class="btn btn-sm btn-outline-secondary">Send test</button></form>
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#webhook{{ $ep->id }}">Edit</button>
+                        <form method="post" action="{{ route('admin.webhooks.destroy', $ep) }}">@csrf @method('delete')<button class="btn btn-sm btn-outline-danger" data-confirm="Delete this webhook?">Delete</button></form>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="text-slate small mb-2">No webhooks yet.</div>
+        @endforelse
+
+        @php $recent = \App\Models\WebhookDelivery::latest('id')->limit(15)->get(); @endphp
+        @if ($recent->isNotEmpty())
+            <h3 class="h6 mt-4">Recent deliveries</h3>
+            <div class="table-responsive"><table class="table table-sm small">
+                <thead><tr><th>When</th><th>Event</th><th>To</th><th>Status</th><th></th></tr></thead>
+                <tbody>@foreach ($recent as $d)
+                    <tr><td class="text-nowrap">{{ $d->created_at->setTimezone(\App\Support\BusinessClock::timezone())->format('M j, g:i A') }}</td><td class="font-monospace">{{ $d->event }}</td>
+                        <td class="text-break" style="max-width:260px">{{ $d->url }}</td>
+                        <td><span class="st {{ ['delivered' => 'st-live', 'pending' => 'st-wait', 'failed' => 'st-fail'][$d->status] ?? 'st-draft' }}">{{ ucfirst($d->status) }}</span>@if ($d->last_error)<div class="text-slate">{{ Str::limit($d->last_error, 80) }}</div>@endif</td>
+                        <td class="text-end">@if ($d->status === 'failed')<form method="post" action="{{ route('admin.webhooks.retry', $d) }}">@csrf<button class="btn btn-sm btn-link p-0">Retry</button></form>@endif</td></tr>
+                @endforeach</tbody>
+            </table></div>
+        @endif
+    </div>
+
     {{-- Legal pages --}}
     <div class="tab-pane fade" id="t-legal" role="tabpanel">
         <p class="text-slate">Shown in the footer of every onboarding page and email. Drafts are provided for your attorney to review.</p>
@@ -163,4 +217,22 @@
         </form>
     </div>
 </div>
+@php $whEvents = \App\Services\Integrations\Webhooks::EVENTS; @endphp
+@foreach (array_merge([null], \App\Models\WebhookEndpoint::orderBy('name')->get()->all()) as $ep)
+<div class="modal fade" id="{{ $ep ? 'webhook'.$ep->id : 'webhookNew' }}" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{{ $ep ? route('admin.webhooks.update', $ep) : route('admin.webhooks.store') }}">@csrf @if ($ep) @method('put') @endif
+        <div class="modal-header"><h2 class="modal-title h5">{{ $ep ? 'Edit webhook' : 'Add webhook' }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+            <div class="mb-3"><label class="form-label">Name</label><input class="form-control" name="name" required maxlength="120" value="{{ $ep?->name }}" placeholder="e.g. GoHighLevel via Zapier"></div>
+            <div class="mb-3"><label class="form-label">URL</label><input class="form-control" name="url" required maxlength="500" value="{{ $ep?->url }}" placeholder="https://hooks.zapier.com/hooks/catch/…"></div>
+            <span class="form-label d-block">Events</span>
+            @foreach ($whEvents as $k => $label)
+                <div class="form-check"><input class="form-check-input" type="checkbox" name="events[]" value="{{ $k }}" id="ev{{ $ep?->id ?? 'n' }}_{{ $loop->index }}" @checked($ep ? in_array($k, $ep->events, true) : true)><label class="form-check-label" for="ev{{ $ep?->id ?? 'n' }}_{{ $loop->index }}">{{ $label }} <span class="text-slate font-monospace small">{{ $k }}</span></label></div>
+            @endforeach
+            @if ($ep)<div class="form-check form-switch mt-3"><input class="form-check-input" type="checkbox" role="switch" name="is_active" value="1" id="act{{ $ep->id }}" @checked($ep->is_active)><label class="form-check-label" for="act{{ $ep->id }}">Active</label></div>@endif
+            @if ($errors->webhook->any())<div class="alert alert-danger small mt-3 mb-0">{{ $errors->webhook->first() }}</div>@endif
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Save webhook</button></div>
+    </form></div></div>
+@endforeach
 @endsection

@@ -81,6 +81,17 @@ final class SettingsSchema
                     'turnstile_secret_key' => ['default' => null, 'rules' => ['nullable', 'string', 'max:255'], 'secret' => true],
                 ],
             ],
+            'alerts' => [
+                'label' => 'Alerts',
+                'fields' => [
+                    'email' => ['default' => '1', 'rules' => ['boolean']],
+                    'slack_webhook_url' => ['default' => null, 'rules' => ['nullable', 'url:https', 'starts_with:https://hooks.slack.com/', 'max:255'], 'secret' => true],
+                    'new_signing' => ['default' => '1', 'rules' => ['boolean']],
+                    'payment_failed' => ['default' => '1', 'rules' => ['boolean']],
+                    'go_lives' => ['default' => '1', 'rules' => ['boolean']],
+                    'chargebacks' => ['default' => '1', 'rules' => ['boolean']],
+                ],
+            ],
             'tax' => [
                 'label' => 'Tax',
                 'fields' => [

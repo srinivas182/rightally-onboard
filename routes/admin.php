@@ -133,6 +133,11 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
     });
 
     Route::middleware('can:menu.settings')->group(function () {
+        Route::post('webhooks', [\App\Http\Controllers\Admin\WebhookController::class, 'store'])->name('webhooks.store');
+        Route::put('webhooks/{endpoint}', [\App\Http\Controllers\Admin\WebhookController::class, 'update'])->name('webhooks.update');
+        Route::delete('webhooks/{endpoint}', [\App\Http\Controllers\Admin\WebhookController::class, 'destroy'])->name('webhooks.destroy');
+        Route::post('webhooks/{endpoint}/test', [\App\Http\Controllers\Admin\WebhookController::class, 'test'])->middleware('throttle:10,1')->name('webhooks.test');
+        Route::post('webhook-deliveries/{delivery}/retry', [\App\Http\Controllers\Admin\WebhookController::class, 'retry'])->name('webhooks.retry');
         Route::get('legal/{page}', [LegalPageController::class, 'edit'])->name('legal.edit');
         Route::put('legal/{page}', [LegalPageController::class, 'update'])->name('legal.update');
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
@@ -140,7 +145,7 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::get('settings/signature/image', [SettingsController::class, 'signature'])->name('settings.signature');
         Route::delete('settings/stripe/live', [SettingsController::class, 'clearStripeLive'])->name('settings.stripe.clear-live');
         Route::put('settings/{group}', [SettingsController::class, 'update'])
-            ->whereIn('group', ['company', 'pricing', 'renewal', 'stripe', 'email', 'security', 'tax'])
+            ->whereIn('group', ['company', 'pricing', 'renewal', 'stripe', 'email', 'security', 'alerts', 'tax'])
             ->name('settings.update');
     });
 });
