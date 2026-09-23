@@ -22,3 +22,16 @@
 
 ## Not in this sprint
 Customers, Contracts, Invoices, Coupons and Email templates menus show as "Soon" until their sprint.
+
+## Takeover review (Sep 23, 2026)
+Sprint 1 was built in a separate session and taken over for sign-off.
+
+| Finding | Fix | Commit |
+|---|---|---|
+| CI failed: `phpunit.xml` expects `tests/Unit`, which didn't exist | Added `tests/Unit/MoneyTest.php` (formatting, dollar-to-cent conversion, approved agreement math) | 8e8ac92 |
+| Negative amounts formatted as `$-450.00` | Now `-$450.00` | 8e8ac92 |
+| Two-factor attempts were limited per session, so a new session reset the counter | Limited per admin: 5 per minute, 20 per hour, with a test | b0a816a |
+| App trusted every proxy (`*`), so a visitor could fake the IP recorded on signed agreements and in the audit log | Trusts only `TRUSTED_PROXIES` (default localhost) | b0a816a |
+| CI failures weren't readable without the Actions UI | CI prints failures as an annotation | 8cb654c |
+
+Open item: set `TRUSTED_PROXIES` to Cloudflare's ranges at deployment if Cloudflare proxies the site.
