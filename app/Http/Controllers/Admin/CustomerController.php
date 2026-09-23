@@ -8,13 +8,14 @@ use App\Enums\CustomerStatus;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
+use App\Models\Contract;
 use App\Models\Customer;
 use App\Models\EmailTemplate;
+use App\Models\Invoice;
 use App\Services\Audit\AuditLogger;
 use App\Services\Billing\AgentCountService;
 use App\Services\Billing\EarlyTerminationService;
 use App\Services\Billing\GoLiveService;
-use App\Services\Billing\SubscriptionService;
 use App\Services\Email\EmailSender;
 use App\Support\BusinessClock;
 use App\Support\Money;
@@ -74,8 +75,8 @@ class CustomerController extends Controller
             'termination' => $canTerminate && $contract ? $termination->quote($customer) : null,
             'activity' => ActivityLog::with('admin')
                 ->where(fn ($q) => $q->where(fn ($w) => $w->where('subject_type', $customer->getMorphClass())->where('subject_id', $customer->id))
-                    ->orWhere(fn ($w) => $w->where('subject_type', (new \App\Models\Contract)->getMorphClass())->whereIn('subject_id', $customer->contracts->pluck('id')))
-                    ->orWhere(fn ($w) => $w->where('subject_type', (new \App\Models\Invoice)->getMorphClass())->whereIn('subject_id', $customer->invoices->pluck('id'))))
+                    ->orWhere(fn ($w) => $w->where('subject_type', (new Contract)->getMorphClass())->whereIn('subject_id', $customer->contracts->pluck('id')))
+                    ->orWhere(fn ($w) => $w->where('subject_type', (new Invoice)->getMorphClass())->whereIn('subject_id', $customer->invoices->pluck('id'))))
                 ->latest('id')->limit(100)->get(),
             'customEmails' => EmailTemplate::where('is_system', false)->where('is_enabled', true)->orderBy('name')->get(),
             'newToken' => session('agent_token'),
@@ -169,7 +170,7 @@ class CustomerController extends Controller
         $invoice = $termination->terminate($customer, $request->user('admin'), $data['reason']);
 
         return back()->with('success', $invoice
-            ? "Agreement terminated. Early termination invoice {$invoice->number} for ".Money::format($invoice->amount_cents)." has been issued and emailed."
+            ? "Agreement terminated. Early termination invoice {$invoice->number} for ".Money::format($invoice->amount_cents).' has been issued and emailed.'
             : 'Agreement terminated. No remaining months were due.');
     }
 

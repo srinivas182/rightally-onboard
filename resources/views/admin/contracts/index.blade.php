@@ -6,6 +6,7 @@
 <h1 class="h3 mb-4">Contracts</h1>
 <ul class="nav nav-tabs tabs-scroll mb-3" role="tablist" data-remember-tab="contracts">
     <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#signed">Signed</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#renewals">Renewals @if ($renewals->where('contract.status', \App\Enums\ContractStatus::Draft)->count())<span class="badge text-bg-warning">{{ $renewals->where('contract.status', \App\Enums\ContractStatus::Draft)->count() }}</span>@endif</a></li>
     <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#templates">Templates</a></li>
 </ul>
 <div class="tab-content">
@@ -39,6 +40,30 @@
                 </tbody>
             </table></div>
             <div class="p-3 border-top">{{ $contracts->links('pagination::bootstrap-5') }}</div>
+            @endif
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="renewals" role="tabpanel">
+        <div class="panel">
+            @if ($renewals->isEmpty())
+                <div class="p-4 text-center text-slate">Renewal agreements are sent automatically 45 days before a term ends, and appear here.</div>
+            @else
+            <div class="table-responsive"><table class="table">
+                <thead><tr><th>Customer</th><th>Current term ends</th><th>Renewal</th><th class="text-end">New monthly</th><th>Offer sent</th><th>Reminder</th><th>Status</th><th></th></tr></thead>
+                <tbody>@foreach ($renewals as $row)
+                    @php $r = $row['contract']; @endphp
+                    <tr><td><b>{{ $r->customer->company_name }}</b></td><td class="small">{{ $r->previous->ends_on?->format('M j, Y') }}</td><td class="small num">{{ $r->number }}</td>
+                        <td class="text-end num">{{ \App\Support\Money::format($r->monthlyFeeCents($r->customer->agent_count)) }}</td>
+                        <td class="small">{{ $row['notices']['offer'] ?? null ? \Illuminate\Support\Carbon::parse($row['notices']['offer'])->setTimezone($tz)->format('M j') : '—' }}</td>
+                        <td class="small">{{ $row['notices']['reminder'] ?? null ? \Illuminate\Support\Carbon::parse($row['notices']['reminder'])->setTimezone($tz)->format('M j') : '—' }}</td>
+                        <td>@if ($r->isSigned())<span class="st st-live">Signed</span>@else<span class="st st-wait">Awaiting signature</span>@endif</td>
+                        <td class="text-end text-nowrap">
+                            @if ($r->isSigned())<a class="btn btn-sm btn-outline-primary" href="{{ route('admin.contracts.pdf', $r) }}">PDF</a>
+                            @else<form method="post" action="{{ route('admin.contracts.resend-renewal', $r) }}" class="d-inline">@csrf<button class="btn btn-sm btn-outline-primary"><svg class="ic me-1" aria-hidden="true"><use href="#i-send"/></svg>Resend</button></form>@endif
+                        </td></tr>
+                @endforeach</tbody>
+            </table></div>
             @endif
         </div>
     </div>

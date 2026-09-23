@@ -10,9 +10,9 @@ use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
-use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailTemplateController;
+use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SettingsController;
 use Illuminate\Support\Facades\Route;
@@ -99,6 +99,7 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
     Route::middleware('can:menu.contracts')->group(function () {
         Route::get('contracts', [ContractController::class, 'index'])->name('contracts.index');
         Route::get('contracts/{contract:uuid}/pdf', [ContractController::class, 'pdf'])->name('contracts.pdf');
+        Route::post('contracts/{contract:uuid}/resend-renewal', [ContractController::class, 'resendRenewal'])->name('contracts.resend-renewal');
         Route::get('contract-templates/{template}', [ContractTemplateController::class, 'show'])->name('contracts.templates.show');
         Route::post('contract-templates/{template}/new-version', [ContractTemplateController::class, 'duplicate'])->name('contracts.templates.duplicate');
         Route::get('contract-templates/{template}/edit', [ContractTemplateController::class, 'edit'])->name('contracts.templates.edit');
