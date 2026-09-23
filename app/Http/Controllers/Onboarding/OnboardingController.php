@@ -142,8 +142,13 @@ class OnboardingController extends Controller
 
         $contract = $signer->sign($contract, trim($request->validated('typed_name')), (string) $request->signaturePng(), $request->ip(), $request->userAgent());
         // Their signed copy by email, with a link back to payment in case they stop here.
-        app(EmailSender::class)->toCustomer('signed_payment_pending', $customer->fresh(), null,
-            [['path' => $contract->pdf_path, 'name' => "RightAlly-Agreement-{$contract->number}.pdf"]]);
+        $pdf = [['path' => $contract->pdf_path, 'name' => "RightAlly-Agreement-{$contract->number}.pdf"]];
+        $mailer = app(EmailSender::class);
+        $mailer->toCustomer('signed_payment_pending', $customer->fresh(), null, $pdf);
+        if ($contract->signer_email && $contract->signer_email !== $customer->email) {
+            // The person who signed on someone else's request gets their own copy too.
+            $mailer->toPerson('signed_payment_pending', $customer->fresh(), $contract->signer_email, $customer->fullName(), [], $pdf);
+        }
 
         return redirect()->route('onboarding.agreement', $customer)->with('signed', true);
     }
