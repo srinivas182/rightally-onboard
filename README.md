@@ -15,7 +15,13 @@ Client onboarding, electronic agreement signing and Stripe billing for RightAlly
 | 3 | Payments (Stripe deposit, webhooks) and email (Brevo, editable templates) | Done |
 | 4 | Billing engine: go-live charge, subscriptions, agent counts, suspension, early termination, renewals | Done |
 | 5 | Admin back office: dashboard, customers, invoices, renewals | Done |
-| 6 | QA, security hardening, VPS go-live | Planned |
+| 6 | QA, security hardening, deployment kit, guides | Done |
+
+## Guides
+- `DEPLOYMENT.md`: server set-up, updates, monitoring, backups and disaster recovery
+- `GO_LIVE_CHECKLIST.md`: everything to check before the first real client
+- `ADMIN_GUIDE.md`: day-to-day use of the admin
+- `docs/`: design decisions per sprint
 
 ## Local setup
 

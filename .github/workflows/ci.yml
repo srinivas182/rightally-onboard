@@ -27,6 +27,11 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Security audit (PHP and JS dependencies)
+        run: |
+          composer audit --no-dev
+          npm audit --omit=dev --audit-level=high
+
       - name: Build front end
         run: npm install --no-audit --no-fund && npm run build
 
