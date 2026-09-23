@@ -14,7 +14,7 @@
 @if ($customQuote)
     <div class="alert alert-info d-flex gap-2 align-items-start">
         <svg class="ic mt-1" aria-hidden="true"><use href="#i-tag"/></svg>
-        <div><b>Your custom quote is applied.</b> The pricing on the right was prepared for you and is valid until {{ $customQuote->expires_at->setTimezone(\App\Support\BusinessClock::timezone())->format('F j, Y') }}.@if ($customQuote->note)<div class="small mt-1">{{ $customQuote->note }}</div>@endif</div>
+        <div><b>Your custom quote is applied.</b> This pricing was prepared for you and is valid until {{ $customQuote->expires_at->setTimezone(\App\Support\BusinessClock::timezone())->format('F j, Y') }}.@if ($customQuote->note)<div class="small mt-1">{{ $customQuote->note }}</div>@endif</div>
     </div>
 @endif
 

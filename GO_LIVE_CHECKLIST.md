@@ -43,6 +43,12 @@ Tick each item before the first real client signs.
     - [ ] Bank confirmation: set a live test customer's card to `4000 0027 6000 3184` in Stripe, end the trial: the Payment needs confirmation email arrives.
 11. [ ] Delete test data before go-live (or start the live database fresh).
 
+## Integrations
+- [ ] Settings > Alerts and integrations: choose alerts; add the Slack webhook URL if you use Slack.
+- [ ] Add a webhook for your CRM (e.g. Zapier Catch Hook to GoHighLevel) and use Send test.
+- [ ] Give `docs/integration-rightally-sites.md` to the RightAlly platform team (account-status and agent-count endpoints).
+- [ ] Existing roles: add the new Custom quotes and Reports menus where needed (Admins and roles).
+
 ## Switch to live
 - [ ] Settings > Stripe: live keys and live webhook secret (a separate endpoint in Stripe's live mode), then switch mode to **Live**.
 - [ ] One real low-value transaction (e.g. your own brokerage with a 99% coupon), then refund it in Stripe.

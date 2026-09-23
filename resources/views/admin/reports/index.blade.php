@@ -43,8 +43,8 @@
     <div class="row g-3 mb-3">
         <div class="col-6 col-lg-3"><div class="kpi"><div class="l">Monthly recurring revenue</div><div class="v num">{{ $m($mrr['mrr']) }}</div><div class="small text-slate">{{ $mrr['customers'] }} live {{ Str::plural('customer', $mrr['customers']) }}</div></div></div>
         <div class="col-6 col-lg-3"><div class="kpi"><div class="l">Annual run rate</div><div class="v num">{{ $m($mrr['mrr'] * 12) }}</div><div class="small text-slate">MRR × 12</div></div></div>
-        <div class="col-6 col-lg-3"><div class="kpi"><div class="l">New this month</div><div class="v num text-success">+{{ $m($mrr['new_mrr']) }}</div><div class="small text-slate">{{ $mrr['new'] }} went live</div></div></div>
-        <div class="col-6 col-lg-3"><div class="kpi"><div class="l">Churned this month</div><div class="v num {{ $mrr['churned_mrr'] ? 'text-danger' : '' }}">-{{ $m($mrr['churned_mrr']) }}</div><div class="small text-slate">{{ $mrr['churned'] }} cancelled or ended</div></div></div>
+        <div class="col-6 col-lg-3"><div class="kpi"><div class="l">New this month</div><div class="v num {{ $mrr['new_mrr'] ? 'text-success' : '' }}">{{ $mrr['new_mrr'] ? '+' : '' }}{{ $m($mrr['new_mrr']) }}</div><div class="small text-slate">{{ $mrr['new'] }} went live</div></div></div>
+        <div class="col-6 col-lg-3"><div class="kpi"><div class="l">Churned this month</div><div class="v num {{ $mrr['churned_mrr'] ? 'text-danger' : '' }}">{{ $mrr['churned_mrr'] ? '-' : '' }}{{ $m($mrr['churned_mrr']) }}</div><div class="small text-slate">{{ $mrr['churned'] }} cancelled or ended</div></div></div>
     </div>
     <div class="row g-3">
         <div class="col-xl-8"><div class="panel">

@@ -320,7 +320,6 @@ class OnboardingController extends Controller
         return [
             'customer' => $customer,
             'customQuote' => $custom,
-            'quoteProblem' => null,
             'prefill' => $custom ? ['company_name' => $custom->company_name, 'email' => $custom->email] : [],
             'states' => UsStates::ALL,
             'quote' => $quote,

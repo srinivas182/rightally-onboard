@@ -18,6 +18,7 @@ Client onboarding, electronic agreement signing and Stripe billing for RightAlly
 | 6 | QA, security hardening, deployment kit, guides | Done |
 | 7 | Tax, bank confirmation, refunds and chargebacks, Stripe reconciliation, deposit reminders | Done |
 | 8 | Privacy and terms, PDF invoices, client account page, agent change emails, someone else signs | Done |
+| 9 | Custom quotes, funnel and revenue reports, webhooks (CRM and RightAlly sites), team alerts | Done |
 
 ## Guides
 - `DEPLOYMENT.md`: server set-up, updates, monitoring, backups and disaster recovery

@@ -40,6 +40,15 @@ Send them `https://onboard.rightally.io`, or a coupon link from Coupons (Copy li
 ## Client self-service
 Clients can open their own account at `https://onboard.rightally.io/account` (they enter their email and get a link). There they see their agreement, invoices and receipts (PDF), what’s charged next, and can update their card or bank account. Point clients there before resending documents by hand.
 
+## Custom quotes
+When you agree different pricing with a brokerage, create a quote (Custom quotes > New quote) and send them its link. It shows their pricing, can’t be combined with a coupon, and works once. Void it if the deal changes.
+
+## Reports
+Onboarding funnel shows where prospects drop off, by source, coupon, campaign or month. Revenue shows monthly recurring revenue, growth and churn, and the next 3 months’ expected charges.
+
+## Alerts and integrations
+Settings > Alerts and integrations: choose which alerts the team gets by email or Slack, and add webhooks to send events to your CRM (for example through Zapier).
+
 ## Coupons
 Percentage off the implementation fee only. Can expire or never expire, and can have a usage limit. Once a code has been used it can’t be renamed; switch it off instead of deleting.
 
