@@ -3,12 +3,18 @@
 namespace App\Http\Controllers\Onboarding;
 
 use App\Enums\ContractStatus;
+use App\Enums\InvoiceStatus;
+use App\Enums\InvoiceType;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\OnboardingAccess;
 use App\Http\Requests\Onboarding\DetailsRequest;
 use App\Http\Requests\Onboarding\SignRequest;
 use App\Models\Contract;
 use App\Models\Customer;
+use App\Models\Invoice;
+use App\Services\Billing\DepositService;
+use App\Services\Stripe\StripeClient;
+use App\Services\Stripe\StripeException;
 use App\Services\Contracts\ContractRenderer;
 use App\Services\Contracts\ContractSigner;
 use App\Services\Onboarding\CouponCheck;
@@ -160,14 +166,74 @@ class OnboardingController extends Controller
         return view('onboarding.schedule', ['customer' => $customer, 'contract' => $contract, 'step' => 3] + $this->ledger($contract));
     }
 
-    public function payment(Customer $customer): View|RedirectResponse
+    public function payment(Customer $customer, DepositService $deposits, StripeClient $stripe): View|RedirectResponse
     {
         $contract = $this->signedContractOrNull($customer);
         if (! $contract) {
             return redirect()->route('onboarding.agreement', $customer);
         }
+        $existing = $this->depositInvoice($customer);
+        if ($existing && in_array($existing->status, [InvoiceStatus::Paid, InvoiceStatus::Processing], true)) {
+            return redirect()->route('onboarding.done', $customer);
+        }
 
-        return view('onboarding.payment', ['customer' => $customer, 'contract' => $contract, 'step' => 4] + $this->ledger($contract));
+        $clientSecret = null;
+        $error = null;
+        if (! $stripe->isConfigured()) {
+            $error = 'Online payment isn’t available right now. Your signed agreement is saved; we’ll email you a payment link shortly.';
+        } else {
+            try {
+                $clientSecret = $deposits->prepare($customer, $contract)['client_secret'];
+            } catch (StripeException $e) {
+                report($e);
+                $error = $e->userMessage ?? 'We couldn’t start the payment. Please try again in a minute.';
+            }
+        }
+
+        return view('onboarding.payment', [
+            'customer' => $customer,
+            'contract' => $contract,
+            'step' => 4,
+            'clientSecret' => $clientSecret,
+            'publishableKey' => $stripe->publishableKey(),
+            'paymentError' => $error ?? ($existing?->status === InvoiceStatus::Failed ? ($existing->failure_reason ?: 'Your last payment didn’t go through.').' Try again or use a different method.' : null),
+        ] + $this->ledger($contract));
+    }
+
+    /** Stripe sends the client back here after confirming (including bank redirects). */
+    public function paymentReturn(Request $request, Customer $customer, DepositService $deposits): RedirectResponse
+    {
+        $invoice = $this->depositInvoice($customer);
+        $piId = (string) $request->query('payment_intent');
+        if (! $invoice || $piId === '' || $piId !== $invoice->stripe_payment_intent_id) {
+            return redirect()->route('onboarding.payment', $customer);
+        }
+
+        try {
+            $invoice = $deposits->syncFromStripe($piId) ?? $invoice;
+        } catch (StripeException $e) {
+            report($e); // the webhook will apply the result
+        }
+
+        return in_array($invoice->status, [InvoiceStatus::Paid, InvoiceStatus::Processing], true)
+            ? redirect()->route('onboarding.done', $customer)
+            : redirect()->route('onboarding.payment', $customer);
+    }
+
+    public function done(Customer $customer): View|RedirectResponse
+    {
+        $contract = $this->signedContractOrNull($customer);
+        $invoice = $this->depositInvoice($customer);
+        if (! $contract || ! $invoice || ! in_array($invoice->status, [InvoiceStatus::Paid, InvoiceStatus::Processing], true)) {
+            return redirect()->route('onboarding.payment', $customer);
+        }
+
+        return view('onboarding.done', ['customer' => $customer, 'contract' => $contract, 'invoice' => $invoice, 'step' => 5] + $this->ledger($contract));
+    }
+
+    private function depositInvoice(Customer $customer): ?Invoice
+    {
+        return $customer->invoices()->where('type', InvoiceType::Deposit)->latest('id')->first();
     }
 
     // ---- helpers ------------------------------------------------------

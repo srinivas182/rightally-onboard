@@ -104,7 +104,12 @@
                 @include('admin.settings._field', ['group' => 'stripe', 'key' => 'live_secret_key', 'label' => 'Secret key', 'value' => $v['stripe']['live_secret_key'], 'col' => 'col-12', 'secret' => true])
                 @include('admin.settings._field', ['group' => 'stripe', 'key' => 'live_webhook_secret', 'label' => 'Webhook signing secret', 'value' => $v['stripe']['live_webhook_secret'], 'col' => 'col-12', 'secret' => true])
             </div>
-            <div class="form-text mt-3">Secret keys are stored encrypted and never shown again, only their last 4 characters. The connection test and webhook address arrive in Sprint 3.</div>
+            <div class="form-text mt-3">Secret keys are stored encrypted and never shown again, only their last 4 characters.</div>
+            <div class="fee-mini mt-3 small">
+                <b>Webhook</b>: in the Stripe dashboard (Developers &gt; Webhooks), add an endpoint for each mode:
+                <div class="input-group input-group-sm my-2" style="max-width:520px"><input class="form-control font-monospace" value="{{ route('stripe.webhook') }}" readonly aria-label="Webhook URL"><button class="btn btn-outline-secondary" type="button" data-copy="{{ route('stripe.webhook') }}">Copy</button></div>
+                Events: <span class="font-monospace">payment_intent.succeeded, payment_intent.processing, payment_intent.payment_failed, invoice.paid, invoice.payment_failed, customer.subscription.updated, customer.subscription.deleted</span>. Paste the endpoint’s signing secret above.
+            </div>
             <div class="d-flex gap-2 mt-4 flex-wrap">
                 <button class="btn btn-primary" type="submit">Save Stripe settings</button>
                 @if ($v['stripe']['live_secret_key'] && $v['stripe']['mode'] === 'test')

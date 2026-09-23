@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Onboarding\CouponCheckController;
 use App\Http\Controllers\Onboarding\OnboardingController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,5 +25,10 @@ Route::prefix('onboard/{customer}')->name('onboarding.')->middleware('onboarding
     Route::post('agreement/sign', [OnboardingController::class, 'sign'])->middleware('throttle:onboarding')->name('sign');
     Route::get('agreement/pdf', [OnboardingController::class, 'pdf'])->name('pdf');
     Route::get('schedule', [OnboardingController::class, 'schedule'])->name('schedule');
-    Route::get('payment', [OnboardingController::class, 'payment'])->name('payment');
+    Route::get('payment', [OnboardingController::class, 'payment'])->middleware('throttle:onboarding')->name('payment');
+    Route::get('payment/return', [OnboardingController::class, 'paymentReturn'])->name('payment.return');
+    Route::get('done', [OnboardingController::class, 'done'])->name('done');
 });
+
+// Stripe webhooks (no session, no CSRF; verified by signature).
+Route::post('/stripe/webhook', StripeWebhookController::class)->name('stripe.webhook');

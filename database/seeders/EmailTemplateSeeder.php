@@ -33,7 +33,7 @@ class EmailTemplateSeeder extends Seeder
 
         return [
             'agreement_signed' => ['Agreement signed', 'A client signs their agreement', true, 'Your RightAlly agreement is signed',
-                "Welcome aboard, {first_name}\n\nThanks for choosing RightAlly for {company_name}. Your agreement is signed and your deposit of {deposit_amount} is paid. The signed agreement is attached to this email.\n\n{fee_table}\n\nYour implementation lead will contact you within 2 business days to schedule a kick-off call.\n\n{button:Download your agreement|{agreement_link}}".$sign],
+                "Welcome aboard, {first_name}\n\nThanks for choosing RightAlly for {company_name}. Your agreement is signed and your deposit of {deposit_amount} is {deposit_status}. The signed agreement is attached to this email.\n\n{fee_table}\n\nYour implementation lead will contact you within 2 business days to schedule a kick-off call.\n\n{button:Download your agreement|{agreement_link}}".$sign],
             'deposit_receipt' => ['Deposit receipt', 'The deposit is paid', true, 'Receipt for your RightAlly deposit',
                 "Hi {first_name},\n\nWe received your deposit of {deposit_amount} for {company_name}. The remaining {balance_amount} is charged on your go-live date, {go_live_date}.\n\n{receipt_details}".$sign],
             'go_live_changed' => ['Go-live date changed', 'An admin moves the go-live date', true, 'Your RightAlly go-live date is now {go_live_date}',

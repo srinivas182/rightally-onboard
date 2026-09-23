@@ -1,0 +1,135 @@
+<?php
+
+namespace App\Services\Email;
+
+use App\Models\EmailTemplate;
+use App\Services\Settings\SettingsService;
+
+/**
+ * Turns an email template (plain text with {placeholders}) into branded HTML
+ * and a plain-text version.
+ *
+ * Template syntax:
+ *   - Paragraphs are separated by a blank line. The first paragraph is the greeting/heading.
+ *   - {first_name} etc. are replaced with values (HTML-escaped).
+ *   - {button:Label|{link_placeholder}} becomes a button.
+ *   - {fee_table} and {receipt_details} become small tables.
+ */
+final class EmailRenderer
+{
+    /** Placeholders shown in the template editor. */
+    public const PLACEHOLDERS = [
+        'first_name' => 'Client’s first name',
+        'company_name' => 'Brokerage name',
+        'deposit_amount' => 'Deposit amount',
+        'deposit_status' => '“paid” or “being processed by your bank”',
+        'balance_amount' => 'Balance due at go-live',
+        'monthly_amount' => 'Current monthly fee',
+        'agent_count' => 'Agents billed',
+        'go_live_date' => 'Go-live date',
+        'first_monthly_date' => 'First monthly charge date',
+        'term_end_date' => 'End of the minimum term',
+        'payment_method' => 'e.g. Visa ending 4242',
+        'amount' => 'Amount of the invoice this email is about',
+        'period' => 'Billing period, e.g. November 2026',
+        'agreement_number' => 'Agreement number',
+        'agreement_link' => 'Link to view and download the agreement (use in a button)',
+        'payment_link' => 'Link to pay or update the payment method (use in a button)',
+        'renewal_link' => 'Link to the renewal agreement (use in a button)',
+        'fee_table' => 'Table of today, go-live and monthly amounts',
+        'receipt_details' => 'Table with receipt number, date, amount and method',
+    ];
+
+    public function __construct(private readonly SettingsService $settings) {}
+
+    /**
+     * @param  array<string, string|array<int, array{0: string, 1: string}>>  $values  table placeholders take [label, value] rows
+     * @return array{subject: string, html: string, text: string}
+     */
+    public function render(EmailTemplate $template, array $values): array
+    {
+        $subject = $this->plain($template->subject, $values);
+        $paragraphs = preg_split('/\R{2,}/', trim($template->body)) ?: [];
+
+        $htmlParas = [];
+        $textParas = [];
+        foreach ($paragraphs as $i => $para) {
+            $htmlParas[] = $this->paragraphHtml($para, $values, $i === 0);
+            $textParas[] = $this->paragraphText($para, $values);
+        }
+
+        $html = view('emails.layout', [
+            'subject' => $subject,
+            'content' => implode("\n", $htmlParas),
+            'company' => $this->settings->group('company'),
+        ])->render();
+
+        return ['subject' => $subject, 'html' => $html, 'text' => implode("\n\n", array_filter($textParas))];
+    }
+
+    private function paragraphHtml(string $para, array $values, bool $first): string
+    {
+        $trimmed = trim($para);
+        if (preg_match('/^\{(fee_table|receipt_details)\}$/', $trimmed, $m)) {
+            return $this->tableHtml((array) ($values[$m[1]] ?? []));
+        }
+        if (preg_match('/^\{button:([^|]+)\|\{([a-z_]+)\}\}$/', $trimmed, $m)) {
+            $url = (string) ($values[$m[2]] ?? '');
+
+            return $url === '' ? '' : '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0"><tr><td style="border-radius:8px;background:#1457EC">'
+                .'<a href="'.e($url).'" style="display:inline-block;padding:12px 22px;color:#ffffff;text-decoration:none;font-weight:600;font-size:15px">'.e($m[1]).'</a></td></tr></table>';
+        }
+
+        $text = nl2br($this->plain($trimmed, $values, escape: true));
+
+        return $first
+            ? '<p style="margin:0 0 16px;font-size:20px;font-weight:600;color:#041527">'.$text.'</p>'
+            : '<p style="margin:0 0 16px">'.$text.'</p>';
+    }
+
+    private function paragraphText(string $para, array $values): string
+    {
+        $trimmed = trim($para);
+        if (preg_match('/^\{(fee_table|receipt_details)\}$/', $trimmed, $m)) {
+            return implode("\n", array_map(fn ($r) => $r[0].': '.$r[1], (array) ($values[$m[1]] ?? [])));
+        }
+        if (preg_match('/^\{button:([^|]+)\|\{([a-z_]+)\}\}$/', $trimmed, $m)) {
+            $url = (string) ($values[$m[2]] ?? '');
+
+            return $url === '' ? '' : $m[1].': '.$url;
+        }
+
+        return $this->plain($trimmed, $values);
+    }
+
+    /** Replaces {placeholders}; table and button placeholders are removed inline. */
+    private function plain(string $text, array $values, bool $escape = false): string
+    {
+        $text = $escape ? e($text) : $text;
+
+        return (string) preg_replace_callback('/\{([a-z_]+)\}/', function ($m) use ($values, $escape) {
+            $v = $values[$m[1]] ?? null;
+            if (is_array($v) || $v === null) {
+                return '';
+            }
+
+            return $escape ? e((string) $v) : (string) $v;
+        }, $text);
+    }
+
+    /** @param array<int, array{0: string, 1: string}> $rows */
+    private function tableHtml(array $rows): string
+    {
+        if (! $rows) {
+            return '';
+        }
+        $html = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #DFE5EF;border-radius:8px;border-collapse:separate;margin:8px 0 20px;font-size:14px">';
+        $last = count($rows) - 1;
+        foreach (array_values($rows) as $i => [$label, $value]) {
+            $border = $i < $last ? 'border-bottom:1px solid #DFE5EF;' : '';
+            $html .= '<tr><td style="padding:10px 14px;'.$border.'">'.e($label).'</td><td style="padding:10px 14px;'.$border.'text-align:right;white-space:nowrap"><b>'.e($value).'</b></td></tr>';
+        }
+
+        return $html.'</table>';
+    }
+}

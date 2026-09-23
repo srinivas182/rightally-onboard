@@ -143,3 +143,45 @@ if (signForm) {
         btn.textContent = 'Signing…';
     });
 }
+
+// ---- Step 4: payment (Stripe Payment Element) ------------------------
+const payForm = document.querySelector('#paymentForm');
+if (payForm) {
+    const err = document.querySelector('#paymentErr');
+    const btn = document.querySelector('#payBtn');
+    const showError = (msg) => { err.textContent = msg; err.classList.remove('d-none'); };
+
+    const start = () => {
+        if (!window.Stripe) { showError('The secure payment form didn’t load. Check your connection and refresh the page.'); return; }
+        const stripe = window.Stripe(payForm.dataset.key);
+        const dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const elements = stripe.elements({
+            clientSecret: payForm.dataset.secret,
+            appearance: {
+                theme: dark ? 'night' : 'stripe',
+                variables: { colorPrimary: '#1457EC', colorText: dark ? '#E7ECF5' : '#041527', borderRadius: '8px', fontFamily: 'Instrument Sans, system-ui, sans-serif' },
+            },
+        });
+        const element = elements.create('payment', {
+            layout: { type: 'tabs' },
+            defaultValues: { billingDetails: { email: payForm.dataset.email, name: payForm.dataset.name } },
+        });
+        element.mount('#paymentElement');
+        element.on('ready', () => { btn.disabled = false; });
+
+        payForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            err.classList.add('d-none');
+            btn.disabled = true;
+            const label = btn.textContent;
+            btn.textContent = 'Processing…';
+            const { error } = await stripe.confirmPayment({ elements, confirmParams: { return_url: payForm.dataset.return } });
+            // Only reached on an immediate error; success redirects to return_url.
+            showError(error?.message || 'The payment didn’t go through. Please try again.');
+            btn.disabled = false;
+            btn.textContent = label;
+        });
+    };
+
+    if (window.Stripe) start(); else window.addEventListener('load', start);
+}
