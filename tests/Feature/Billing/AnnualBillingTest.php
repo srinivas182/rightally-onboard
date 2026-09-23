@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Invoice;
 use App\Services\Admin\ReportStats;
 use App\Services\Billing\EarlyTerminationService;
+use App\Services\Settings\SettingsService;
 use Database\Seeders\ContractTemplateSeeder;
 use Database\Seeders\EmailTemplateSeeder;
 use Database\Seeders\RoleSeeder;
@@ -85,7 +86,7 @@ class AnnualBillingTest extends TestCase
 
     public function test_yearly_option_can_be_turned_off(): void
     {
-        app(\App\Services\Settings\SettingsService::class)->setMany('pricing', ['annual_enabled' => '0']);
+        app(SettingsService::class)->setMany('pricing', ['annual_enabled' => '0']);
         $this->get('/')->assertDontSee('Subscription billing');
     }
 }

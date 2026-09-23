@@ -19,7 +19,9 @@ class CouponCheckController extends Controller
             'valid' => (bool) $result['coupon'],
             'code' => $result['coupon']?->code,
             'percent' => $result['coupon'] ? (float) $result['coupon']->percent_off : 0,
-            'message' => $result['message'] ?? ($result['coupon'] ? "{$code} applied. ".rtrim(rtrim(number_format((float) $result['coupon']->percent_off, 2), '0'), '.').'% off your implementation fee.' : 'Enter a coupon code, or leave this blank.'),
+            'message' => $result['message'] ?? ($result['coupon']
+                ? __(':code applied. :pct% off your implementation fee.', ['code' => $code, 'pct' => rtrim(rtrim(number_format((float) $result['coupon']->percent_off, 2), '0'), '.')])
+                : __('Enter a coupon code, or leave this blank.')),
         ]);
     }
 }

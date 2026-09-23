@@ -46,7 +46,7 @@ class AccountController extends Controller
         Customer::where('email', strtolower($data['email']))->where('status', '!=', CustomerStatus::Draft)->get()
             ->each(fn (Customer $c) => $email->toCustomer('account_link', $c));
 
-        return back()->with('status', 'If that email belongs to a RightAlly customer, we’ve sent a link to open your account. It works for 7 days.');
+        return back()->with('status', __('If that email belongs to a RightAlly customer, we’ve sent a link to open your account. It works for 7 days.'));
     }
 
     public function show(Customer $customer, StripeClient $stripe): View
@@ -93,7 +93,7 @@ class AccountController extends Controller
         } catch (StripeException $e) {
             report($e);
 
-            return redirect()->route('account.show', $customer)->with('warning', $e->userMessage ?? 'We couldn’t start the update. Please try again in a minute.');
+            return redirect()->route('account.show', $customer)->with('warning', $e->userMessage ?? __('We couldn’t start the update. Please try again in a minute.'));
         }
 
         return view('account.payment-method', ['customer' => $customer, 'clientSecret' => $si['client_secret'], 'publishableKey' => $stripe->publishableKey()]);
@@ -109,7 +109,7 @@ class AccountController extends Controller
             $si = null;
         }
         if (! $si || ($si['customer'] ?? null) !== $customer->stripe_customer_id) {
-            return redirect()->route('account.show', $customer)->with('warning', 'We couldn’t confirm the update. Please try again.');
+            return redirect()->route('account.show', $customer)->with('warning', __('We couldn’t confirm the update. Please try again.'));
         }
 
         if (($si['status'] ?? '') === 'succeeded' && is_array($si['payment_method'] ?? null)) {
@@ -118,14 +118,14 @@ class AccountController extends Controller
             $email->toCustomer('payment_method_updated', $customer->fresh());
             $hasFailed = $customer->invoices()->where('status', InvoiceStatus::Failed)->whereNotNull('hosted_invoice_url')->exists();
 
-            return redirect()->route('account.show', $customer)->with('success', 'Payment method updated to '.$customer->fresh()->payment_method_label.'. Future charges use it.'
-                .($hasFailed ? ' You still have an unpaid invoice below: use Pay now to settle it.' : ''));
+            return redirect()->route('account.show', $customer)->with('success', __('Payment method updated to :method. Future charges use it.', ['method' => $customer->fresh()->payment_method_label])
+                .($hasFailed ? ' '.__('You still have an unpaid invoice below: use Pay now to settle it.') : ''));
         }
         if (($si['status'] ?? '') === 'processing') {
-            return redirect()->route('account.show', $customer)->with('status', 'Your bank account is being verified. We’ll switch to it once your bank confirms.');
+            return redirect()->route('account.show', $customer)->with('status', __('Your bank account is being verified. We’ll switch to it once your bank confirms.'));
         }
 
-        return redirect()->route('account.payment-method', $customer)->with('warning', $si['last_setup_error']['message'] ?? 'The update didn’t go through. Please try again.');
+        return redirect()->route('account.payment-method', $customer)->with('warning', $si['last_setup_error']['message'] ?? __('The update didn’t go through. Please try again.'));
     }
 
     /** @return array{date: Carbon, amount: int, label: string}|null */
@@ -135,15 +135,15 @@ class AccountController extends Controller
             return null;
         }
         if (in_array($customer->status, [CustomerStatus::ContractSigned, CustomerStatus::AwaitingGoLive], true)) {
-            return ['date' => BusinessClock::date($customer->go_live_date), 'amount' => $contract->balance_cents, 'label' => 'Implementation balance, on your go-live date'];
+            return ['date' => BusinessClock::date($customer->go_live_date), 'amount' => $contract->balance_cents, 'label' => __('Implementation balance, on your go-live date')];
         }
         if (in_array($customer->status, [CustomerStatus::Live, CustomerStatus::PaymentFailed, CustomerStatus::Suspended], true)) {
             return ['date' => BillingDates::nextCharge($customer, $contract), 'amount' => $contract->recurringFeeCents($customer->agent_count),
-                'label' => ($contract->isAnnual() ? 'Yearly fee' : 'Monthly fee').", {$customer->agent_count} agents"];
+                'label' => __($contract->isAnnual() ? 'Yearly fee, :n agents' : 'Monthly fee, :n agents', ['n' => $customer->agent_count])];
         }
         if ($customer->status === CustomerStatus::Paused && $customer->paused_until) {
             return ['date' => BillingDates::nextCharge($customer, $contract, BusinessClock::date($customer->paused_until)), 'amount' => $contract->recurringFeeCents($customer->agent_count),
-                'label' => 'First charge after your pause'];
+                'label' => __('First charge after your pause')];
         }
 
         return null;

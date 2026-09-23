@@ -60,7 +60,7 @@ class OnboardingController extends Controller
         $this->captureTracking($request);
         $custom = $this->sessionQuote($request);
         $quoteProblem = $request->filled('quote') && ! $custom
-            ? 'This quote link has expired or has already been used. You can continue at our standard pricing, or reply to your quote email for a new link.'
+            ? __('This quote link has expired or has already been used. You can continue at our standard pricing, or reply to your quote email for a new link.')
             : null;
         $code = $custom ? '' : strtoupper(trim((string) ($request->query('coupon') ?? old('coupon', ''))));
         $check = $this->coupons->check($code);
@@ -76,7 +76,7 @@ class OnboardingController extends Controller
     public function store(DetailsRequest $request): RedirectResponse
     {
         if (! $this->turnstile->verify($request->input('cf-turnstile-response'), $request->ip())) {
-            throw ValidationException::withMessages(['turnstile' => 'Please confirm you’re not a robot, then try again.']);
+            throw ValidationException::withMessages(['turnstile' => __('Please confirm you’re not a robot, then try again.')]);
         }
 
         $custom = $this->sessionQuote($request);
@@ -190,7 +190,7 @@ class OnboardingController extends Controller
         ]);
         $audit->log('contract.signature_requested', "{$requestedBy} asked {$customer->fullName()} ({$data['signer_email']}) to sign {$contract->number}", $contract, null, 'client');
 
-        return redirect()->route('onboarding.agreement', $customer)->with('delegated', "We’ve emailed {$data['signer_first_name']} at {$data['signer_email']} a link to review and sign. Receipts will still go to {$customer->email}.");
+        return redirect()->route('onboarding.agreement', $customer)->with('delegated', __('We’ve emailed :name at :email a link to review and sign. Receipts will still go to :account.', ['name' => $data['signer_first_name'], 'email' => $data['signer_email'], 'account' => $customer->email]));
     }
 
     public function pdf(Customer $customer): StreamedResponse
@@ -235,7 +235,7 @@ class OnboardingController extends Controller
                 $clientSecret = $deposits->prepare($customer, $contract)['client_secret'];
             } catch (StripeException $e) {
                 report($e);
-                $error = $e->userMessage ?? 'We couldn’t start the payment. Please try again in a minute.';
+                $error = $e->userMessage ?? __('We couldn’t start the payment. Please try again in a minute.');
             }
         }
 
@@ -245,7 +245,7 @@ class OnboardingController extends Controller
             'step' => 4,
             'clientSecret' => $clientSecret,
             'publishableKey' => $stripe->publishableKey(),
-            'paymentError' => $error ?? ($existing?->status === InvoiceStatus::Failed ? ($existing->failure_reason ?: 'Your last payment didn’t go through.').' Try again or use a different method.' : null),
+            'paymentError' => $error ?? ($existing?->status === InvoiceStatus::Failed ? ($existing->failure_reason ?: __('Your last payment didn’t go through.')).' Try again or use a different method.' : null),
         ] + $this->ledger($contract));
     }
 

@@ -57,17 +57,17 @@ class DetailsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'state_code.required' => 'Choose your state.',
-            'state_code.in' => 'Choose your state.',
-            'zip.regex' => 'Enter a 5-digit ZIP code, for example 33131.',
-            'agents.min' => 'Enter at least 1 agent.',
-            'agents.required' => 'Enter how many agents will use RightAlly.',
-            'email.email' => 'Enter a valid email address, for example name@brokerage.com.',
+            'state_code.required' => __('Choose your state.'),
+            'state_code.in' => __('Choose your state.'),
+            'zip.regex' => __('Enter a 5-digit ZIP code, for example 33131.'),
+            'agents.min' => __('Enter at least 1 agent.'),
+            'agents.required' => __('Enter how many agents will use RightAlly.'),
+            'email.email' => __('Enter a valid email address, for example name@brokerage.com.'),
         ];
     }
 
     public function attributes(): array
     {
-        return ['company_name' => 'brokerage or company name', 'state_code' => 'state', 'zip' => 'ZIP code'];
+        return ['company_name' => __('brokerage or company name'), 'state_code' => __('state'), 'zip' => __('ZIP code')];
     }
 }

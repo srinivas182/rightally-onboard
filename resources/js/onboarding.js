@@ -1,3 +1,6 @@
+
+// Interface text helper: fills :placeholders.
+const T = (key, vars = {}) => Object.entries(vars).reduce((t, [k, v]) => t.replace(`:${k}`, v), key);
 // Client onboarding: live pricing, coupon check, agent stepper and signature pad.
 import * as bootstrap from 'bootstrap';
 import SignaturePad from 'signature_pad';
@@ -43,14 +46,14 @@ if (form) {
         setL('monthly', money(yearly
             ? Math.round(pricing.platform * 12 * d) + billed * Math.round(pricing.perAgent * 12 * d)
             : pricing.platform + billed * pricing.perAgent));
-        setL('period', yearly ? 'Yearly' : 'Monthly');
-        setL('periodfee', yearly ? 'Your yearly fee' : 'Your monthly fee');
+        setL('period', yearly ? T('Yearly') : T('Monthly'));
+        setL('periodfee', yearly ? T('Your yearly fee') : T('Your monthly fee'));
         $$('input[name="billing"]').forEach((r) => r.closest('.choice')?.classList.toggle('is-on', r.checked));
         setL('agents', String(billed));
         $$('[data-l-disc]').forEach((el) => el.classList.toggle('d-none', !discount));
         help.textContent = entered < pricing.minAgents
-            ? `Billed at the ${pricing.minAgents}-agent minimum. You can add agents any time.`
-            : 'Agents who will use RightAlly. You can change this later.';
+            ? T('Billed at the :min-agent minimum. You can add agents any time.', { min: pricing.minAgents })
+            : T('Agents who will use RightAlly. You can change this later.');
     };
 
     agentsInput.addEventListener('input', render);
@@ -75,12 +78,12 @@ if (form) {
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').content },
                 body: JSON.stringify({ code }),
             });
-            if (res.status === 429) { showCouponMsg('Too many tries. Wait a minute, then try again.', 'error'); return; }
+            if (res.status === 429) { showCouponMsg(T('Too many tries. Wait a minute, then try again.'), 'error'); return; }
             const data = await res.json();
             coupon = data.valid ? { code: data.code, percent: data.percent } : { code: '', percent: 0 };
             showCouponMsg(data.message, data.valid ? 'ok' : 'error');
         } catch {
-            showCouponMsg('We couldn’t check that code. It will be checked when you continue.', 'muted');
+            showCouponMsg(T('We couldn’t check that code. It will be checked when you continue.'), 'muted');
         }
         render();
     };
@@ -136,9 +139,9 @@ if (signForm) {
 
     signForm.addEventListener('submit', (e) => {
         const problems = [];
-        if (!$('#consent').checked) problems.push('Tick the box to agree to sign electronically.');
-        if (!typed.value.trim()) problems.push('Type your full legal name.');
-        if (pad.isEmpty()) problems.push('Draw your signature in the box.');
+        if (!$('#consent').checked) problems.push(T('Tick the box to agree to sign electronically.'));
+        if (!typed.value.trim()) problems.push(T('Type your full legal name.'));
+        if (pad.isEmpty()) problems.push(T('Draw your signature in the box.'));
         const err = $('#signErr');
         if (problems.length) {
             e.preventDefault();
@@ -150,7 +153,7 @@ if (signForm) {
         $('#signatureData').value = pad.toDataURL('image/png');
         const btn = $('#signBtn');
         btn.disabled = true;
-        btn.textContent = 'Signing…';
+        btn.textContent = T('Signing…');
     });
 }
 
@@ -162,8 +165,8 @@ if (payForm) {
     const showError = (msg) => { err.textContent = msg; err.classList.remove('d-none'); };
 
     const start = () => {
-        if (!window.Stripe) { showError('The secure payment form didn’t load. Check your connection and refresh the page.'); return; }
-        const stripe = window.Stripe(payForm.dataset.key);
+        if (!window.Stripe) { showError(T('The secure payment form didn’t load. Check your connection and refresh the page.')); return; }
+        const stripe = window.Stripe(payForm.dataset.key, { locale: payForm.dataset.locale || 'auto' });
         const dark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
         const elements = stripe.elements({
             clientSecret: payForm.dataset.secret,
@@ -184,11 +187,11 @@ if (payForm) {
             err.classList.add('d-none');
             btn.disabled = true;
             const label = btn.textContent;
-            btn.textContent = 'Processing…';
+            btn.textContent = T('Processing…');
             const confirm = payForm.dataset.mode === 'setup' ? stripe.confirmSetup.bind(stripe) : stripe.confirmPayment.bind(stripe);
             const { error } = await confirm({ elements, confirmParams: { return_url: payForm.dataset.return } });
             // Only reached on an immediate error; success redirects to return_url.
-            showError(error?.message || 'The payment didn’t go through. Please try again.');
+            showError(error?.message || T('The payment didn’t go through. Please try again.'));
             btn.disabled = false;
             btn.textContent = label;
         });

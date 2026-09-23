@@ -27,10 +27,10 @@ class SignRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'consent.accepted' => 'Tick the box to agree to sign electronically.',
-            'typed_name.required' => 'Type your full legal name.',
-            'signature.required' => 'Draw your signature in the box.',
-            'signature.starts_with' => 'Draw your signature in the box.',
+            'consent.accepted' => __('Tick the box to agree to sign electronically.'),
+            'typed_name.required' => __('Type your full legal name.'),
+            'signature.required' => __('Draw your signature in the box.'),
+            'signature.starts_with' => __('Draw your signature in the box.'),
         ];
     }
 
@@ -42,7 +42,7 @@ class SignRequest extends FormRequest
             }
             $png = $this->signaturePng();
             if ($png === null) {
-                $v->errors()->add('signature', 'Draw your signature in the box.');
+                $v->errors()->add('signature', __('Draw your signature in the box.'));
             }
         }];
     }

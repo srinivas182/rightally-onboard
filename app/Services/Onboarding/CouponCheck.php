@@ -21,13 +21,13 @@ final class CouponCheck
         $coupon = Coupon::where('code', $code)->first();
 
         if (! $coupon || ! $coupon->is_active) {
-            return ['coupon' => null, 'message' => "{$code} isn’t a valid code. Check the spelling, or continue without a coupon."];
+            return ['coupon' => null, 'message' => __(':code isn’t a valid code. Check the spelling, or continue without a coupon.', ['code' => $code])];
         }
         if ($coupon->isExpired()) {
-            return ['coupon' => null, 'message' => "{$code} expired on {$coupon->expires_on->format('M j, Y')}. You can continue without a coupon."];
+            return ['coupon' => null, 'message' => __(':code expired on :date. You can continue without a coupon.', ['code' => $code, 'date' => $coupon->expires_on->translatedFormat('M j, Y')])];
         }
         if (! $coupon->isUsable()) {
-            return ['coupon' => null, 'message' => "{$code} has reached its limit. You can continue without a coupon."];
+            return ['coupon' => null, 'message' => __(':code has reached its limit. You can continue without a coupon.', ['code' => $code])];
         }
 
         return ['coupon' => $coupon, 'message' => null];

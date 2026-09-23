@@ -24,7 +24,7 @@ class OnboardingAccess
 
         if (! in_array($uuid, $allowed, true)) {
             if (! $request->hasValidSignature()) {
-                abort(403, 'This onboarding link has expired. Open the latest link from your email, or start again.');
+                abort(403, __('This onboarding link has expired. Open the latest link from your email, or start again.'));
             }
             self::remember($request, $uuid);
         }
