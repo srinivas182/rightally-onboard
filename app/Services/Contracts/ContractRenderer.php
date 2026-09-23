@@ -2,6 +2,7 @@
 
 namespace App\Services\Contracts;
 
+use App\Enums\ContractType;
 use App\Models\Contract;
 use App\Services\Settings\SettingsService;
 use App\Support\BusinessClock;
@@ -46,6 +47,9 @@ final class ContractRenderer
         'monthly_fee' => 'Monthly fee at the agents billed',
         'min_monthly_fee' => 'Monthly fee at the minimum agents',
         'term_months' => 'Minimum term in months',
+        'term_start_date' => 'Start of the term (renewals)',
+        'term_end_date' => 'End of the term (renewals)',
+        'previous_agreement_number' => 'Agreement being renewed (renewals)',
         'fee_table' => 'The fee summary table',
     ];
 
@@ -101,12 +105,25 @@ final class ContractRenderer
             'monthly_fee' => Money::format($contract->monthlyFeeCents()),
             'min_monthly_fee' => Money::format($contract->monthlyFeeCents($contract->min_agents)),
             'term_months' => (string) $contract->term_months,
+            'term_start_date' => $contract->starts_on ? Carbon::parse($contract->starts_on)->format('F j, Y') : '',
+            'term_end_date' => $contract->ends_on ? Carbon::parse($contract->ends_on)->format('F j, Y') : '',
+            'previous_agreement_number' => (string) $contract->previous?->number,
         ];
     }
 
     public function feeTableHtml(Contract $contract): string
     {
         $v = $this->values($contract);
+        if ($contract->type === ContractType::Renewal) {
+            $rows = [
+                ['Renewal term', "{$v['term_start_date']} to {$v['term_end_date']}"],
+                ['Platform fee per month', $v['platform_fee']],
+                ["Per agent per month (minimum {$v['min_agents']})", $v['per_agent_fee']],
+                ["<b>Monthly fee at {$v['agent_count']} agents</b>", '<b>'.e($v['monthly_fee']).'</b>'],
+            ];
+
+            return $this->feeRows('Renewal fees', $rows);
+        }
         $rows = [['Set-up fee', $v['setup_fee']]];
         if ($contract->discount_cents > 0) {
             $rows[] = ["Discount ({$v['coupon_code']}, {$v['discount_percent']}%)", '-'.$v['discount_amount']];
@@ -116,7 +133,13 @@ final class ContractRenderer
         $rows[] = ["Balance on go-live date (target {$v['go_live_date']})", $v['balance_amount']];
         $rows[] = ["Monthly: {$v['platform_fee']} platform + {$v['per_agent_fee']} × {$v['agent_count']} agents (minimum {$v['min_agents']})", $v['monthly_fee']];
 
-        $html = '<div class="fee-box"><div class="hd">Fee summary</div><table><tbody>';
+        return $this->feeRows('Fee summary', $rows);
+    }
+
+    /** @param array<int, array{0: string, 1: string}> $rows labels/amounts starting with <b> are trusted markup */
+    private function feeRows(string $title, array $rows): string
+    {
+        $html = '<div class="fee-box"><div class="hd">'.e($title).'</div><table><tbody>';
         foreach ($rows as [$label, $amount]) {
             $l = str_starts_with($label, '<b>') ? $label : e($label);
             $a = str_starts_with($amount, '<b>') ? $amount : e($amount);

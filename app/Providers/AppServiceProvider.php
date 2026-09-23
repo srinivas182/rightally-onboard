@@ -55,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('onboarding', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
+        RateLimiter::for('agent-api', fn (Request $request) => Limit::perMinute(30)->by(substr((string) $request->bearerToken(), 0, 16) ?: $request->ip()));
         RateLimiter::for('coupon-check', fn (Request $request) => Limit::perMinute(20)->by($request->ip()));
 
         View::composer('layouts.admin', function ($view) {

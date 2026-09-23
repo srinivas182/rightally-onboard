@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Onboarding\CouponCheckController;
 use App\Http\Controllers\Onboarding\OnboardingController;
+use App\Http\Controllers\Onboarding\RenewalController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +29,13 @@ Route::prefix('onboard/{customer}')->name('onboarding.')->middleware('onboarding
     Route::get('payment', [OnboardingController::class, 'payment'])->middleware('throttle:onboarding')->name('payment');
     Route::get('payment/return', [OnboardingController::class, 'paymentReturn'])->name('payment.return');
     Route::get('done', [OnboardingController::class, 'done'])->name('done');
+});
+
+// Renewal agreements, opened from the emailed (signed) link.
+Route::middleware('signed')->prefix('renew/{contract:uuid}')->name('renewal.')->group(function () {
+    Route::get('/', [RenewalController::class, 'show'])->name('show');
+    Route::post('sign', [RenewalController::class, 'sign'])->middleware('throttle:onboarding')->name('sign');
+    Route::get('pdf', [RenewalController::class, 'pdf'])->name('pdf');
 });
 
 // Stripe webhooks (no session, no CSRF; verified by signature).

@@ -63,6 +63,12 @@ class Contract extends Model
         return $this->belongsTo(ContractTemplate::class, 'contract_template_id');
     }
 
+    /** @return BelongsTo<Contract, $this> */
+    public function previous(): BelongsTo
+    {
+        return $this->belongsTo(Contract::class, 'previous_contract_id');
+    }
+
     /** @return HasMany<Invoice, $this> */
     public function invoices(): HasMany
     {

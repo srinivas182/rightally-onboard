@@ -4,6 +4,7 @@ namespace App\Services\Contracts;
 
 use App\Enums\AgentCountSource;
 use App\Enums\ContractStatus;
+use App\Enums\ContractType;
 use App\Enums\CustomerStatus;
 use App\Models\AgentCountLog;
 use App\Models\Contract;
@@ -45,7 +46,9 @@ final class ContractSigner
             $disk->put("{$dir}/client-signature.png", SignatureImage::trim($signaturePng));
             $companySig = $this->copyCompanySignature($dir);
 
-            $goLive = BusinessClock::today()->addDays((int) $this->settings->get('pricing', 'go_live_days'));
+            $isRenewal = $contract->type === ContractType::Renewal;
+            // Renewals keep the term dates set when they were offered; new agreements start at the target go-live date.
+            $goLive = $isRenewal ? $contract->starts_on->copy() : BusinessClock::today()->addDays((int) $this->settings->get('pricing', 'go_live_days'));
             $now = now();
 
             $contract->forceFill([
@@ -72,6 +75,12 @@ final class ContractSigner
             $contract->pdf_path = $pdfPath;
             $contract->document_sha256 = hash('sha256', $bytes);
             $contract->save();
+
+            if ($isRenewal) {
+                $this->audit->log('contract.renewal_signed', "{$customer->company_name} signed renewal {$contract->number}", $contract, ['signer' => $typedName, 'ip' => $ip], 'client');
+
+                return $contract;
+            }
 
             $customer->update(['status' => CustomerStatus::ContractSigned, 'go_live_date' => $goLive->toDateString()]);
 
