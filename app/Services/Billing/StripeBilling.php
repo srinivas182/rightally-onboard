@@ -21,7 +21,7 @@ use App\Support\Money;
  */
 final class StripeBilling
 {
-    public function __construct(private readonly StripeClient $stripe) {}
+    public function __construct(private readonly StripeClient $stripe, private readonly TaxService $tax) {}
 
     /**
      * Creates our invoice and a matching Stripe invoice, then tries to charge
@@ -48,7 +48,7 @@ final class StripeBilling
             'default_payment_method' => $customer->stripe_payment_method_id,
             'description' => $description,
             'metadata' => ['invoice' => $invoice->number, 'type' => $type->value, 'customer_uuid' => $customer->uuid],
-        ], "invoice-{$invoice->number}");
+        ] + $this->tax->automaticTax(), "invoice-{$invoice->number}");
 
         $this->stripe->post('invoiceitems', [
             'customer' => $customer->stripe_customer_id,
@@ -56,6 +56,8 @@ final class StripeBilling
             'amount' => $amountCents,
             'currency' => 'usd',
             'description' => $description,
+            'tax_behavior' => 'exclusive',
+            'tax_code' => TaxService::TAX_CODE,
         ], "invoiceitem-{$invoice->number}");
 
         $si = $this->stripe->post("invoices/{$si['id']}/finalize", [], "finalize-{$invoice->number}");
@@ -83,6 +85,7 @@ final class StripeBilling
             default => $invoice->status,
         };
         $invoice->update(array_filter([
+            'tax_cents' => isset($si['tax']) ? (int) $si['tax'] : null,
             'status' => $status,
             'paid_at' => $status === InvoiceStatus::Paid ? now() : null,
             'hosted_invoice_url' => $si['hosted_invoice_url'] ?? null,
@@ -103,7 +106,8 @@ final class StripeBilling
             'currency' => 'usd',
             'unit_amount' => $amountCents,
             'recurring' => ['interval' => 'month'],
-            'product_data' => ['name' => $name],
+            'product_data' => ['name' => $name, 'tax_code' => TaxService::TAX_CODE],
+            'tax_behavior' => 'exclusive',
             'lookup_key' => $key,
             'nickname' => $name,
         ], "price-{$key}");

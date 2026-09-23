@@ -118,7 +118,8 @@ class DepositPaymentTest extends TestCase
 
         // Reloading the page reuses the same PaymentIntent.
         $this->get("/onboard/{$customer->uuid}/payment")->assertOk();
-        Http::assertSentCount(3); // create customer, create PaymentIntent, then (on reload) retrieve it
+        // Stripe: create customer, create PaymentIntent, then (on reload) retrieve it.
+        $this->assertCount(3, Http::recorded(fn (Request $r) => str_contains($r->url(), 'api.stripe.com')));
     }
 
     public function test_card_payment_marks_deposit_paid_saves_the_card_and_sends_the_welcome_email(): void

@@ -108,7 +108,7 @@
             <div class="fee-mini mt-3 small">
                 <b>Webhook</b>: in the Stripe dashboard (Developers &gt; Webhooks), add an endpoint for each mode:
                 <div class="input-group input-group-sm my-2" style="max-width:520px"><input class="form-control font-monospace" value="{{ route('stripe.webhook') }}" readonly aria-label="Webhook URL"><button class="btn btn-outline-secondary" type="button" data-copy="{{ route('stripe.webhook') }}">Copy</button></div>
-                Events: <span class="font-monospace">payment_intent.succeeded, payment_intent.processing, payment_intent.payment_failed, invoice.paid, invoice.payment_failed, customer.subscription.updated, customer.subscription.deleted</span>. Paste the endpoint’s signing secret above.
+                Events: <span class="font-monospace">{{ implode(', ', \App\Services\Stripe\StripeEventHandler::TYPES) }}</span>. Paste the endpoint’s signing secret above.
             </div>
             <div class="d-flex gap-2 mt-4 flex-wrap">
                 <button class="btn btn-primary" type="submit">Save Stripe settings</button>
@@ -149,7 +149,7 @@
     <div class="tab-pane fade" id="t-tax" role="tabpanel">
         <form method="post" action="{{ route('admin.settings.update', 'tax') }}">@csrf @method('put')
             <div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" id="tx" name="enabled" value="1" @checked($v['tax']['enabled'] === '1')><label class="form-check-label" for="tx">Charge sales tax with Stripe Tax</label></div>
-            <div class="form-text">Off by default. When on, Stripe calculates tax from each customer’s address. Your Stripe Tax registrations must be set up in Stripe first.</div>
+            <div class="form-text">Off by default. When on, Stripe Tax adds sales tax on top of every charge (deposit, go-live balance, monthly fees, early termination), calculated from the client’s address, and records it for your tax reports. Before switching on: add your tax registrations in Stripe (Tax &gt; Registrations) and confirm with your accountant where RightAlly must collect tax. Existing monthly subscriptions keep their current setting.</div>
             <button class="btn btn-primary mt-4" type="submit">Save tax setting</button>
         </form>
     </div>

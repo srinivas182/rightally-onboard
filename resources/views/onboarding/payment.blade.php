@@ -4,10 +4,13 @@
     @push('head')<script src="https://js.stripe.com/v3/" nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}"></script>@endpush
 @endif
 @section('content')
-@php $deposit = \App\Support\Money::format($contract->deposit_cents); @endphp
+@php
+    $taxCents = (int) ($customer->invoices()->where('type', 'deposit')->latest('id')->value('tax_cents') ?? 0);
+    $deposit = \App\Support\Money::format($contract->deposit_cents + $taxCents);
+@endphp
 <p class="step-kicker">Step 4 of 5</p>
 <h1>Add your payment method</h1>
-<p class="lead">We’ll charge the deposit of {{ $deposit }} now and keep this method on file for the scheduled payments in your agreement.</p>
+<p class="lead">We’ll charge the deposit of {{ $deposit }}@if ($taxCents) (including {{ \App\Support\Money::format($taxCents) }} sales tax)@endif now and keep this method on file for the scheduled payments in your agreement.</p>
 
 @if ($paymentError)
     <div class="alert {{ $clientSecret ? 'alert-danger' : 'alert-warning' }}" role="alert">{{ $paymentError }}</div>

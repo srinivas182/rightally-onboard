@@ -11,7 +11,7 @@ class Payment extends Model
 
     protected function casts(): array
     {
-        return ['settled_at' => 'datetime'];
+        return ['settled_at' => 'datetime', 'dispute_due_by' => 'datetime'];
     }
 
     /** @return BelongsTo<Invoice, $this> */

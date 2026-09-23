@@ -18,6 +18,7 @@ final class SubscriptionService
     public function __construct(
         private readonly StripeClient $stripe,
         private readonly StripeBilling $billing,
+        private readonly TaxService $tax,
     ) {}
 
     public function start(Customer $customer, Contract $contract): void
@@ -42,7 +43,7 @@ final class SubscriptionService
             'proration_behavior' => 'none',
             'off_session' => 'true',
             'metadata' => ['customer_uuid' => $customer->uuid, 'agreement' => $contract->number],
-        ]), "subscription-{$customer->uuid}");
+        ] + $this->tax->automaticTax()), "subscription-{$customer->uuid}");
 
         $agentItem = collect($sub['items']['data'] ?? [])->first(fn ($i) => ($i['price']['id'] ?? null) === $agentPrice);
         $customer->forceFill(['stripe_subscription_id' => $sub['id'], 'stripe_agent_item_id' => $agentItem['id'] ?? null])->save();

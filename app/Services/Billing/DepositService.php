@@ -29,6 +29,7 @@ final class DepositService
         private readonly StripeClient $stripe,
         private readonly EmailSender $email,
         private readonly AuditLogger $audit,
+        private readonly TaxService $tax,
     ) {}
 
     /**
@@ -41,15 +42,19 @@ final class DepositService
         $customerId = $this->ensureStripeCustomer($customer);
         $invoice = $this->depositInvoice($customer, $contract);
 
+        $tax = $this->tax->calculate($customer, $invoice->amount_cents, $invoice->number);
+        $total = $invoice->amount_cents + $tax['tax_cents'];
+        $invoice->update(['tax_cents' => $tax['tax_cents'], 'stripe_tax_calculation_id' => $tax['calculation_id']]);
+
         if ($invoice->stripe_payment_intent_id) {
             $pi = $this->stripe->get('payment_intents/'.$invoice->stripe_payment_intent_id);
-            if (in_array($pi['status'], ['requires_payment_method', 'requires_confirmation', 'requires_action'], true)) {
+            if (in_array($pi['status'], ['requires_payment_method', 'requires_confirmation', 'requires_action'], true) && (int) ($pi['amount'] ?? $total) === $total) {
                 return ['invoice' => $invoice, 'client_secret' => $pi['client_secret']];
             }
         }
 
         $pi = $this->stripe->post('payment_intents', [
-            'amount' => $invoice->amount_cents,
+            'amount' => $total,
             'currency' => 'usd',
             'customer' => $customerId,
             'setup_future_usage' => 'off_session',
@@ -57,8 +62,8 @@ final class DepositService
             'payment_method_options' => ['us_bank_account' => ['verification_method' => 'automatic']],
             'description' => "RightAlly deposit, agreement {$contract->number}",
             'receipt_email' => $customer->email,
-            'metadata' => ['invoice' => $invoice->number, 'customer_uuid' => $customer->uuid, 'type' => 'deposit'],
-        ], "deposit-{$invoice->id}-".($invoice->attempt_count + 1));
+            'metadata' => ['invoice' => $invoice->number, 'customer_uuid' => $customer->uuid, 'type' => 'deposit', 'tax_cents' => $tax['tax_cents']],
+        ], "deposit-{$invoice->id}-".($invoice->attempt_count + 1)."-{$total}");
 
         $invoice->update(['stripe_payment_intent_id' => $pi['id'], 'attempt_count' => $invoice->attempt_count + 1]);
 
@@ -119,6 +124,13 @@ final class DepositService
         });
 
         $invoice->refresh();
+        if ($sendWelcome || $sendReceipt) {
+            try {
+                $this->tax->record($invoice->stripe_tax_calculation_id, $invoice->number);
+            } catch (\Throwable $e) {
+                report($e); // payment is safe; the tax record can be added in Stripe if this fails
+            }
+        }
         if ($sendWelcome) {
             $this->sendWelcome($invoice);
         }

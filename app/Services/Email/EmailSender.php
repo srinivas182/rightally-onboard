@@ -63,6 +63,21 @@ final class EmailSender
         return $log;
     }
 
+    /** Internal alerts to the team CC addresses (first address is To, the rest CC). */
+    public function toTeam(string $templateKey, array $values): ?EmailLog
+    {
+        $template = EmailTemplate::where('key', $templateKey)->first();
+        $team = $this->teamCc();
+        if (! $template || ! $template->is_enabled || ! $team) {
+            return null;
+        }
+        $mail = $this->renderer->render($template, $values);
+        $log = EmailLog::create(['template_key' => $templateKey, 'to_email' => $team[0], 'cc' => array_slice($team, 1), 'subject' => $mail['subject'], 'status' => 'queued']);
+        SendEmail::dispatch($log->id, 'RightAlly team', $mail['html'], $mail['text'], []);
+
+        return $log;
+    }
+
     /** Sends a rendered test of a template to an admin, with sample values. */
     public function test(EmailTemplate $template, string $to, array $sampleValues): EmailLog
     {

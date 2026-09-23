@@ -16,6 +16,8 @@ final class SampleEmailValues
             'payment_method' => 'Visa ending 4242', 'amount' => '$660.00', 'period' => 'November 2026',
             'agreement_number' => 'RA-2026-0024', 'agreement_link' => url('/'), 'payment_link' => url('/'), 'renewal_link' => url('/'),
             'admin_name' => 'Sunil', 'invited_by' => 'Srini', 'invite_link' => url('/admin'), 'reset_link' => url('/admin'),
+            'invoice_number' => 'INV-2026-0311', 'dispute_reason' => 'product not received', 'respond_by' => 'October 14, 2026',
+            'stripe_link' => 'https://dashboard.stripe.com/disputes', 'customer_link' => url('/admin/customers'),
             'fee_table' => [['Paid today', '$255.00'], ['Due on go-live, Oct 23, 2026', '$2,295.00'], ['Monthly from Nov 22, 2026', '$660.00']],
             'receipt_details' => [['Receipt', 'INV-2026-0311'], ['Date', 'Sep 23, 2026'], ['For', 'Deposit'], ['Paid with', 'Visa ending 4242'], ['Amount', '$255.00']],
         ];

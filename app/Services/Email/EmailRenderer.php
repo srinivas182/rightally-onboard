@@ -38,6 +38,11 @@ final class EmailRenderer
         'renewal_link' => 'Link to the renewal agreement (use in a button)',
         'fee_table' => 'Table of today, go-live and monthly amounts',
         'receipt_details' => 'Table with receipt number, date, amount and method',
+        'invoice_number' => 'Invoice number (chargeback alert)',
+        'dispute_reason' => 'Reason the client gave their bank (chargeback alert)',
+        'respond_by' => 'Deadline to respond to a chargeback',
+        'stripe_link' => 'Link to the dispute in Stripe (chargeback alert)',
+        'customer_link' => 'Link to the customer in admin (chargeback alert)',
     ];
 
     public function __construct(private readonly SettingsService $settings) {}

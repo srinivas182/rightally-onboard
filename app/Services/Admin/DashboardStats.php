@@ -34,7 +34,13 @@ final class DashboardStats
 
     public function revenueCents(Carbon $start, Carbon $end): int
     {
-        return (int) Payment::where('status', 'succeeded')->whereBetween('settled_at', [$start->copy()->utc(), $end->copy()->utc()])->sum('amount_cents');
+        // Settled money, less refunds and the sales tax collected (tax isn't revenue). Open chargebacks are excluded.
+        return (int) Payment::query()
+            ->join('invoices', 'invoices.id', '=', 'payments.invoice_id')
+            ->whereIn('payments.status', ['succeeded', 'refunded'])
+            ->whereBetween('payments.settled_at', [$start->copy()->utc(), $end->copy()->utc()])
+            ->selectRaw('COALESCE(SUM(payments.amount_cents - payments.refunded_cents - invoices.tax_cents), 0) as net')
+            ->value('net');
     }
 
     /** Revenue by month for the last 12 months, for the chart. @return array{labels: array, values: array} */
@@ -92,6 +98,10 @@ final class DashboardStats
         Customer::where('status', CustomerStatus::ContractSigned)->where('updated_at', '<=', now()->subDay())->limit(5)->get()
             ->each(fn (Customer $c) => $items->push(['kind' => 'warning', 'customer' => $c,
                 'text' => 'Signed but deposit not paid', 'detail' => 'Signed '.$c->updated_at->setTimezone(BusinessClock::timezone())->format('M j').'. Consider following up.']));
+
+        Payment::with('customer', 'invoice')->where('status', 'disputed')->orderBy('dispute_due_by')->limit(5)->get()
+            ->each(fn ($p) => $items->prepend(['kind' => 'danger', 'customer' => $p->customer,
+                'text' => 'Chargeback on '.$p->invoice->number, 'detail' => 'Respond in Stripe by '.($p->dispute_due_by?->setTimezone(BusinessClock::timezone())->format('M j') ?? 'the deadline').'.']));
 
         return $items->take(8);
     }

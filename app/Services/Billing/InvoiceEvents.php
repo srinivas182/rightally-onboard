@@ -101,6 +101,42 @@ final class InvoiceEvents
         $invoice->update(['payment_link_sent_at' => now()]);
     }
 
+    /**
+     * The bank asked the cardholder to confirm an automatic charge (e.g. 3-D Secure).
+     * Treated like a failure for follow-up and suspension, with its own email and link.
+     *
+     * @param  array<string, mixed>  $si
+     */
+    public function actionRequired(Invoice $invoice, array $si = []): void
+    {
+        $first = DB::transaction(function () use ($invoice, $si) {
+            $invoice = Invoice::whereKey($invoice->id)->lockForUpdate()->first();
+            if ($invoice->status === InvoiceStatus::Paid || $invoice->failed_at !== null) {
+                return false;
+            }
+            $invoice->update([
+                'status' => InvoiceStatus::Failed, 'failed_at' => now(),
+                'failure_reason' => 'Your bank needs you to confirm this payment',
+                'hosted_invoice_url' => $si['hosted_invoice_url'] ?? $invoice->hosted_invoice_url,
+                'payment_link_sent_at' => now(),
+            ]);
+
+            return true;
+        });
+        if (! $first) {
+            return;
+        }
+        $invoice->refresh();
+        $customer = $invoice->customer;
+        if ($invoice->type === InvoiceType::Balance) {
+            $customer->update(['status' => CustomerStatus::BalanceFailed]);
+        } elseif ($invoice->type === InvoiceType::Monthly && $customer->status !== CustomerStatus::Suspended) {
+            $customer->update(['status' => CustomerStatus::PaymentFailed]);
+        }
+        $this->audit->log('payment.action_required', "Bank confirmation needed for {$invoice->number} ({$customer->company_name})", $invoice, null, 'system');
+        $this->email->toCustomer('payment_action_required', $customer, $invoice);
+    }
+
     private function balancePaid(Customer $customer, Invoice $invoice): void
     {
         $contract = $invoice->contract ?? $customer->contracts()->where('status', ContractStatus::Signed)->latest('signed_at')->first();
@@ -142,13 +178,15 @@ final class InvoiceEvents
         $agentLine = collect($lines)->first(fn ($l) => ($l['subscription_item'] ?? null) === $customer->stripe_agent_item_id);
         $period = $lines[0]['period'] ?? null;
 
+        $tax = (int) ($si['tax'] ?? 0);
         $invoice = Invoice::firstOrCreate(['stripe_invoice_id' => $si['id']], [
+            'tax_cents' => $tax,
             'number' => 'TMP-'.bin2hex(random_bytes(6)),
             'customer_id' => $customer->id,
             'contract_id' => $customer->contracts()->where('status', ContractStatus::Signed)->latest('signed_at')->value('id'),
             'type' => InvoiceType::Monthly,
             'status' => InvoiceStatus::Scheduled,
-            'amount_cents' => $amount,
+            'amount_cents' => $amount - $tax,
             'agents_billed' => $agentLine['quantity'] ?? $customer->agent_count,
             'period_start' => $period ? Carbon::createFromTimestamp($period['start'])->toDateString() : null,
             'period_end' => $period ? Carbon::createFromTimestamp($period['end'])->toDateString() : null,

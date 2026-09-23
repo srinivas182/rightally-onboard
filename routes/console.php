@@ -7,6 +7,9 @@ use App\Services\Billing\AgentCountService;
 use App\Services\Billing\BalanceService;
 use App\Services\Billing\RenewalService;
 use App\Services\Billing\SuspensionService;
+use App\Services\Onboarding\DepositReminders;
+use App\Services\Stripe\Reconciler;
+use App\Services\Stripe\StripeClient;
 use App\Support\BusinessClock;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -51,6 +54,24 @@ Artisan::command('agents:sync', function (AgentCountService $agents) {
 
 Schedule::command('billing:daily')->dailyAt('09:00')->timezone(BusinessClock::timezone())->withoutOverlapping()->onOneServer();
 Schedule::command('agents:sync')->dailyAt('06:00')->timezone(BusinessClock::timezone())->withoutOverlapping()->onOneServer();
+
+Artisan::command('onboarding:reminders', function (DepositReminders $reminders) {
+    $this->line('Deposit reminders sent: '.$reminders->send());
+})->purpose('Remind clients who signed but haven’t paid the deposit (24 hours, 3 days)');
+
+Artisan::command('billing:reconcile {--days=3}', function (Reconciler $reconciler, StripeClient $stripe) {
+    if (! $stripe->isConfigured()) {
+        $this->warn('Stripe is not configured; nothing to reconcile.');
+
+        return;
+    }
+    $r = $reconciler->run((int) $this->option('days'));
+    $this->line("Stripe events checked: {$r['checked']}, applied now: {$r['replayed']}, failed: {$r['failed']}");
+    Cache::forever('health:reconcile_last', ['at' => now(), 'replayed' => $r['replayed'], 'failed' => $r['failed']]);
+})->purpose('Apply any Stripe events the webhook missed');
+
+Schedule::command('onboarding:reminders')->hourly()->withoutOverlapping()->onOneServer();
+Schedule::command('billing:reconcile')->dailyAt('05:00')->timezone(BusinessClock::timezone())->withoutOverlapping()->onOneServer();
 
 // Heartbeat so the dashboard can tell whether cron is running.
 Schedule::call(fn () => Cache::forever(SystemHealth::HEARTBEAT_KEY, now()))->everyFiveMinutes()->name('scheduler-heartbeat')->onOneServer();

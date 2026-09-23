@@ -15,6 +15,7 @@ use App\Models\Invoice;
 use App\Services\Billing\DepositService;
 use App\Services\Contracts\ContractRenderer;
 use App\Services\Contracts\ContractSigner;
+use App\Services\Email\EmailSender;
 use App\Services\Onboarding\CouponCheck;
 use App\Services\Onboarding\OnboardingService;
 use App\Services\Pricing\QuoteCalculator;
@@ -139,7 +140,10 @@ class OnboardingController extends Controller
             return redirect()->route('onboarding.agreement', $customer);
         }
 
-        $signer->sign($contract, trim($request->validated('typed_name')), (string) $request->signaturePng(), $request->ip(), $request->userAgent());
+        $contract = $signer->sign($contract, trim($request->validated('typed_name')), (string) $request->signaturePng(), $request->ip(), $request->userAgent());
+        // Their signed copy by email, with a link back to payment in case they stop here.
+        app(EmailSender::class)->toCustomer('signed_payment_pending', $customer->fresh(), null,
+            [['path' => $contract->pdf_path, 'name' => "RightAlly-Agreement-{$contract->number}.pdf"]]);
 
         return redirect()->route('onboarding.agreement', $customer)->with('signed', true);
     }
