@@ -1,0 +1,91 @@
+// =============================================================
+// RightAlly brand theme for Bootstrap 5.3
+// Colours sampled from the RightAlly logo (icon gradient + wordmark)
+// =============================================================
+
+// ---- Brand tokens -------------------------------------------
+$ra-blue:       #1457EC; // icon top, primary actions
+$ra-blue-deep:  #0839B2; // icon bottom, hover / gradient end
+$ra-navy:       #041527; // wordmark, headings, admin chrome
+$ra-mist:       #F3F6FB; // app background (cool, never cream)
+$ra-line:       #DFE5EF; // hairlines, input borders
+$ra-slate:      #56627A; // secondary text
+
+// ---- Bootstrap overrides ------------------------------------
+$primary:   $ra-blue;
+$dark:      $ra-navy;
+$success:   #0E8F63;
+$danger:    #D1343F;
+$warning:   #C98200;
+$info:      #2F7FD8;
+$body-color: $ra-navy;
+$body-bg:    #ffffff;
+$secondary-color: $ra-slate;
+$border-color: $ra-line;
+
+$font-family-sans-serif: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+$font-family-serif-doc:  "Source Serif 4", Georgia, "Times New Roman", serif;
+$headings-font-weight: 600;
+$headings-color: $ra-navy;
+$font-size-base: 1rem;
+$line-height-base: 1.55;
+
+$border-radius:    .5rem;
+$border-radius-sm: .375rem;
+$border-radius-lg: .875rem;
+$border-radius-xl: 1.25rem;
+
+$input-padding-y: .7rem;
+$input-padding-x: .9rem;
+$input-border-color: $ra-line;
+$input-focus-border-color: $ra-blue;
+$input-focus-box-shadow: 0 0 0 .2rem rgba($ra-blue, .18);
+$form-label-font-weight: 500;
+$form-label-margin-bottom: .35rem;
+
+$btn-padding-y: .7rem;
+$btn-padding-x: 1.25rem;
+$btn-font-weight: 600;
+$btn-focus-box-shadow: 0 0 0 .2rem rgba($ra-blue, .3);
+
+$card-border-color: $ra-line;
+$card-cap-bg: transparent;
+$table-cell-padding-y: .8rem;
+$table-cell-padding-x: .9rem;
+$table-border-color: $ra-line;
+$enable-shadows: false;
+$enable-negative-margins: true;
+
+@import "bootstrap/scss/bootstrap";
+
+// ---- Theme-aware custom properties --------------------------
+:root {
+  --ra-blue: #{$ra-blue};
+  --ra-blue-deep: #{$ra-blue-deep};
+  --ra-navy: #{$ra-navy};
+  --ra-mist: #{$ra-mist};
+  --ra-line: #{$ra-line};
+  --ra-slate: #{$ra-slate};
+  --ra-surface: #ffffff;
+  --ra-text: #{$ra-navy};
+  --ra-doc-font: #{$font-family-serif-doc};
+  --ra-gradient: linear-gradient(170deg, #{$ra-blue} 0%, #{$ra-blue-deep} 100%);
+}
+@mixin ra-dark {
+  --ra-mist: #0A1627;
+  --ra-line: #22324A;
+  --ra-slate: #9AA8BF;
+  --ra-surface: #0F1D33;
+  --ra-text: #E7ECF5;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { @include ra-dark; } }
+:root[data-theme="dark"] { @include ra-dark; }
+
+body { background: var(--ra-mist); color: var(--ra-text); font-feature-settings: "tnum" 0; }
+.num, .table td.num, .money { font-variant-numeric: tabular-nums; }
+.text-slate { color: var(--ra-slate) !important; }
+.bg-surface { background: var(--ra-surface) !important; }
+.border-line { border-color: var(--ra-line) !important; }
+.btn-primary { background-image: var(--ra-gradient); border: 0; }
+.btn-primary:hover { filter: brightness(1.06); }
+.doc-serif { font-family: var(--ra-doc-font); }
