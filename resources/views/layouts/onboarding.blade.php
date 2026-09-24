@@ -38,9 +38,9 @@
         <div class="work"><div class="work-inner">
             @yield('content')
         </div></div>
-        @include('partials.legal-footer')
     </main>
 </div>
+@include('partials.legal-footer', ['dark' => true])
 
 @if ($step < 5)
     <div class="m-ledger">

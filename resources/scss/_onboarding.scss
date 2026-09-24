@@ -98,3 +98,12 @@
     &:focus-within { outline: 2px solid var(--ra-blue); outline-offset: 2px; }
     .form-check-input { margin-top: .2rem; flex-shrink: 0; }
 }
+
+// Onboarding footer: same navy as the left panel.
+.site-foot-dark {
+    position: relative; z-index: 1; // sits above the page area if it runs long
+    background: var(--ra-navy); color: #A9B8D0;
+    a { color: #DCE4F2; text-decoration: underline; text-underline-offset: 2px; &:hover { color: #fff; } }
+}
+// Phones: keep the footer clear of the fixed "Due today" bar.
+@media (max-width: 991.98px) { .site-foot-dark { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px)) !important; } }
