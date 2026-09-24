@@ -1,4 +1,5 @@
 import * as bootstrap from 'bootstrap';
+import './password-toggle';
 window.bootstrap = bootstrap;
 
 // Follow the viewer's light/dark preference for Bootstrap components.

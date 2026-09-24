@@ -110,3 +110,17 @@ body { background: var(--ra-mist); color: var(--ra-text); font-feature-settings:
     background: #041527; color: #fff; padding: .5rem 1rem; border-radius: 8px; text-decoration: none;
     &:focus { top: .75rem; outline: 3px solid #7FA6FF; }
 }
+
+
+// Password fields with a show/hide (eye) button.
+.pw-wrap { position: relative; }
+.pw-wrap > input { padding-right: 3rem; }
+.pw-wrap .pw-toggle {
+    position: absolute; top: 50%; right: .35rem; transform: translateY(-50%);
+    width: 2.4rem; height: 2.4rem; display: grid; place-items: center;
+    border: 0; border-radius: .5rem; background: transparent; color: #4A5670;
+    &:hover { background: #EEF2F8; color: #041527; }
+    &:focus-visible { outline: 2px solid var(--ra-blue); outline-offset: 1px; }
+}
+// Keep Bootstrap's error message showing under a wrapped field.
+.pw-wrap:has(> .is-invalid) ~ .invalid-feedback { display: block; }

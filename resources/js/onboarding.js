@@ -1,4 +1,5 @@
 
+import './password-toggle';
 // Interface text helper: fills :placeholders.
 const T = (key, vars = {}) => Object.entries(vars).reduce((t, [k, v]) => t.replace(`:${k}`, v), key);
 // Client onboarding: live pricing, coupon check, agent stepper and signature pad.
