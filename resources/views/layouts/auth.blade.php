@@ -13,7 +13,7 @@
 <a class="skip-link" href="#main">Skip to main content</a>
     <main id="main" tabindex="-1" class="auth">
         <div class="auth-card">
-            <img src="{{ asset('brand/logo.png') }}" alt="RightAlly" class="auth-logo">
+            <div class="auth-brand"><img src="{{ asset('brand/logo-white.png') }}" alt="RightAlly" class="auth-logo"><span class="badge text-bg-primary fw-medium">Admin</span></div>
             @include('partials.flash', ['hideErrorSummary' => true])
             @yield('content')
         </div>
