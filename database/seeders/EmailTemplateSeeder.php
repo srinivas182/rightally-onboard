@@ -64,6 +64,8 @@ class EmailTemplateSeeder extends Seeder
                 "Hi {first_name},\n\nAs agreed, the RightAlly subscription for {company_name} is paused until {pause_until}. There are no monthly charges during the pause, and access to your RightAlly site is paused too.\n\nYour minimum term has been extended by the length of the pause and now ends on {term_end_date}. Monthly charges restart automatically after {pause_until}.".$sign],
             'subscription_resumed' => ['Subscription resumed', 'A pause ends', true, 'Your RightAlly subscription has resumed',
                 "Hi {first_name},\n\nWelcome back. The RightAlly subscription for {company_name} is active again, and your subscription of {subscription_amount} has restarted.\n\n{button:View your account|{account_link}}".$sign],
+            'resume_onboarding' => ['Continue onboarding', 'A client started but didn’t finish (sent on request, or by an admin)', true, 'Continue setting up RightAlly for {company_name}',
+                "Hi {first_name},\n\nYou’re almost there. Your RightAlly set-up for {company_name} is saved; the next step is to {next_step}.\n\n{button:Continue where you left off|{resume_link}}\n\nThe link works for 7 days. Questions? Just reply to this email.".$sign],
             'go_live_changed' => ['Go-live date changed', 'An admin moves the go-live date', true, 'Your RightAlly go-live date is now {go_live_date}',
                 "Hi {first_name},\n\nYour go-live date has moved to {go_live_date}. The remaining implementation fee of {balance_amount} will be charged on that date instead.".$sign],
             'balance_reminder' => ['Balance reminder', '3 days before the go-live charge', false, 'You go live on {go_live_date}',

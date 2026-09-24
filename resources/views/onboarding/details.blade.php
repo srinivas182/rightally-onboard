@@ -6,6 +6,7 @@
 @section('content')
 @php $v = fn (string $key, $fallback = '') => old($key, $customer?->{$key} ?? ($prefill[$key] ?? $fallback)); @endphp
 <p class="step-kicker">{{ __('Step :n of 5', ['n' => 1]) }}</p>
+@unless ($customer)<p class="small mb-2">{{ __('Already started?') }} <a href="{{ route('account.request') }}">{{ __('Get a link to continue where you left off') }}</a></p>@endunless
 <h1>{{ $customer ? __('Update your details') : __('Let’s set up your brokerage on RightAlly') }}</h1>
 <p class="lead">{{ __('Tell us who is signing and where your business is based. These details go on your agreement.') }}</p>
 
@@ -100,7 +101,10 @@
     <fieldset class="mb-4"><legend>{{ __('Coupon') }} <span class="fw-normal text-slate">({{ __('optional') }})</span></legend>
         <label class="visually-hidden" for="coupon">{{ __('Coupon code') }}</label>
         <div class="input-group has-validation" style="max-width:420px">
-            <input class="form-control text-uppercase @error('coupon') is-invalid @enderror" id="coupon" name="coupon" value="{{ $couponCode }}" placeholder="{{ __('Enter code') }}" aria-describedby="couponMsg" maxlength="40" autocomplete="off">
+            <div class="coupon-field flex-grow-1">
+                <input class="form-control text-uppercase @error('coupon') is-invalid @enderror" id="coupon" name="coupon" value="{{ $couponCode }}" placeholder="{{ __('Enter code') }}" aria-describedby="couponMsg" maxlength="40" autocomplete="off">
+                <button type="button" class="coupon-clear {{ $couponCode ? '' : 'd-none' }}" id="couponClear" aria-label="{{ __('Remove coupon') }}" title="{{ __('Remove coupon') }}">×</button>
+            </div>
             <button class="btn btn-outline-primary" type="button" id="couponApply">{{ __('Apply') }}</button>
         </div>
         @php

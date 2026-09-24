@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Admin\CustomerEraser;
 use App\Services\Audit\AuditLogger;
 use App\Services\Settings\SettingsSchema;
 use App\Services\Settings\SettingsService;
+use App\Services\Stripe\StripeClient;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -152,5 +154,23 @@ class SettingsController extends Controller
             $shown[$key] = SettingsSchema::isSecret($group, $key) ? '[hidden]' : $this->settings->get($group, $key);
         }
         $this->audit->log("settings.{$group}", 'Changed '.SettingsSchema::groups()[$group]['label'].' settings', null, $shown);
+    }
+
+    /** Super admins, Stripe test mode only: remove every customer and their data before going live. */
+    public function resetData(Request $request, CustomerEraser $eraser, StripeClient $stripe): RedirectResponse
+    {
+        abort_unless($request->user('admin')->isSuperAdmin(), 403);
+        if ($stripe->mode() !== 'test') {
+            return redirect()->to(route('admin.settings.index').'#t-reset')->withErrors(['reset' => 'Resetting is only allowed while Stripe is in test mode.'], 'reset');
+        }
+        $request->validateWithBag('reset', [
+            'confirm' => ['required', 'in:RESET'],
+            'password' => ['required', 'current_password:admin'],
+        ], ['confirm.in' => 'Type RESET in capitals.', 'password.current_password' => 'That password is incorrect.']);
+
+        $count = $eraser->resetAll();
+        $this->audit->log('data.reset', "Reset all client data ({$count} customers removed)");
+
+        return redirect()->to(route('admin.settings.index').'#t-reset')->with('success', "Done. {$count} customers and all their agreements, invoices, payments, emails and history were removed. Admins, settings, templates and coupons are unchanged.");
     }
 }

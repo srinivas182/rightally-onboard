@@ -49,6 +49,8 @@ final class EmailRenderer
         'credit_amount' => 'Credit amount',
         'credit_reason' => 'Reason given for the credit',
         'pause_until' => 'Date the pause ends',
+        'resume_link' => 'Link to continue onboarding where the client stopped (use in a button)',
+        'next_step' => 'What the client does next, e.g. “review and sign your agreement”',
         'login_code' => 'Admin sign-in code',
         'code_minutes' => 'Minutes the sign-in code is valid',
         'alert_title' => 'Team alert title',

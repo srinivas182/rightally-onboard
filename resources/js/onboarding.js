@@ -88,6 +88,19 @@ if (form) {
         render();
     };
     if (couponInput) { // no coupon field on custom quotes
+        // × inside the field: remove the code (e.g. an expired one) and go back to standard pricing.
+        const couponClear = $('#couponClear');
+        const syncClear = () => couponClear?.classList.toggle('d-none', couponInput.value.trim() === '');
+        couponInput.addEventListener('input', syncClear);
+        couponClear?.addEventListener('click', () => {
+            couponInput.value = '';
+            couponInput.classList.remove('is-invalid');
+            coupon = { code: '', percent: 0 };
+            showCouponMsg('', 'muted');
+            syncClear();
+            render();
+            couponInput.focus();
+        });
         $('#couponApply').addEventListener('click', applyCoupon);
         couponInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); } });
         // Changing the code after applying it: the old discount no longer applies.

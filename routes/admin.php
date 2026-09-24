@@ -83,6 +83,8 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::put('{customer}/agents', [CustomerController::class, 'updateAgents'])->name('agents');
         Route::put('{customer}/live', [CustomerController::class, 'updateLive'])->name('live');
         Route::put('{customer}/contact', [CustomerController::class, 'updateContact'])->name('contact');
+        Route::delete('{customer}', [CustomerController::class, 'destroy'])->name('destroy');
+        Route::post('{customer}/resume-link', [CustomerController::class, 'sendResume'])->middleware('throttle:20,1')->name('resume-link');
         Route::post('{customer}/token', [CustomerController::class, 'newToken'])->name('token');
         Route::post('{customer}/resend-welcome', [CustomerController::class, 'resendWelcome'])->name('resend-welcome');
         Route::post('{customer}/send-email', [CustomerController::class, 'sendEmail'])->name('send-email');
@@ -154,6 +156,7 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::delete('webhooks/{endpoint}', [WebhookController::class, 'destroy'])->name('webhooks.destroy');
         Route::post('webhooks/{endpoint}/test', [WebhookController::class, 'test'])->middleware('throttle:10,1')->name('webhooks.test');
         Route::post('webhook-deliveries/{delivery}/retry', [WebhookController::class, 'retry'])->name('webhooks.retry');
+        Route::post('settings/reset-data', [SettingsController::class, 'resetData'])->middleware('throttle:5,10')->name('settings.reset-data');
         Route::get('legal/{page}', [LegalPageController::class, 'edit'])->name('legal.edit');
         Route::put('legal/{page}', [LegalPageController::class, 'update'])->name('legal.update');
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');

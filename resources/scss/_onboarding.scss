@@ -81,6 +81,15 @@
 .tl li.now .n { background: var(--ra-blue); border-color: var(--ra-blue); color: #fff; }
 .tl .amt { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 
+// Coupon field with a × to remove the code
+.coupon-field { position: relative; }
+.coupon-field .form-control { padding-right: 2.4rem; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.coupon-field .coupon-clear {
+    position: absolute; right: .35rem; top: 50%; transform: translateY(-50%); z-index: 5;
+    width: 1.8rem; height: 1.8rem; border: 0; border-radius: 50%; background: #E6EBF3; color: #3B4659; font-size: 1.15rem; line-height: 1;
+    &:hover, &:focus-visible { background: #CDD6E4; }
+}
+
 // Billing choice (monthly / yearly)
 .choice {
     display: flex; align-items: flex-start; gap: .25rem; width: 100%;

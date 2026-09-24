@@ -42,10 +42,21 @@ final class SystemHealth
                 $this->stripe->isConfigured() ? (filled($this->stripe->webhookSecret()) ? 'Keys and webhook secret set' : 'Webhook signing secret missing') : 'Keys missing in Settings > Stripe'),
             'webhooks' => $this->check((bool) $lastEvent && ! $lastEvent->error, 'Stripe webhooks',
                 $lastEvent ? ($lastEvent->error ? 'Last event failed: '.mb_substr($lastEvent->error, 0, 120) : 'Last event '.$lastEvent->created_at->diffForHumans()) : 'No events received yet'),
+            'stripe_errors' => $this->stripeErrorCheck(),
             'reconcile' => $this->reconcileCheck(),
             'email' => $this->check(filled($this->settings->get('email', 'brevo_api_key')), 'Email (Brevo)',
                 filled($this->settings->get('email', 'brevo_api_key')) ? 'API key set' : 'API key missing: emails are only written to the log'),
         ];
+    }
+
+    private function stripeErrorCheck(): array
+    {
+        $e = Cache::get('health:stripe_last_error');
+        $recent = $e && $e['at']->gt(now()->subDay());
+
+        return $this->check(! $recent, 'Stripe requests', $recent
+            ? 'Last error '.$e['at']->diffForHumans().' ('.$e['path'].'): '.$e['message']
+            : 'No errors in the last 24 hours');
     }
 
     private function reconcileCheck(): array

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Services\Audit\AuditLogger;
+use App\Services\Auth\EmailLoginCode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,7 +51,7 @@ class LoginController extends Controller
         // Second step: authenticator code, or a code by email (always available; the only option without an app).
         $request->session()->put('admin.2fa', ['id' => $admin->id, 'remember' => (bool) ($data['remember'] ?? false)]);
         if (! $admin->hasTwoFactorEnabled()) {
-            $error = app(\App\Services\Auth\EmailLoginCode::class)->send($admin);
+            $error = app(EmailLoginCode::class)->send($admin);
 
             return redirect()->route('admin.two-factor.challenge', ['method' => 'email'])->with($error ? 'warning' : 'status', $error ?? "We’ve emailed a 6-digit code to {$admin->email}.");
         }

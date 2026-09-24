@@ -3,6 +3,8 @@
 namespace Tests\Feature\Admin;
 
 use App\Models\Admin;
+use App\Models\EmailLog;
+use Database\Seeders\EmailTemplateSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PragmaRX\Google2FA\Google2FA;
@@ -40,14 +42,14 @@ class AuthenticationTest extends TestCase
 
     public function test_admin_without_authenticator_signs_in_with_an_emailed_code(): void
     {
-        $this->seed(\Database\Seeders\EmailTemplateSeeder::class);
+        $this->seed(EmailTemplateSeeder::class);
         $admin = Admin::factory()->superAdmin()->create();
 
         $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password'])
             ->assertRedirect('/admin/two-factor/challenge?method=email');
         $this->get('/admin')->assertRedirect('/admin/login'); // not signed in yet
 
-        $mail = \App\Models\EmailLog::where('template_key', 'admin_login_code')->where('to_email', $admin->email)->firstOrFail();
+        $mail = EmailLog::where('template_key', 'admin_login_code')->where('to_email', $admin->email)->firstOrFail();
         preg_match('/(\d{6})/', $mail->subject, $m);
 
         $this->post('/admin/two-factor/challenge', ['email_code' => '000000'])->assertSessionHasErrors('email_code');
@@ -62,13 +64,13 @@ class AuthenticationTest extends TestCase
 
     public function test_email_codes_are_rate_limited(): void
     {
-        $this->seed(\Database\Seeders\EmailTemplateSeeder::class);
+        $this->seed(EmailTemplateSeeder::class);
         $admin = Admin::factory()->superAdmin()->withTwoFactor()->create();
         $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password'])->assertRedirect('/admin/two-factor/challenge');
 
         $this->post('/admin/two-factor/email-code')->assertSessionHas('status');
         $this->post('/admin/two-factor/email-code')->assertSessionHas('warning'); // one a minute
-        $this->assertSame(1, \App\Models\EmailLog::where('template_key', 'admin_login_code')->count());
+        $this->assertSame(1, EmailLog::where('template_key', 'admin_login_code')->count());
     }
 
     public function test_confirming_two_factor_setup_enables_it_and_shows_recovery_codes(): void

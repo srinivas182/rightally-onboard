@@ -33,13 +33,14 @@
     </form>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-6 col-xl-2">{!! $kpi('Customers onboarded', number_format($kpis['onboarded']), '+'.$kpis['onboarded_this_month'].' this month', $canCustomers ? route('admin.customers.index') : null) !!}</div>
-    <div class="col-6 col-xl-2">{!! $kpi('Revenue received', $mShort($revenueCents), $rangeLabel, $canInvoices ? route('admin.invoices.index', ['tab' => 'paid']) : null) !!}</div>
-    <div class="col-6 col-xl-2">{!! $kpi('Failed payments', '<span class="'.($kpis['failed'] ? 'text-danger' : '').'">'.$kpis['failed'].'</span>', $m($kpis['failed_cents']).' outstanding', $canInvoices ? route('admin.invoices.index', ['tab' => 'failed']) : null, $kpis['failed'] ? 'alert-k' : '') !!}</div>
-    <div class="col-6 col-xl-2">{!! $kpi('Go-lives next 7 days', (string) $kpis['go_lives'], $m($kpis['go_lives_cents']).' to charge', $canInvoices ? route('admin.invoices.index', ['tab' => 'upcoming']) : null) !!}</div>
-    <div class="col-6 col-xl-2">{!! $kpi('Suspended', (string) $kpis['suspended'], 'Unpaid 30+ days', $canCustomers ? route('admin.customers.index', ['status' => 'suspended']) : null) !!}</div>
-    <div class="col-6 col-xl-2">{!! $kpi('Renewals due', (string) $kpis['renewals'], 'Next 45 days, unsigned', $canContracts ? route('admin.contracts.index').'#renewals' : null) !!}</div>
+<div class="kpi-grid mb-4">
+    <div>{!! $kpi('Customers onboarded', number_format($kpis['onboarded']), '+'.$kpis['onboarded_this_month'].' this month', $canCustomers ? route('admin.customers.index') : null) !!}</div>
+    <div>{!! $kpi('Not finished', (string) $kpis['incomplete'], 'Started, not paid yet', $canCustomers ? route('admin.customers.index', ['status' => 'incomplete']) : null, $kpis['incomplete'] ? 'alert-k' : '') !!}</div>
+    <div>{!! $kpi('Revenue received', $mShort($revenueCents), $rangeLabel, $canInvoices ? route('admin.invoices.index', ['tab' => 'paid']) : null) !!}</div>
+    <div>{!! $kpi('Failed payments', '<span class="'.($kpis['failed'] ? 'text-danger' : '').'">'.$kpis['failed'].'</span>', $m($kpis['failed_cents']).' outstanding', $canInvoices ? route('admin.invoices.index', ['tab' => 'failed']) : null, $kpis['failed'] ? 'alert-k' : '') !!}</div>
+    <div>{!! $kpi('Go-lives next 7 days', (string) $kpis['go_lives'], $m($kpis['go_lives_cents']).' to charge', $canInvoices ? route('admin.invoices.index', ['tab' => 'upcoming']) : null) !!}</div>
+    <div>{!! $kpi('Suspended', (string) $kpis['suspended'], 'Unpaid 30+ days', $canCustomers ? route('admin.customers.index', ['status' => 'suspended']) : null) !!}</div>
+    <div>{!! $kpi('Renewals due', (string) $kpis['renewals'], 'Next 45 days, unsigned', $canContracts ? route('admin.contracts.index').'#renewals' : null) !!}</div>
 </div>
 
 <div class="row g-3">

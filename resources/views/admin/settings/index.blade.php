@@ -4,7 +4,7 @@
 @section('content')
 <h1 class="h3 mb-4">Settings</h1>
 <ul class="nav nav-tabs tabs-scroll mb-4" role="tablist" data-remember-tab="settings">
-    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'security' => 'Security', 'alerts' => 'Alerts and integrations', 'tax' => 'Tax', 'legal' => 'Legal pages'] as $tab => $label)
+    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'security' => 'Security', 'alerts' => 'Alerts and integrations', 'tax' => 'Tax', 'legal' => 'Legal pages'] + (auth('admin')->user()->isSuperAdmin() ? ['reset' => 'Test data'] : []) as $tab => $label)
         <li class="nav-item"><a class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab" href="#t-{{ $tab }}">{{ $label }}</a></li>
     @endforeach
 </ul>
@@ -203,6 +203,20 @@
             </table></div>
         @endif
     </div>
+
+    {{-- Test data reset (super admins) --}}
+    @if (auth('admin')->user()->isSuperAdmin())
+    <div class="tab-pane fade" id="t-reset" role="tabpanel">
+        <h3 class="h6">Reset test data</h3>
+        <p class="text-slate small">Removes <b>every customer</b> with their agreements, signed PDFs, invoices, payments, emails, quotes and activity history, and resets coupon usage. Admins, roles, settings, email and agreement templates, coupons and legal pages stay. Use it once before going live. Only available while Stripe is in test mode; test records in Stripe’s dashboard aren’t touched.</p>
+        @if ($errors->reset->any())<div class="alert alert-danger small">{{ $errors->reset->first() }}</div>@endif
+        <form method="post" action="{{ route('admin.settings.reset-data') }}" class="row g-2" style="max-width:560px">@csrf
+            <div class="col-sm-6"><label class="form-label small" for="resetConfirm">Type RESET</label><input class="form-control" id="resetConfirm" name="confirm" required autocomplete="off"></div>
+            <div class="col-sm-6"><label class="form-label small" for="resetPw">Your password</label><input type="password" class="form-control" id="resetPw" name="password" required autocomplete="current-password"></div>
+            <div class="col-12"><button class="btn btn-danger" data-confirm="Delete ALL customers and their data? This can’t be undone.">Reset all client data</button></div>
+        </form>
+    </div>
+    @endif
 
     {{-- Legal pages --}}
     <div class="tab-pane fade" id="t-legal" role="tabpanel">

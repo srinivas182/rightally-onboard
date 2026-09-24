@@ -68,6 +68,7 @@ final class DashboardStats
 
         return [
             'onboarded' => Customer::whereIn('status', self::ONBOARDED)->count(),
+            'incomplete' => Customer::whereIn('status', [CustomerStatus::Draft, CustomerStatus::ContractSigned])->count(),
             'onboarded_this_month' => Customer::whereIn('status', self::ONBOARDED)->where('onboarding_started_at', '>=', $monthStart)->count(),
             'failed' => Invoice::where('status', InvoiceStatus::Failed)->whereIn('type', [InvoiceType::Balance, InvoiceType::Monthly, InvoiceType::Annual, InvoiceType::EarlyTermination])->count(),
             'failed_cents' => (int) Invoice::where('status', InvoiceStatus::Failed)->sum('amount_cents'),

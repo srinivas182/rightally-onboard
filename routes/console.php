@@ -90,3 +90,28 @@ Schedule::call(fn () => Cache::forever(SystemHealth::HEARTBEAT_KEY, now()))->eve
 // Housekeeping.
 Schedule::command('queue:prune-failed --hours=720')->weekly();
 Schedule::command('auth:clear-resets')->daily();
+
+// Checks the saved Stripe keys: php artisan stripe:check
+Artisan::command('stripe:check', function (StripeClient $stripe) {
+    $this->line('Mode: '.$stripe->mode());
+    if (! $stripe->isConfigured()) {
+        $this->error('No secret key saved for this mode (Settings > Stripe).');
+
+        return 1;
+    }
+    try {
+        $account = $stripe->get('account');
+        $this->info('Keys work. Account: '.($account['settings']['dashboard']['display_name'] ?? $account['id'] ?? '?').', country '.($account['country'] ?? '?').', charges enabled: '.(($account['charges_enabled'] ?? false) ? 'yes' : 'no'));
+        $this->line('Webhook secret saved: '.(filled($stripe->webhookSecret()) ? 'yes' : 'NO'));
+    } catch (Throwable $e) {
+        $this->error($e->getMessage());
+
+        return 1;
+    }
+    $last = Cache::get('health:stripe_last_error');
+    if ($last) {
+        $this->warn('Last Stripe error ('.$last['at']->diffForHumans().', '.$last['path'].'): '.$last['message']);
+    }
+
+    return 0;
+})->purpose('Test the Stripe keys saved in Settings and show the last Stripe error');

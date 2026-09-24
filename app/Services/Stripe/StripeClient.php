@@ -4,6 +4,7 @@ namespace App\Services\Stripe;
 
 use App\Services\Settings\SettingsService;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -79,6 +80,7 @@ final class StripeClient
                 default => $request->asForm()->post(self::BASE.$path, $data),
             };
         } catch (ConnectionException $e) {
+            $this->rememberError('Could not reach Stripe: '.$e->getMessage(), $path);
             throw new StripeException('Could not reach Stripe: '.$e->getMessage(), 'We couldn’t reach our payment provider. Please try again in a minute.');
         }
 
@@ -87,6 +89,7 @@ final class StripeClient
             $err = (array) ($json['error'] ?? []);
             // Card errors carry a message written for the cardholder; others don't.
             $userMessage = ($err['type'] ?? null) === 'card_error' ? ($err['message'] ?? null) : null;
+            $this->rememberError('Stripe '.$response->status().': '.($err['message'] ?? 'unknown error'), $path);
             throw new StripeException('Stripe '.$response->status().': '.($err['message'] ?? 'unknown error'), $userMessage, $err['code'] ?? null);
         }
 
@@ -96,5 +99,11 @@ final class StripeClient
     private function secretKey(): ?string
     {
         return $this->settings->get('stripe', $this->mode().'_secret_key');
+    }
+
+    /** Last Stripe error, shown to super admins in System status so problems are visible without server logs. */
+    private function rememberError(string $message, string $path): void
+    {
+        Cache::put('health:stripe_last_error', ['message' => mb_substr($message, 0, 500), 'path' => $path, 'at' => now()], now()->addDays(7));
     }
 }

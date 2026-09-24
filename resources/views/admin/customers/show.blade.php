@@ -38,11 +38,23 @@
                     <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#pauseModal">Pause subscription…</button></li>
                 @endif
                 @if ($termination)<li><button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#terminateModal">Early termination…</button></li>@endif
+                @if (auth('admin')->user()->isSuperAdmin())<li><hr class="dropdown-divider"></li><li><button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete customer…</button></li>@endif
             </ul>
         </div>
     </div>
 </div>
 
+@if (\App\Services\Onboarding\ResumeLinks::isIncomplete($customer))
+    @php $resumeUrl = app(\App\Services\Onboarding\ResumeLinks::class)->link($customer); @endphp
+    <div class="alert alert-warning">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div><b>Onboarding not finished.</b> Next step for the client: {{ \App\Services\Onboarding\ResumeLinks::nextStep($customer)['label'] }}. Started {{ $customer->onboarding_started_at?->setTimezone($tz)->format('M j, g:i A') }}.</div>
+            <form method="post" action="{{ route('admin.customers.resume-link', $customer) }}">@csrf<button class="btn btn-sm btn-primary"><svg class="ic me-1" aria-hidden="true"><use href="#i-send"/></svg>Email link to continue</button></form>
+        </div>
+        <div class="input-group input-group-sm mt-2"><input class="form-control font-monospace" value="{{ $resumeUrl }}" readonly aria-label="Link to continue"><button class="btn btn-outline-secondary" type="button" data-copy="{{ $resumeUrl }}">Copy link</button></div>
+        <div class="small mt-1">Share this link any way you like (WhatsApp, text). It works for {{ \App\Services\Onboarding\ResumeLinks::DAYS }} days.</div>
+    </div>
+@endif
 @foreach ($pendingApprovals as $pa)
     <div class="alert alert-warning small d-flex justify-content-between align-items-center flex-wrap gap-2"><div><b>Waiting for approval:</b> {{ $pa->label() }} of {{ \App\Support\Money::format($pa->amount_cents) }}, requested by {{ $pa->requester->name }}.</div><a class="btn btn-sm btn-outline-dark" href="{{ route('admin.approvals.index') }}">Open approvals</a></div>
 @endforeach
@@ -264,6 +276,27 @@
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Pause</button></div>
     </form></div></div>
+
+{{-- Delete customer (super admins) --}}
+@if (auth('admin')->user()->isSuperAdmin())
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{{ route('admin.customers.destroy', $customer) }}">@csrf @method('delete')
+        <div class="modal-header"><h2 class="modal-title h5" id="deleteTitle">Delete {{ $customer->company_name }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+            <p>This permanently deletes the customer and <b>all</b> their agreements, signed PDFs, invoices, payments, emails and history. It can’t be undone.</p>
+            @if (! $customer->invoices->where('status', \App\Enums\InvoiceStatus::Paid)->isEmpty() && app(\App\Services\Stripe\StripeClient::class)->mode() === 'live')
+                <div class="alert alert-warning small">This customer has paid invoices in live mode. Deleting removes those records here; keep your Stripe and accounting records for tax purposes.</div>
+            @endif
+            <div class="form-check mb-3"><input class="form-check-input" type="checkbox" name="stripe" value="1" id="delStripe" checked><label class="form-check-label" for="delStripe">Also cancel their Stripe subscription and delete them in Stripe</label></div>
+            <label class="form-label" for="delConfirm">Type <b>{{ $customer->company_name }}</b> to confirm</label>
+            <input class="form-control @error('confirm', 'delete') is-invalid @enderror" id="delConfirm" name="confirm" required autocomplete="off">
+            @error('confirm', 'delete')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <div class="form-text mt-2">The same email can be used to sign up again afterwards.</div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger">Delete permanently</button></div>
+    </form></div></div>
+@if ($errors->delete->any())<div data-open-modal="#deleteModal" hidden></div>@endif
+@endif
 
 {{-- Send custom email --}}
 <div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">

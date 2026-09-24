@@ -14,6 +14,7 @@ use App\Models\Credit;
 use App\Models\Customer;
 use App\Models\EmailTemplate;
 use App\Models\Invoice;
+use App\Services\Admin\CustomerEraser;
 use App\Services\Audit\AuditLogger;
 use App\Services\Billing\AgentCountService;
 use App\Services\Billing\ApprovalService;
@@ -23,6 +24,7 @@ use App\Services\Billing\GoLiveService;
 use App\Services\Billing\PauseService;
 use App\Services\Billing\RefundService;
 use App\Services\Email\EmailSender;
+use App\Services\Onboarding\ResumeLinks;
 use App\Services\Stripe\StripeClient;
 use App\Support\BusinessClock;
 use App\Support\Money;
@@ -45,6 +47,10 @@ class CustomerController extends Controller
             'q' => (string) $request->query('q'),
             'status' => (string) $request->query('status'),
             'statuses' => CustomerStatus::cases(),
+            'counts' => [
+                'all' => Customer::count(),
+                'incomplete' => Customer::whereIn('status', [CustomerStatus::Draft, CustomerStatus::ContractSigned])->count(),
+            ],
         ]);
     }
 
@@ -124,9 +130,35 @@ class CustomerController extends Controller
         return back()->with('success', 'Live site details saved.');
     }
 
+    /** Super admins only: deletes the customer and everything linked to them. */
+    public function destroy(Request $request, Customer $customer, CustomerEraser $eraser): RedirectResponse
+    {
+        abort_unless($request->user('admin')->isSuperAdmin(), 403);
+        $request->validateWithBag('delete', ['confirm' => ['required', 'in:'.$customer->company_name]], ['confirm.in' => 'Type the company name exactly to confirm.']);
+        $name = $customer->company_name;
+        $result = $eraser->erase($customer, $request->boolean('stripe'));
+
+        return redirect()->route('admin.customers.index')->with('success', "{$name} deleted with all agreements, invoices and history. {$result['stripe']}.");
+    }
+
+    /** Emails the client a link to continue onboarding where they stopped. */
+    public function sendResume(Customer $customer, ResumeLinks $links): RedirectResponse
+    {
+        abort_unless(ResumeLinks::isIncomplete($customer), 400);
+        if (! $links->send($customer)) {
+            return back()->with('warning', 'A link was sent 3 times in the last hour. Copy the link and share it instead.');
+        }
+        $this->audit->log('customer.resume_sent', "Sent a continue-onboarding link to {$customer->email}", $customer);
+
+        return back()->with('success', "Link to continue sent to {$customer->email}.");
+    }
+
     public function updateContact(Request $request, Customer $customer): RedirectResponse
     {
         $data = $request->validateWithBag('contact', ['email' => ['required', 'email:rfc', 'max:160'], 'phone' => ['required', 'string', 'max:30']]);
+        if (Customer::where('email', strtolower($data['email']))->whereKeyNot($customer->id)->exists()) {
+            return back()->withErrors(['email' => 'Another customer already uses this email.'], 'contact');
+        }
         $phone = UsPhone::toE164($data['phone']);
         if (! $phone) {
             return back()->withErrors(['phone' => 'Enter a 10-digit US phone number.'], 'contact');
@@ -260,9 +292,11 @@ class CustomerController extends Controller
     {
         $q = trim((string) $request->query('q'));
         $status = CustomerStatus::tryFrom((string) $request->query('status'));
+        $incomplete = $request->query('status') === 'incomplete';
 
         return Customer::query()
             ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($incomplete, fn ($query) => $query->whereIn('status', [CustomerStatus::Draft, CustomerStatus::ContractSigned]))
             ->when($q !== '', fn ($query) => $query->where(fn ($w) => $w->where('company_name', 'like', "%{$q}%")
                 ->orWhere('email', 'like', "%{$q}%")->orWhere('last_name', 'like', "%{$q}%")->orWhere('first_name', 'like', "%{$q}%")
                 ->orWhere('city', 'like', "%{$q}%")))

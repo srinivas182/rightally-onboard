@@ -11,7 +11,8 @@
         <form method="get" class="d-flex gap-2 flex-wrap flex-grow-1" role="search">
             <input class="form-control form-control-sm" style="max-width:260px" type="search" name="q" value="{{ $q }}" placeholder="Search company, name, email, city" aria-label="Search customers">
             <select class="form-select form-select-sm" style="max-width:190px" name="status" aria-label="Status" onchange="this.form.submit()">
-                <option value="">All statuses</option>
+                <option value="">All statuses ({{ $counts['all'] }})</option>
+                <option value="incomplete" @selected($status === 'incomplete')>Not completed ({{ $counts['incomplete'] }})</option>
                 @foreach ($statuses as $s)<option value="{{ $s->value }}" @selected($status === $s->value)>{{ $s->label() }}</option>@endforeach
             </select>
             <button class="btn btn-outline-secondary btn-sm" type="submit">Search</button>
@@ -32,7 +33,12 @@
                 <td class="text-end num">{{ $c->agent_count }}</td>
                 <td class="small">{{ $c->payment_method_label ?? '—' }}</td>
                 <td class="small">{{ $c->source ?? '—' }}</td>
-                <td class="text-end"><a href="{{ route('admin.customers.show', $c) }}" class="btn btn-sm btn-outline-primary">Open</a></td>
+                <td class="text-end text-nowrap">
+                    @if (\App\Services\Onboarding\ResumeLinks::isIncomplete($c))
+                        <form method="post" action="{{ route('admin.customers.resume-link', $c) }}" class="d-inline">@csrf<button class="btn btn-sm btn-outline-secondary" title="Email a link to continue onboarding">Send link</button></form>
+                    @endif
+                    <a href="{{ route('admin.customers.show', $c) }}" class="btn btn-sm btn-outline-primary">Open</a>
+                </td>
             </tr>
         @endforeach
         </tbody>

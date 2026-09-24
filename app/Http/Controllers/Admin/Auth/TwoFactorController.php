@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Services\Audit\AuditLogger;
+use App\Services\Auth\EmailLoginCode;
 use App\Services\Auth\TwoFactorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,7 +90,7 @@ class TwoFactorController extends Controller
     }
 
     /** Emails a one-time sign-in code to the admin who passed the password step. */
-    public function sendEmailCode(Request $request, \App\Services\Auth\EmailLoginCode $codes): RedirectResponse
+    public function sendEmailCode(Request $request, EmailLoginCode $codes): RedirectResponse
     {
         $admin = Admin::find($request->session()->get('admin.2fa')['id'] ?? 0);
         if (! $admin) {
@@ -113,7 +114,7 @@ class TwoFactorController extends Controller
         $request->validate(['code' => ['nullable', 'string'], 'recovery_code' => ['nullable', 'string'], 'email_code' => ['nullable', 'string']]);
 
         $ok = match (true) {
-            $request->filled('email_code') => app(\App\Services\Auth\EmailLoginCode::class)->verify($admin, (string) $request->input('email_code')),
+            $request->filled('email_code') => app(EmailLoginCode::class)->verify($admin, (string) $request->input('email_code')),
             $request->filled('recovery_code') => $this->twoFactor->useRecoveryCode($admin, (string) $request->input('recovery_code')),
             default => $admin->hasTwoFactorEnabled() && $this->twoFactor->verify((string) $admin->two_factor_secret, (string) $request->input('code')),
         };

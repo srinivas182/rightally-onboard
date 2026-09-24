@@ -20,6 +20,7 @@ use App\Services\Contracts\ContractSigner;
 use App\Services\Email\EmailSender;
 use App\Services\Onboarding\CouponCheck;
 use App\Services\Onboarding\OnboardingService;
+use App\Services\Onboarding\ResumeLinks;
 use App\Services\Pricing\QuoteCalculator;
 use App\Services\Security\Turnstile;
 use App\Services\Settings\SettingsService;
@@ -79,6 +80,23 @@ class OnboardingController extends Controller
             throw ValidationException::withMessages(['turnstile' => __('Please confirm you’re not a robot, then try again.')]);
         }
 
+        // One email, one account: send the existing client a link instead of creating a duplicate.
+        $existing = Customer::where('email', strtolower((string) $request->validated('email')))->first();
+        if ($existing) {
+            $allowed = (array) $request->session()->get(OnboardingAccess::SESSION_KEY, []);
+            if (in_array($existing->uuid, $allowed, true) && ResumeLinks::isIncomplete($existing)) {
+                return redirect()->route(ResumeLinks::nextStep($existing)['route'], $existing); // same browser: carry on
+            }
+            if (ResumeLinks::isIncomplete($existing)) {
+                app(ResumeLinks::class)->send($existing);
+                $message = __('You’ve already started setting up RightAlly with this email. We’ve emailed you a link to continue where you left off.');
+            } else {
+                app(EmailSender::class)->toCustomer('account_link', $existing);
+                $message = __('An account already exists for this email. We’ve emailed you a link to open it. Contact us if you need a second account.');
+            }
+            throw ValidationException::withMessages(['email' => $message]);
+        }
+
         $custom = $this->sessionQuote($request);
         $check = $custom ? ['coupon' => null, 'message' => null] : $this->coupons->check($request->validated('coupon'));
         if ($check['message']) {
@@ -114,6 +132,9 @@ class OnboardingController extends Controller
 
     public function updateDetails(DetailsRequest $request, Customer $customer): RedirectResponse
     {
+        if (Customer::where('email', strtolower((string) $request->validated('email')))->whereKeyNot($customer->id)->exists()) {
+            throw ValidationException::withMessages(['email' => __('Another account already uses this email. Use a different email, or contact us.')]);
+        }
         $check = $this->coupons->check($request->validated('coupon'));
         if ($check['message']) {
             throw ValidationException::withMessages(['coupon' => $check['message']]);
