@@ -80,6 +80,7 @@ final class SettingsSchema
             'security' => [
                 'label' => 'Security',
                 'fields' => [
+                    'client_link_days' => ['default' => '90', 'rules' => ['nullable', 'integer', 'min:1', 'max:365']],
                     // Cloudflare Turnstile on the public onboarding form. Off until both keys are set.
                     'turnstile_site_key' => ['default' => null, 'rules' => ['nullable', 'string', 'max:120']],
                     'turnstile_secret_key' => ['default' => null, 'rules' => ['nullable', 'string', 'max:255'], 'secret' => true],

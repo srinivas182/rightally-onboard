@@ -27,6 +27,7 @@ use App\Services\Settings\SettingsService;
 use App\Services\Stripe\StripeClient;
 use App\Services\Stripe\StripeException;
 use App\Support\BusinessClock;
+use App\Support\ClientLinks;
 use App\Support\UsPhone;
 use App\Support\UsStates;
 use Illuminate\Http\RedirectResponse;
@@ -207,7 +208,7 @@ class OnboardingController extends Controller
         $email->toPerson('signature_request', $customer, strtolower($data['signer_email']), $customer->fullName(), [
             'signer_name' => $data['signer_first_name'],
             'requested_by' => $requestedBy,
-            'signing_link' => URL::temporarySignedRoute('onboarding.agreement', now()->addDays(7), ['customer' => $customer->uuid]),
+            'signing_link' => URL::temporarySignedRoute('onboarding.agreement', now()->addDays(ClientLinks::days()), ['customer' => $customer->uuid]),
         ]);
         $audit->log('contract.signature_requested', "{$requestedBy} asked {$customer->fullName()} ({$data['signer_email']}) to sign {$contract->number}", $contract, null, 'client');
 

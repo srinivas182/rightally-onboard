@@ -52,7 +52,7 @@
             <form method="post" action="{{ route('admin.customers.resume-link', $customer) }}">@csrf<button class="btn btn-sm btn-primary"><svg class="ic me-1" aria-hidden="true"><use href="#i-send"/></svg>Email link to continue</button></form>
         </div>
         <div class="input-group input-group-sm mt-2"><input class="form-control font-monospace" value="{{ $resumeUrl }}" readonly aria-label="Link to continue"><button class="btn btn-outline-secondary" type="button" data-copy="{{ $resumeUrl }}">Copy link</button></div>
-        <div class="small mt-1">Share this link any way you like (WhatsApp, text). It works for {{ \App\Services\Onboarding\ResumeLinks::DAYS }} days.</div>
+        <div class="small mt-1">Share this link any way you like (WhatsApp, text). It works for {{ \App\Support\ClientLinks::days() }} days.</div>
     </div>
 @endif
 @foreach ($pendingApprovals as $pa)

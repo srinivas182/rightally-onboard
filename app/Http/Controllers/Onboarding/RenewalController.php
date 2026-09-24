@@ -9,6 +9,7 @@ use App\Http\Requests\Onboarding\SignRequest;
 use App\Models\Contract;
 use App\Services\Contracts\ContractRenderer;
 use App\Services\Contracts\ContractSigner;
+use App\Support\ClientLinks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
@@ -41,7 +42,7 @@ class RenewalController extends Controller
             $signer->sign($contract, trim($request->validated('typed_name')), (string) $request->signaturePng(), $request->ip(), $request->userAgent(), (string) $request->input('signature_method', 'drawn'));
         }
 
-        return redirect()->to(URL::temporarySignedRoute('renewal.show', now()->addDays(7), ['contract' => $contract->uuid]));
+        return redirect()->to(URL::temporarySignedRoute('renewal.show', now()->addDays(ClientLinks::days()), ['contract' => $contract->uuid]));
     }
 
     public function pdf(Contract $contract): StreamedResponse

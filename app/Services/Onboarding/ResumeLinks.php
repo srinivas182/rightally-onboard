@@ -5,11 +5,12 @@ namespace App\Services\Onboarding;
 use App\Enums\CustomerStatus;
 use App\Models\Customer;
 use App\Services\Email\EmailSender;
+use App\Support\ClientLinks;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 
 /**
- * "Continue where you left off": a signed link (7 days) to the next
+ * "Continue where you left off": a signed link (Settings > Security, default 90 days) to the next
  * unfinished onboarding step, for clients who stopped part-way.
  */
 final class ResumeLinks
@@ -33,7 +34,7 @@ final class ResumeLinks
 
     public function link(Customer $customer): string
     {
-        return URL::temporarySignedRoute(self::nextStep($customer)['route'], now()->addDays(self::DAYS), ['customer' => $customer->uuid]);
+        return URL::temporarySignedRoute(self::nextStep($customer)['route'], now()->addDays(ClientLinks::days()), ['customer' => $customer->uuid]);
     }
 
     /** Emails the resume link. Limited to 3 an hour per customer so the form can't be used to spam. */

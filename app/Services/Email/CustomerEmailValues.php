@@ -3,11 +3,11 @@
 namespace App\Services\Email;
 
 use App\Enums\InvoiceStatus;
-use App\Http\Controllers\Onboarding\AccountController;
 use App\Models\Contract;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Support\BusinessClock;
+use App\Support\ClientLinks;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
@@ -31,7 +31,8 @@ final class CustomerEmailValues
             'first_monthly_date' => $goLive ? Carbon::parse($goLive)->addDays(30)->format('F j, Y') : '',
             'agreement_link' => $this->link('onboarding.agreement', $customer),
             'payment_link' => $invoice?->hosted_invoice_url ?: $this->link('onboarding.payment', $customer),
-            'account_link' => URL::temporarySignedRoute('account.show', now()->addDays(AccountController::LINK_DAYS), ['customer' => $customer->uuid]),
+            'link_days' => (string) ClientLinks::days(),
+            'account_link' => URL::temporarySignedRoute('account.show', now()->addDays(ClientLinks::days()), ['customer' => $customer->uuid]),
             'deposit_status' => $deposit?->status === InvoiceStatus::Processing ? 'being processed by your bank' : 'paid',
         ];
 
@@ -76,6 +77,6 @@ final class CustomerEmailValues
     /** Signed links let the client open their pages from any device for 30 days. */
     private function link(string $route, Customer $customer): string
     {
-        return URL::temporarySignedRoute($route, now()->addDays(30), ['customer' => $customer->uuid]);
+        return URL::temporarySignedRoute($route, now()->addDays(ClientLinks::days()), ['customer' => $customer->uuid]);
     }
 }

@@ -18,6 +18,7 @@ use App\Services\Stripe\StripeClient;
 use App\Services\Stripe\StripeException;
 use App\Support\BillingDates;
 use App\Support\BusinessClock;
+use App\Support\ClientLinks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -28,12 +29,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * The client's account page: no password, opened from an emailed link
- * (valid 7 days). Agreement, invoices and receipts, next charge, and
+ * (valid for the client link period). Agreement, invoices and receipts, next charge, and
  * updating the card or bank account.
  */
 class AccountController extends Controller
 {
-    public const LINK_DAYS = 7;
+    /** @deprecated use \App\Support\ClientLinks::days() */
+    public const LINK_DAYS = 90;
 
     public function request(): View
     {
@@ -48,7 +50,7 @@ class AccountController extends Controller
             ? app(ResumeLinks::class)->send($c)   // not finished: link to continue where they stopped
             : $email->toCustomer('account_link', $c));
 
-        return back()->with('status', __('If that email belongs to a RightAlly customer, we’ve sent a link to continue your set-up or open your account. It works for 7 days.'));
+        return back()->with('status', __('If that email belongs to a RightAlly customer, we’ve sent a link to continue your set-up or open your account. It works for :days days.', ['days' => ClientLinks::days()]));
     }
 
     public function show(Customer $customer, StripeClient $stripe): View

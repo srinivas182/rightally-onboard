@@ -145,6 +145,7 @@
             <div class="row g-3">
                 @include('admin.settings._field', ['group' => 'security', 'key' => 'turnstile_site_key', 'label' => 'Turnstile site key', 'value' => $v['security']['turnstile_site_key'], 'col' => 'col-12'])
                 @include('admin.settings._field', ['group' => 'security', 'key' => 'turnstile_secret_key', 'label' => 'Turnstile secret key', 'value' => $v['security']['turnstile_secret_key'], 'col' => 'col-12', 'secret' => true])
+                @include('admin.settings._field', ['group' => 'security', 'key' => 'client_link_days', 'label' => 'Client links stay valid for', 'value' => $v['security']['client_link_days'] ?? '90', 'suffix' => 'days', 'type' => 'number', 'col' => 'col-sm-6', 'help' => 'Links in client emails and links you share (continue onboarding, account, signing, renewal). 1 to 365; default 90. Changes apply to links created from now on.'])
             </div>
             <button class="btn btn-primary mt-4" type="submit">Save security settings</button>
         </form>
