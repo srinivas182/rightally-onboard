@@ -10,8 +10,8 @@
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EEF2F8">
 <tr><td align="center" style="padding:28px 12px">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden">
-        <tr><td style="padding:26px 36px;border-bottom:1px solid #E6EBF3">
-            <img src="{{ asset('brand/logo.png') }}" alt="RightAlly" height="30" style="height:30px;display:block;border:0">
+        <tr><td bgcolor="#041527" style="padding:24px 36px;background:#041527">
+            <img src="{{ asset('brand/logo-white.png') }}" alt="RightAlly" width="129" height="30" style="height:30px;width:auto;display:block;border:0;color:#ffffff;font-weight:600;font-size:20px">
         </td></tr>
         <tr><td style="padding:32px 36px;font-size:15px;line-height:1.6">
             {!! $content !!}
