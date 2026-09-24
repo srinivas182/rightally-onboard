@@ -170,4 +170,27 @@ class MobileFeedbackTest extends TestCase
         $this->post("/admin/customers/{$customer->uuid}/account-link")->assertSessionHas('success');
         $this->assertSame(1, EmailLog::where('template_key', 'account_link')->count());
     }
+
+    public function test_a_corrected_request_is_not_blocked_by_stripe_remembering_the_failed_one(): void
+    {
+        $seen = [];
+        $this->stripe['POST customers'] = function (Request $r) use (&$seen) {
+            $key = $r->header('Idempotency-Key')[0];
+            if (isset($seen[$key]) && $seen[$key] !== $r['email']) {   // Stripe: same key, different parameters
+                return ['__status' => 400, 'json' => ['error' => ['type' => 'idempotency_error', 'message' => 'Keys for idempotent requests can only be used with the same parameters they were first used with.']]];
+            }
+            $seen[$key] = $r['email'];
+
+            return str_contains((string) $r['email'], '.') ? ['id' => 'cus_ok'] : ['__status' => 400, 'json' => ['error' => ['message' => 'Invalid email address: '.$r['email']]]];
+        };
+        $this->stripe['POST payment_intents'] = ['id' => 'pi_1', 'status' => 'requires_payment_method', 'client_secret' => 'pi_1_secret', 'amount' => 30000];
+        $this->fakeBilling();
+        $customer = $this->billedCustomer(CustomerStatus::ContractSigned);
+        $customer->forceFill(['email' => 'test@gmail', 'stripe_customer_id' => null])->save();
+        $this->withSession([OnboardingAccess::SESSION_KEY => [$customer->uuid]]);
+
+        $this->get("/onboard/{$customer->uuid}/payment")->assertSee('looks incomplete');
+        $this->post("/onboard/{$customer->uuid}/email", ['email' => 'test@gmail.com']);
+        $this->get("/onboard/{$customer->uuid}/payment")->assertSee('data-secret="pi_1_secret"', false);
+    }
 }

@@ -68,7 +68,10 @@ final class StripeClient
         }
 
         $request = Http::withToken($secret)
-            ->withHeaders(array_filter(['Stripe-Version' => self::API_VERSION, 'Idempotency-Key' => $idempotencyKey ? $this->keyPrefix().'-'.$idempotencyKey : null]))
+            // The key includes a fingerprint of the request, so an identical retry is de-duplicated
+            // but a corrected request (e.g. after fixing an email Stripe rejected) is treated as new.
+            ->withHeaders(array_filter(['Stripe-Version' => self::API_VERSION, 'Idempotency-Key' => $idempotencyKey
+                ? $this->keyPrefix().'-'.$idempotencyKey.'-'.substr(sha1(json_encode($data)), 0, 12) : null]))
             ->acceptJson()
             ->timeout(20)
             ->retry(2, 300, fn ($e) => $e instanceof ConnectionException, throw: false);
