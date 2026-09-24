@@ -13,9 +13,9 @@
 <h1>{{ __('Add your payment method') }}</h1>
 <p class="lead">
     @if ($taxCents)
-        {{ __('We’ll charge the deposit of :amount (including :tax sales tax) now and keep this method on file for the scheduled payments in your agreement.', ['amount' => $deposit, 'tax' => \App\Support\Money::format($taxCents)]) }}
+        {{ __('We’ll charge the deposit of :amount (including :tax sales tax) now.', ['amount' => $deposit, 'tax' => \App\Support\Money::format($taxCents)]) }}
     @else
-        {{ __('We’ll charge the deposit of :amount now and keep this method on file for the scheduled payments in your agreement.', ['amount' => $deposit]) }}
+        {{ __('We’ll charge the deposit of :amount now.', ['amount' => $deposit]) }}
     @endif
 </p>
 

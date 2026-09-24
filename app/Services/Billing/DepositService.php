@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Services\Audit\AuditLogger;
 use App\Services\Email\EmailSender;
 use App\Services\Stripe\StripeClient;
+use App\Services\Stripe\StripeException;
 use App\Support\BusinessClock;
 use App\Support\UsStates;
 use Illuminate\Support\Facades\DB;
@@ -54,7 +55,7 @@ final class DepositService
             }
         }
 
-        $pi = $this->stripe->post('payment_intents', [
+        $params = [
             'amount' => $total,
             'currency' => 'usd',
             'customer' => $customerId,
@@ -64,7 +65,20 @@ final class DepositService
             'description' => "RightAlly deposit, agreement {$contract->number}",
             'receipt_email' => $customer->email,
             'metadata' => ['invoice' => $invoice->number, 'customer_uuid' => $customer->uuid, 'type' => 'deposit', 'tax_cents' => $tax['tax_cents']],
-        ], "deposit-{$invoice->id}-".($invoice->attempt_count + 1)."-{$total}");
+        ];
+        $key = "deposit-{$invoice->id}-".($invoice->attempt_count + 1)."-{$total}";
+        try {
+            $pi = $this->stripe->post('payment_intents', $params, $key);
+        } catch (StripeException $e) {
+            // Bank payments (ACH) not switched on in the Stripe account: offer card only rather than failing.
+            if (! str_contains($e->getMessage(), 'us_bank_account')) {
+                throw $e;
+            }
+            report($e);
+            unset($params['payment_method_options']);
+            $params['payment_method_types'] = ['card'];
+            $pi = $this->stripe->post('payment_intents', $params, $key.'-card');
+        }
 
         $invoice->update(['stripe_payment_intent_id' => $pi['id'], 'attempt_count' => $invoice->attempt_count + 1]);
 

@@ -85,13 +85,22 @@ class AccountController extends Controller
             return redirect()->route('account.show', $customer);
         }
         try {
-            $si = $stripe->post('setup_intents', [
+            $params = [
                 'customer' => $customer->stripe_customer_id,
                 'usage' => 'off_session',
                 'payment_method_types' => ['card', 'us_bank_account'],
                 'payment_method_options' => ['us_bank_account' => ['verification_method' => 'automatic']],
                 'metadata' => ['customer_uuid' => $customer->uuid, 'type' => 'update_payment_method'],
-            ]);
+            ];
+            try {
+                $si = $stripe->post('setup_intents', $params);
+            } catch (StripeException $e) {
+                if (! str_contains($e->getMessage(), 'us_bank_account')) {
+                    throw $e;
+                }
+                unset($params['payment_method_options']);
+                $si = $stripe->post('setup_intents', ['payment_method_types' => ['card']] + $params);
+            }
         } catch (StripeException $e) {
             report($e);
 
