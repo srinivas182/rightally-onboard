@@ -102,6 +102,9 @@ Artisan::command('stripe:check', function (StripeClient $stripe) {
     try {
         $account = $stripe->get('account');
         $this->info('Keys work. Account: '.($account['settings']['dashboard']['display_name'] ?? $account['id'] ?? '?').', country '.($account['country'] ?? '?').', charges enabled: '.(($account['charges_enabled'] ?? false) ? 'yes' : 'no'));
+        $caps = $account['capabilities'] ?? [];
+        $this->line('Card payments: '.($caps['card_payments'] ?? 'not requested'));
+        $this->line('ACH Direct Debit (bank payments): '.($caps['us_bank_account_ach_payments'] ?? 'not available on this account'));
         $this->line('Webhook secret saved: '.(filled($stripe->webhookSecret()) ? 'yes' : 'NO'));
     } catch (Throwable $e) {
         $this->error($e->getMessage());
