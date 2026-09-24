@@ -32,7 +32,7 @@ class DetailsRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:80'],
             'title' => ['required', 'string', 'max:80'],
             'company_name' => ['required', 'string', 'max:160'],
-            'email' => ['required', 'email:rfc', 'max:160'],
+            'email' => ['required', 'email:rfc,filter', 'regex:/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/', 'max:160'],
             'phone' => ['required', 'string', 'max:30'],
             'phone_e164' => ['nullable'],
             'agents' => ['required', 'integer', 'min:1', 'max:5000'],
@@ -62,6 +62,7 @@ class DetailsRequest extends FormRequest
             'zip.regex' => __('Enter a 5-digit ZIP code, for example 33131.'),
             'agents.min' => __('Enter at least 1 agent.'),
             'agents.required' => __('Enter how many agents will use RightAlly.'),
+            'email.regex' => __('Enter a valid email address, for example name@brokerage.com.'),
             'email.email' => __('Enter a valid email address, for example name@brokerage.com.'),
         ];
     }

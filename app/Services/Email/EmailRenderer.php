@@ -49,6 +49,8 @@ final class EmailRenderer
         'credit_amount' => 'Credit amount',
         'credit_reason' => 'Reason given for the credit',
         'pause_until' => 'Date the pause ends',
+        'login_code' => 'Admin sign-in code',
+        'code_minutes' => 'Minutes the sign-in code is valid',
         'alert_title' => 'Team alert title',
         'alert_text' => 'Team alert details',
         'alert_link' => 'Link to the admin page for the alert',

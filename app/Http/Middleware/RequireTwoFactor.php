@@ -25,9 +25,8 @@ class RequireTwoFactor
             return redirect()->route('admin.login')->withErrors(['email' => 'Your account has been deactivated.']);
         }
 
-        if ($admin && ! $admin->hasTwoFactorEnabled()) {
-            return redirect()->route('admin.two-factor.setup');
-        }
+        // Sign-in always passes a code step (authenticator or emailed code), so an
+        // authenticator app is recommended (banner in the admin), not forced.
 
         return $next($request);
     }

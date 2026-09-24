@@ -12,8 +12,14 @@
 @if ($signed)
     <div class="alert alert-success d-flex gap-2 align-items-start" role="status">
         <svg class="ic mt-1" aria-hidden="true"><use href="#i-check"/></svg>
-        <div><b>{{ __('Signed :date.', ['date' => $contract->signed_at->setTimezone(\App\Support\BusinessClock::timezone())->translatedFormat('M j, Y, g:i A T')]) }}</b> {{ __('Agreement :number.', ['number' => $contract->number]) }}</div>
+        <div class="flex-grow-1"><b>{{ __('Signed :date.', ['date' => $contract->signed_at->setTimezone(\App\Support\BusinessClock::timezone())->translatedFormat('M j, Y, g:i A T')]) }}</b> {{ __('Agreement :number.', ['number' => $contract->number]) }}</div>
+        <a class="btn btn-success btn-sm text-nowrap" href="{{ route('onboarding.schedule', $customer) }}">{{ __('Continue') }} →</a>
     </div>
+@endif
+@if ($signed)
+    @section('mobile-cta')
+        <a class="btn btn-light btn-sm fw-semibold px-4" href="{{ route('onboarding.schedule', $customer) }}">{{ __('Continue') }} →</a>
+    @endsection
 @endif
 
 <nav class="toc" aria-label="{{ __('Agreement sections') }}">

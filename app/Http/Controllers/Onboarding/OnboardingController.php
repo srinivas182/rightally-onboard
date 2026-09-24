@@ -176,7 +176,7 @@ class OnboardingController extends Controller
             'signer_first_name' => ['required', 'string', 'max:80'],
             'signer_last_name' => ['required', 'string', 'max:80'],
             'signer_title' => ['required', 'string', 'max:80'],
-            'signer_email' => ['required', 'email:rfc', 'max:160'],
+            'signer_email' => ['required', 'email:rfc,filter', 'regex:/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/', 'max:160'],
         ]);
         $requestedBy = $customer->fullName();
 

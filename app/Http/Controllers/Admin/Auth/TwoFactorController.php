@@ -79,7 +79,25 @@ class TwoFactorController extends Controller
             return redirect()->route('admin.login');
         }
 
-        return view('admin.auth.two-factor-challenge');
+        $admin = Admin::find($request->session()->get('admin.2fa')['id'] ?? 0);
+
+        return view('admin.auth.two-factor-challenge', [
+            'hasApp' => (bool) $admin?->hasTwoFactorEnabled(),
+            'emailMode' => $request->query('method') === 'email' || ! $admin?->hasTwoFactorEnabled(),
+            'maskedEmail' => $admin ? preg_replace('/(?<=.).(?=[^@]*@)/', '•', $admin->email) : '',
+        ]);
+    }
+
+    /** Emails a one-time sign-in code to the admin who passed the password step. */
+    public function sendEmailCode(Request $request, \App\Services\Auth\EmailLoginCode $codes): RedirectResponse
+    {
+        $admin = Admin::find($request->session()->get('admin.2fa')['id'] ?? 0);
+        if (! $admin) {
+            return redirect()->route('admin.login');
+        }
+        $error = $codes->send($admin);
+
+        return redirect()->route('admin.two-factor.challenge', ['method' => 'email'])->with($error ? 'warning' : 'status', $error ?? "We’ve emailed a 6-digit code to {$admin->email}.");
     }
 
     public function verify(Request $request, LoginController $login): RedirectResponse
@@ -92,17 +110,20 @@ class TwoFactorController extends Controller
             return redirect()->route('admin.login');
         }
 
-        $request->validate(['code' => ['nullable', 'string'], 'recovery_code' => ['nullable', 'string']]);
+        $request->validate(['code' => ['nullable', 'string'], 'recovery_code' => ['nullable', 'string'], 'email_code' => ['nullable', 'string']]);
 
-        $ok = $request->filled('recovery_code')
-            ? $this->twoFactor->useRecoveryCode($admin, (string) $request->input('recovery_code'))
-            : $this->twoFactor->verify((string) $admin->two_factor_secret, (string) $request->input('code'));
+        $ok = match (true) {
+            $request->filled('email_code') => app(\App\Services\Auth\EmailLoginCode::class)->verify($admin, (string) $request->input('email_code')),
+            $request->filled('recovery_code') => $this->twoFactor->useRecoveryCode($admin, (string) $request->input('recovery_code')),
+            default => $admin->hasTwoFactorEnabled() && $this->twoFactor->verify((string) $admin->two_factor_secret, (string) $request->input('code')),
+        };
 
         if (! $ok) {
-            $this->audit->log('auth.2fa_failed', 'Failed two-factor attempt', $admin, null, 'system');
-            throw ValidationException::withMessages([
-                $request->filled('recovery_code') ? 'recovery_code' : 'code' => 'That code didn’t work. Try the newest code from your authenticator app.',
-            ]);
+            $this->audit->log('auth.2fa_failed', 'Failed sign-in code attempt', $admin, null, 'system');
+            $field = $request->filled('email_code') ? 'email_code' : ($request->filled('recovery_code') ? 'recovery_code' : 'code');
+            throw ValidationException::withMessages([$field => $field === 'email_code'
+                ? 'That code didn’t work or has expired. Check the newest email, or send a new code.'
+                : 'That code didn’t work. Try the newest code from your authenticator app.']);
         }
 
         $request->session()->forget('admin.2fa');

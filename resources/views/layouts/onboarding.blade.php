@@ -19,7 +19,7 @@
 @endphp
 <div class="ob">
     <aside class="rail" aria-label="{{ __('Onboarding progress') }}">
-        <div class="brand-inv"><img src="{{ asset('brand/icon.png') }}" alt="">RightAlly</div>
+        <div class="brand-inv"><img src="{{ asset('brand/logo-white.png') }}" alt="RightAlly" class="logo-w"></div>
         <ol class="steps">
             @foreach ($names as $i => $name)
                 @php $n = $i + 1; @endphp
@@ -33,7 +33,7 @@
     </aside>
 
     <main id="main" tabindex="-1">
-        <div class="m-head"><img src="{{ asset('brand/logo.png') }}" alt="RightAlly"><span class="small text-slate">{{ __('Step :n of 5', ['n' => $step]) }}</span></div>
+        <div class="m-head"><img src="{{ asset('brand/logo-white.png') }}" alt="RightAlly"><span class="small text-slate">{{ __('Step :n of 5', ['n' => $step]) }}</span></div>
         <div class="m-prog" aria-hidden="true"><i style="width: {{ $step * 20 }}%"></i></div>
         <div class="work"><div class="work-inner">
             @yield('content')
@@ -45,7 +45,11 @@
 @if ($step < 5)
     <div class="m-ledger">
         <div><div class="small opacity-75">{{ __('Due today') }}</div><b class="fs-5 num" data-l="deposit">{{ $money($ledger['deposit']) }}</b></div>
-        <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#ledgerSheet">{{ __('View agreement') }}</button>
+        @hasSection('mobile-cta')
+            @yield('mobile-cta')
+        @else
+            <button class="btn btn-sm btn-outline-light" type="button" data-bs-toggle="offcanvas" data-bs-target="#ledgerSheet">{{ __('View agreement') }}</button>
+        @endif
     </div>
     <div class="offcanvas offcanvas-bottom h-auto" tabindex="-1" id="ledgerSheet" aria-labelledby="ledgerSheetTitle">
         <div class="offcanvas-header"><h2 class="offcanvas-title h5" id="ledgerSheetTitle">{{ __('Your agreement') }}</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="{{ __('Close') }}"></button></div>

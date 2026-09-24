@@ -35,6 +35,7 @@ Route::middleware('guest:admin')->group(function () {
 
     Route::get('two-factor/challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge');
     Route::post('two-factor/challenge', [TwoFactorController::class, 'verify'])->middleware('throttle:admin-2fa');
+    Route::post('two-factor/email-code', [TwoFactorController::class, 'sendEmailCode'])->middleware('throttle:10,10')->name('two-factor.email-code');
 
     Route::get('forgot-password', [PasswordResetController::class, 'request'])->name('password.request');
     Route::post('forgot-password', [PasswordResetController::class, 'email'])->middleware('throttle:admin-login')->name('password.email');

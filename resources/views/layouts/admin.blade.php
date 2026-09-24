@@ -44,7 +44,7 @@
 
 <div class="adm">
     <nav class="side" aria-label="Admin menu">
-        <div class="brand-inv"><img src="{{ asset('brand/icon.png') }}" alt="">RightAlly <span class="badge text-bg-primary fw-medium ms-1" style="font-size:.65rem">Admin</span></div>
+        <div class="brand-inv"><img src="{{ asset('brand/logo-white.png') }}" alt="RightAlly" class="logo-w"> <span class="badge text-bg-primary fw-medium" style="font-size:.65rem">Admin</span></div>
         {!! $nav() !!}
         <form method="post" action="{{ route('admin.logout') }}" class="mt-auto">@csrf
             <button class="nav-a" type="submit"><svg class="ic" aria-hidden="true"><use href="#i-out"/></svg>Sign out</button>
@@ -54,7 +54,7 @@
     <div class="min-w-0">
         <header class="topb">
             <button class="btn btn-light d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#admMenu" aria-label="Open menu"><svg class="ic"><use href="#i-menu"/></svg></button>
-            <img src="{{ asset('brand/logo.png') }}" alt="RightAlly" class="d-lg-none" style="height:24px">
+            <img src="{{ asset('brand/logo-white.png') }}" alt="RightAlly" class="d-lg-none" style="height:24px">
             <span class="ms-auto"></span>
             @if ($stripeMode === 'test')
                 <span class="badge text-bg-warning">Stripe test mode</span>
@@ -76,7 +76,7 @@
 
         <div class="offcanvas offcanvas-start" tabindex="-1" id="admMenu" style="background:var(--ra-navy);width:270px" aria-label="Admin menu">
             <div class="offcanvas-body d-flex flex-column">
-                <div class="brand-inv mb-3"><img src="{{ asset('brand/icon.png') }}" alt="">RightAlly</div>
+                <div class="brand-inv mb-3"><img src="{{ asset('brand/logo-white.png') }}" alt="RightAlly" class="logo-w"></div>
                 {!! $nav() !!}
                 <form method="post" action="{{ route('admin.logout') }}" class="mt-auto">@csrf
                     <button class="nav-a" type="submit"><svg class="ic" aria-hidden="true"><use href="#i-out"/></svg>Sign out</button>
@@ -86,6 +86,12 @@
 
         <main class="main" id="main" tabindex="-1">
             @include('partials.flash')
+            @if (! auth('admin')->user()->hasTwoFactorEnabled() && ! request()->routeIs('admin.two-factor.*', 'admin.account.*'))
+                <div class="alert alert-info small d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span>You sign in with emailed codes. For stronger security, set up an authenticator app.</span>
+                    <a class="btn btn-sm btn-outline-primary" href="{{ route('admin.two-factor.setup') }}">Set up authenticator</a>
+                </div>
+            @endif
             @yield('content')
         </main>
     </div>

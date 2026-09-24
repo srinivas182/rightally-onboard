@@ -47,17 +47,15 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        if ($admin->hasTwoFactorEnabled()) {
-            $request->session()->put('admin.2fa', ['id' => $admin->id, 'remember' => (bool) ($data['remember'] ?? false)]);
+        // Second step: authenticator code, or a code by email (always available; the only option without an app).
+        $request->session()->put('admin.2fa', ['id' => $admin->id, 'remember' => (bool) ($data['remember'] ?? false)]);
+        if (! $admin->hasTwoFactorEnabled()) {
+            $error = app(\App\Services\Auth\EmailLoginCode::class)->send($admin);
 
-            return redirect()->route('admin.two-factor.challenge');
+            return redirect()->route('admin.two-factor.challenge', ['method' => 'email'])->with($error ? 'warning' : 'status', $error ?? "We’ve emailed a 6-digit code to {$admin->email}.");
         }
 
-        // First sign-in: signed in, but RequireTwoFactor sends them to setup.
-        Auth::guard('admin')->login($admin);
-        $this->recordLogin($request, $admin);
-
-        return redirect()->route('admin.two-factor.setup');
+        return redirect()->route('admin.two-factor.challenge');
     }
 
     public function destroy(Request $request): RedirectResponse

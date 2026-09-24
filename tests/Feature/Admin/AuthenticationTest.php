@@ -38,16 +38,37 @@ class AuthenticationTest extends TestCase
         $this->assertGuest('admin');
     }
 
-    public function test_first_sign_in_forces_two_factor_setup(): void
+    public function test_admin_without_authenticator_signs_in_with_an_emailed_code(): void
     {
+        $this->seed(\Database\Seeders\EmailTemplateSeeder::class);
         $admin = Admin::factory()->superAdmin()->create();
 
         $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password'])
-            ->assertRedirect('/admin/two-factor/setup');
+            ->assertRedirect('/admin/two-factor/challenge?method=email');
+        $this->get('/admin')->assertRedirect('/admin/login'); // not signed in yet
 
-        // Every back-office page sends them back to setup until it's done.
-        $this->get('/admin')->assertRedirect('/admin/two-factor/setup');
-        $this->get('/admin/settings')->assertRedirect('/admin/two-factor/setup');
+        $mail = \App\Models\EmailLog::where('template_key', 'admin_login_code')->where('to_email', $admin->email)->firstOrFail();
+        preg_match('/(\d{6})/', $mail->subject, $m);
+
+        $this->post('/admin/two-factor/challenge', ['email_code' => '000000'])->assertSessionHasErrors('email_code');
+        $this->post('/admin/two-factor/challenge', ['email_code' => $m[1]])->assertRedirect('/admin');
+        $this->get('/admin')->assertOk()->assertSee('set up an authenticator app');
+
+        // The code works once.
+        auth('admin')->logout();
+        $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password']);
+        $this->post('/admin/two-factor/challenge', ['email_code' => $m[1]])->assertSessionHasErrors('email_code');
+    }
+
+    public function test_email_codes_are_rate_limited(): void
+    {
+        $this->seed(\Database\Seeders\EmailTemplateSeeder::class);
+        $admin = Admin::factory()->superAdmin()->withTwoFactor()->create();
+        $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password'])->assertRedirect('/admin/two-factor/challenge');
+
+        $this->post('/admin/two-factor/email-code')->assertSessionHas('status');
+        $this->post('/admin/two-factor/email-code')->assertSessionHas('warning'); // one a minute
+        $this->assertSame(1, \App\Models\EmailLog::where('template_key', 'admin_login_code')->count());
     }
 
     public function test_confirming_two_factor_setup_enables_it_and_shows_recovery_codes(): void

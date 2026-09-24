@@ -86,6 +86,8 @@ class EmailTemplateSeeder extends Seeder
                 "Hi {first_name},\n\nYour agreement ended on {term_end_date} and your subscription has been cancelled. Reply to this email if you’d like to continue.".$sign],
             'early_termination' => ['Early termination invoice', 'An admin records early termination', true, 'Your RightAlly early termination invoice',
                 "Hi {first_name},\n\nAs your agreement ended before its 12-month minimum term, {amount} is due for the remaining months, as set out in Section 7 of your agreement.\n\n{button:View invoice|{payment_link}}".$sign],
+            'admin_login_code' => ['Admin sign-in code', 'An admin signs in with an emailed code', false, 'Your RightAlly admin sign-in code: {login_code}',
+                "Hi {admin_name},\n\nYour sign-in code is:\n\n{login_code}\n\nIt works for {code_minutes} minutes. If you didn’t try to sign in, change your password right away."],
             'admin_invite' => ['Admin invite', 'An admin is invited', false, 'You’re invited to the RightAlly admin',
                 "Hi {admin_name},\n\n{invited_by} has invited you to the RightAlly onboarding admin.\n\n{button:Set your password|{invite_link}}\n\nThis link expires in 72 hours."],
             'password_reset' => ['Password reset', 'An admin requests a reset', false, 'Reset your RightAlly admin password',

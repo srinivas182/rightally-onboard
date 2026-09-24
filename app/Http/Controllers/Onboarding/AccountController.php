@@ -42,7 +42,7 @@ class AccountController extends Controller
     /** Emails an account link. Same answer whether or not the email is known. */
     public function sendLink(Request $request, EmailSender $email): RedirectResponse
     {
-        $data = $request->validate(['email' => ['required', 'email', 'max:160']]);
+        $data = $request->validate(['email' => ['required', 'email:rfc,filter', 'regex:/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/', 'max:160']]);
         Customer::where('email', strtolower($data['email']))->where('status', '!=', CustomerStatus::Draft)->get()
             ->each(fn (Customer $c) => $email->toCustomer('account_link', $c));
 

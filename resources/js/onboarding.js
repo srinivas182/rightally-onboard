@@ -118,10 +118,15 @@ if (doc) {
 const signForm = $('#signForm');
 if (signForm) {
     const canvas = $('#pad');
+    canvas.style.touchAction = 'none'; // finger drawing must not scroll the page
     const pad = new SignaturePad(canvas, { penColor: '#0839B2', minWidth: 0.8, maxWidth: 2.4 });
     let strokes = [];
 
+    // Phones fire "resize" when the address bar shows or hides; only redraw when the width really changes.
+    let lastWidth = 0;
     const resize = () => {
+        if (canvas.offsetWidth === lastWidth && lastWidth !== 0) return;
+        lastWidth = canvas.offsetWidth;
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         strokes = pad.toData();
         canvas.width = canvas.offsetWidth * ratio;

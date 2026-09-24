@@ -38,7 +38,7 @@
                 <input class="form-control @error('company_name') is-invalid @enderror" id="company_name" name="company_name" value="{{ $v('company_name') }}" required autocomplete="organization" maxlength="160">
                 @error('company_name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
             <div class="col-sm-6"><label class="form-label" for="email">{{ __('Email') }}</label>
-                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ $v('email') }}" required autocomplete="email" maxlength="160">
+                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ $v('email') }}" required autocomplete="email" maxlength="160" pattern="[^@\s]+@[^@\s]+\.[A-Za-z]{2,}" title="{{ __('Enter a valid email address, for example name@brokerage.com.') }}">
                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@else<div class="form-text">{{ __('Your signed agreement and receipts go here.') }}</div>@enderror</div>
             <div class="col-sm-6"><label class="form-label" for="phone">{{ __('Phone') }}</label>
                 <div class="input-group has-validation"><span class="input-group-text">+1</span>
