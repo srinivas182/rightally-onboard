@@ -19,7 +19,7 @@
     @yield('header-right')
 </div></header>
 <main id="main" tabindex="-1" class="container py-4 py-md-5" style="max-width:860px">
-    @include('partials.flash')
+    @include('partials.flash', ['hideErrorSummary' => View::hasSection('field-errors-only')])
     @yield('content')
 </main>
 @include('partials.legal-footer')

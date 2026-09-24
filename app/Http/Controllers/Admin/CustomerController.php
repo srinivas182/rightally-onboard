@@ -24,6 +24,7 @@ use App\Services\Billing\GoLiveService;
 use App\Services\Billing\PauseService;
 use App\Services\Billing\RefundService;
 use App\Services\Email\EmailSender;
+use App\Services\Onboarding\ClientAccess;
 use App\Services\Onboarding\ResumeLinks;
 use App\Services\Stripe\StripeClient;
 use App\Support\BusinessClock;
@@ -154,12 +155,18 @@ class CustomerController extends Controller
     }
 
     /** Emails the client a fresh link to their account page (agreement, invoices, payment method). */
-    public function sendAccountLink(Customer $customer, EmailSender $email): RedirectResponse
+    /** Emails the client what they need to get in: a create-password link, or a sign-in link. */
+    public function sendAccountLink(Customer $customer, ClientAccess $access): RedirectResponse
     {
-        $email->toCustomer('account_link', $customer);
-        $this->audit->log('customer.account_link_sent', "Sent an account link to {$customer->email}", $customer);
+        $result = $access->send($customer);
+        $this->audit->log('customer.account_link_sent', "Sent account access email ({$result}) to {$customer->email}", $customer);
 
-        return back()->with('success', "Account link sent to {$customer->email}.");
+        return back()->with($result === 'throttled' ? 'warning' : 'success', match ($result) {
+            'set_password' => "Create-password link sent to {$customer->email} (valid 24 hours).",
+            'sign_in' => "Sign-in link sent to {$customer->email}.",
+            'resume' => "Link to continue onboarding sent to {$customer->email}.",
+            default => 'A link was sent a moment ago. Try again in a minute.',
+        });
     }
 
     public function updateContact(Request $request, Customer $customer): RedirectResponse

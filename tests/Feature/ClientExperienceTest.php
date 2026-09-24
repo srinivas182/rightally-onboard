@@ -92,25 +92,15 @@ class ClientExperienceTest extends TestCase
 
     // ---- 3. Client account ---------------------------------------------
 
-    public function test_account_link_is_emailed_only_to_known_customers_with_the_same_answer(): void
-    {
-        $this->fakeBilling();
-        $this->billedCustomer(CustomerStatus::Live);
-
-        $known = $this->post('/account', ['email' => 'MARIA@sunlinerealty.com'])->assertSessionHas('status')->getSession()->get('status');
-        $unknown = $this->post('/account', ['email' => 'nobody@example.com'])->getSession()->get('status');
-        $this->assertSame($known, $unknown);
-        $this->assertSame(1, EmailLog::where('template_key', 'account_link')->count());
-    }
-
     public function test_account_page_shows_agreement_invoices_and_next_charge_and_guards_access(): void
     {
         $this->fakeBilling();
         $customer = $this->billedCustomer(CustomerStatus::Live, goLive: '2026-08-20');
         $invoice = $this->monthly($customer);
 
-        $this->get("/account/{$customer->uuid}")->assertForbidden();
-        $this->get($this->accountUrl($customer))->assertOk()
+        $this->get("/account/{$customer->uuid}")->assertRedirect('/account'); // must sign in
+        $this->actingAs($customer, 'customer');
+        $this->get("/account/{$customer->uuid}")->assertOk()
             ->assertSee('Sunline Realty Group')->assertSee('RA-2026-0001')->assertSee('INV-2026-0200')
             ->assertSee('$660.00')->assertSee('October 19, 2026')->assertSee('Visa ending 4242');
         $this->get("/account/{$customer->uuid}/invoices/{$invoice->id}/pdf")->assertOk();
@@ -130,7 +120,7 @@ class ClientExperienceTest extends TestCase
         $this->fakeBilling();
         $customer = $this->billedCustomer(CustomerStatus::Live);
 
-        $this->get($this->accountUrl($customer));
+        $this->actingAs($customer, 'customer');
         $this->get("/account/{$customer->uuid}/payment-method")->assertOk()->assertSee('data-secret="seti_1_secret"', false)->assertSee('data-mode="setup"', false);
         $this->get("/account/{$customer->uuid}/payment-method/return?setup_intent=seti_1")->assertRedirect("/account/{$customer->uuid}");
 
@@ -147,7 +137,7 @@ class ClientExperienceTest extends TestCase
         $this->stripe['GET setup_intents'] = ['id' => 'seti_2', 'status' => 'succeeded', 'customer' => 'cus_OTHER', 'payment_method' => ['id' => 'pm_x', 'type' => 'card']];
         $this->fakeBilling();
         $customer = $this->billedCustomer(CustomerStatus::Live);
-        $this->get($this->accountUrl($customer));
+        $this->actingAs($customer, 'customer');
 
         $this->get("/account/{$customer->uuid}/payment-method/return?setup_intent=seti_2")->assertSessionHas('warning');
         $this->assertSame('pm_1', $customer->fresh()->stripe_payment_method_id);

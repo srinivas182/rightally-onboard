@@ -139,11 +139,20 @@
             </form>
         </div></div>
         @unless (\App\Services\Onboarding\ResumeLinks::isIncomplete($customer))
-            @php $accountUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute('account.show', now()->addDays(\App\Support\ClientLinks::days()), ['customer' => $customer->uuid]); @endphp
-            <div class="panel mb-3"><div class="panel-h"><h2>Client account link</h2></div><div class="p-3 p-md-4">
-                <p class="small text-slate mb-2">Their agreement, invoices and receipts, and updating their payment method. A new link each time you open this page, valid {{ \App\Support\ClientLinks::days() }} days.</p>
-                <div class="input-group input-group-sm mb-2"><input class="form-control font-monospace" value="{{ $accountUrl }}" readonly aria-label="Account link"><button class="btn btn-outline-secondary" type="button" data-copy="{{ $accountUrl }}">Copy</button></div>
-                <form method="post" action="{{ route('admin.customers.account-link', $customer) }}">@csrf<button class="btn btn-sm btn-outline-primary"><svg class="ic me-1" aria-hidden="true"><use href="#i-send"/></svg>Email it to {{ $customer->email }}</button></form>
+            <div class="panel mb-3"><div class="panel-h"><h2>Client account</h2></div><div class="p-3 p-md-4">
+                <p class="small mb-2">
+                    @if ($customer->hasPassword())
+                        <span class="st st-live">Password set</span> <span class="text-slate">{{ $customer->password_set_at?->setTimezone($tz)->format('M j, Y') }}@if ($customer->last_login_at) · last sign-in {{ $customer->last_login_at->setTimezone($tz)->format('M j, g:i A') }}@endif</span>
+                    @else
+                        <span class="st st-wait">No password yet</span> <span class="text-slate">They create one from an emailed link.</span>
+                    @endif
+                </p>
+                <p class="small text-slate mb-2">The client signs in at <span class="font-monospace">{{ route('account.login') }}</span> with their email and password to see their agreement, invoices and receipts, and to update their payment method.</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('account.show', $customer) }}" target="_blank" rel="noopener">View their account</a>
+                    <button class="btn btn-sm btn-outline-secondary" type="button" data-copy="{{ route('account.login') }}">Copy sign-in address</button>
+                    <form method="post" action="{{ route('admin.customers.account-link', $customer) }}">@csrf<button class="btn btn-sm btn-outline-primary"><svg class="ic me-1" aria-hidden="true"><use href="#i-send"/></svg>{{ $customer->hasPassword() ? 'Email sign-in link' : 'Email create-password link' }}</button></form>
+                </div>
             </div></div>
         @endunless
         <div class="panel"><div class="panel-h"><h2>Billing</h2></div><div class="p-3 p-md-4">

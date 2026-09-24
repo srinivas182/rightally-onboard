@@ -13,12 +13,10 @@ use App\Services\Audit\AuditLogger;
 use App\Services\Billing\InvoicePdf;
 use App\Services\Billing\PaymentMethods;
 use App\Services\Email\EmailSender;
-use App\Services\Onboarding\ResumeLinks;
 use App\Services\Stripe\StripeClient;
 use App\Services\Stripe\StripeException;
 use App\Support\BillingDates;
 use App\Support\BusinessClock;
-use App\Support\ClientLinks;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -36,22 +34,6 @@ class AccountController extends Controller
 {
     /** @deprecated use \App\Support\ClientLinks::days() */
     public const LINK_DAYS = 90;
-
-    public function request(): View
-    {
-        return view('account.request');
-    }
-
-    /** Emails an account link. Same answer whether or not the email is known. */
-    public function sendLink(Request $request, EmailSender $email): RedirectResponse
-    {
-        $data = $request->validate(['email' => ['required', 'email:rfc,filter', 'regex:/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/', 'max:160']]);
-        Customer::where('email', strtolower($data['email']))->get()->each(fn (Customer $c) => ResumeLinks::isIncomplete($c)
-            ? app(ResumeLinks::class)->send($c)   // not finished: link to continue where they stopped
-            : $email->toCustomer('account_link', $c));
-
-        return back()->with('status', __('If that email belongs to a RightAlly customer, we’ve sent a link to continue your set-up or open your account. It works for :days days.', ['days' => ClientLinks::days()]));
-    }
 
     public function show(Customer $customer, StripeClient $stripe): View
     {

@@ -1,6 +1,12 @@
 @extends('layouts.page')
 @section('title', __('Your account'))
-@section('header-right')<span class="small text-slate">{{ $customer->company_name }}</span>@endsection
+@section('header-right')
+    @if (request()->attributes->get('viewing_as_admin'))
+        <span class="badge text-bg-warning">{{ __('Admin view') }}</span>
+    @elseif (auth('customer')->check())
+        <form method="post" action="{{ route('account.logout') }}" class="d-flex align-items-center gap-2">@csrf<span class="small text-slate d-none d-sm-inline">{{ $customer->email }}</span><button class="btn btn-sm btn-outline-secondary">{{ __('Sign out') }}</button></form>
+    @endif
+@endsection
 @section('content')
 @php
     $m = fn (int $c) => \App\Support\Money::format($c);
@@ -45,7 +51,7 @@
         <h2 class="small text-slate fw-normal mb-1">{{ __('Payment method') }}</h2>
         <div class="fs-5 fw-semibold mt-1">{{ $customer->payment_method_label ?? __('None saved yet') }}</div>
         @if ($customer->card_exp_month)<div class="small text-slate">{{ __('Expires :date', ['date' => sprintf('%02d/%d', $customer->card_exp_month, $customer->card_exp_year)]) }}</div>@endif
-        @if ($canUpdateMethod)<a class="btn btn-outline-primary btn-sm mt-3" href="{{ route('account.payment-method', $customer) }}"><svg class="ic me-1" aria-hidden="true"><use href="#i-card"/></svg>{{ __('Update payment method') }}</a>@endif
+        @if ($canUpdateMethod && ! request()->attributes->get('viewing_as_admin'))<a class="btn btn-outline-primary btn-sm mt-3" href="{{ route('account.payment-method', $customer) }}"><svg class="ic me-1" aria-hidden="true"><use href="#i-card"/></svg>{{ __('Update payment method') }}</a>@endif
     </div></div>
 </div>
 

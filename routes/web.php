@@ -3,6 +3,7 @@
 use App\Http\Controllers\BrevoWebhookController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\Onboarding\AccountController;
+use App\Http\Controllers\Onboarding\ClientAuthController;
 use App\Http\Controllers\Onboarding\CouponCheckController;
 use App\Http\Controllers\Onboarding\OnboardingController;
 use App\Http\Controllers\Onboarding\RenewalController;
@@ -38,10 +39,18 @@ Route::prefix('onboard/{customer}')->name('onboarding.')->middleware('onboarding
     Route::get('done', [OnboardingController::class, 'done'])->name('done');
 });
 
-// Client account (no password): request a link, then open it from the email.
-Route::get('/account', [AccountController::class, 'request'])->name('account.request');
-Route::post('/account', [AccountController::class, 'sendLink'])->middleware('throttle:5,10')->name('account.send-link');
-Route::prefix('account/{customer}')->name('account.')->middleware('onboarding.access')->group(function () {
+// Client account: sign in with email and password (first time: create a password from an emailed link).
+Route::controller(ClientAuthController::class)->prefix('account')->name('account.')->group(function () {
+    Route::get('/', 'showEmail')->name('login');
+    Route::post('/', 'submitEmail')->middleware('throttle:10,10')->name('login.email');
+    Route::get('password', 'showPassword')->name('password');
+    Route::post('password', 'login')->middleware('throttle:20,1')->name('login.password');
+    Route::post('forgot', 'forgot')->middleware('throttle:5,10')->name('forgot');
+    Route::get('reset/{token}', 'showReset')->name('password.reset');
+    Route::post('reset', 'reset')->middleware('throttle:10,10')->name('password.update');
+    Route::post('logout', 'logout')->name('logout');
+});
+Route::prefix('account/{customer}')->name('account.')->middleware('client.account')->group(function () {
     Route::get('/', [AccountController::class, 'show'])->name('show');
     Route::get('invoices/{invoice}/pdf', [AccountController::class, 'invoicePdf'])->name('invoice-pdf');
     Route::get('agreements/{contract:uuid}/pdf', [AccountController::class, 'agreementPdf'])->name('agreement-pdf');

@@ -32,7 +32,7 @@ final class CustomerEmailValues
             'agreement_link' => $this->link('onboarding.agreement', $customer),
             'payment_link' => $invoice?->hosted_invoice_url ?: $this->link('onboarding.payment', $customer),
             'link_days' => (string) ClientLinks::days(),
-            'account_link' => URL::temporarySignedRoute('account.show', now()->addDays(ClientLinks::days()), ['customer' => $customer->uuid]),
+            'account_link' => route('account.show', $customer), // password-protected
             'deposit_status' => $deposit?->status === InvoiceStatus::Processing ? 'being processed by your bank' : 'paid',
         ];
 

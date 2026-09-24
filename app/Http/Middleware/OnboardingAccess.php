@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Customer;
+use App\Services\Onboarding\ResumeLinks;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,6 +24,11 @@ class OnboardingAccess
         $allowed = (array) $request->session()->get(self::SESSION_KEY, []);
 
         if (! in_array($uuid, $allowed, true)) {
+            // Finished clients use their password-protected account instead of old emailed links,
+            // so a forwarded email can't open their agreement or receipts.
+            if ($customer instanceof Customer && ! ResumeLinks::isIncomplete($customer)) {
+                return redirect()->route('account.show', $customer);
+            }
             if (! $request->hasValidSignature()) {
                 abort(403, __('This link has expired. Enter your email on the next page and we’ll send you a new one straight away.'));
             }

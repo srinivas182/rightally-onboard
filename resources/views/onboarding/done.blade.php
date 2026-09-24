@@ -26,7 +26,7 @@
 </ol>
 <div class="d-flex flex-column flex-sm-row gap-2">
     <a class="btn btn-outline-primary" href="{{ route('onboarding.pdf', $customer) }}"><svg class="ic me-1" aria-hidden="true"><use href="#i-down"/></svg>{{ __('Download signed agreement') }}</a>
-    <a class="btn btn-link" href="{{ route('account.request') }}">{{ __('Your account') }}</a>
+    <a class="btn btn-link" href="{{ route('account.login', ['email' => $customer->email]) }}">{{ __('Set up your account login') }}</a>
     <a class="btn btn-link" href="mailto:{{ app(\App\Services\Settings\SettingsService::class)->get('company', 'support_email') }}">{{ __('Contact support') }}</a>
 </div>
 @endsection

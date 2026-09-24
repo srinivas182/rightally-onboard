@@ -164,11 +164,13 @@ class MobileFeedbackTest extends TestCase
         $this->fakeBilling();
         $customer = $this->billedCustomer(CustomerStatus::Live);
 
-        $this->get("/onboard/{$customer->uuid}/payment")->assertForbidden()->assertSee('Email me a new link')->assertSee('/account', false);
+        // A finished client's old onboarding link goes to the (password-protected) account.
+        $this->get("/onboard/{$customer->uuid}/payment")->assertRedirect("/account/{$customer->uuid}");
 
-        $this->actingAs($this->admin, 'admin')->get("/admin/customers/{$customer->uuid}")->assertSee('Client account link')->assertSee('/account/'.$customer->uuid.'?expires=', false);
+        $this->actingAs($this->admin, 'admin')->get("/admin/customers/{$customer->uuid}")->assertSee('Client account')->assertSee('No password yet');
+        $this->get("/account/{$customer->uuid}")->assertOk()->assertSee('Admin view')->assertDontSee('Update payment method');
         $this->post("/admin/customers/{$customer->uuid}/account-link")->assertSessionHas('success');
-        $this->assertSame(1, EmailLog::where('template_key', 'account_link')->count());
+        $this->assertSame(1, EmailLog::where('template_key', 'customer_set_password')->count());
     }
 
     public function test_a_corrected_request_is_not_blocked_by_stripe_remembering_the_failed_one(): void

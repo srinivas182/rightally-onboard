@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Admin;
+use App\Models\Customer;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,12 +24,21 @@ return [
             'driver' => 'session',
             'provider' => 'admins',
         ],
+        // Clients signing in to their account page.
+        'customer' => [
+            'driver' => 'session',
+            'provider' => 'customers',
+        ],
     ],
 
     'providers' => [
         'admins' => [
             'driver' => 'eloquent',
             'model' => Admin::class,
+        ],
+        'customers' => [
+            'driver' => 'eloquent',
+            'model' => Customer::class,
         ],
     ],
 
@@ -37,6 +47,13 @@ return [
             'provider' => 'admins',
             'table' => 'password_reset_tokens',
             'expire' => 60,
+            'throttle' => 60,
+        ],
+        // Client set-password and reset links: valid 24 hours.
+        'customers' => [
+            'provider' => 'customers',
+            'table' => 'customer_password_reset_tokens',
+            'expire' => 1440,
             'throttle' => 60,
         ],
     ],

@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Enums\CustomerStatus;
+use App\Services\Email\EmailSender;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Carbon;
 
 /**
@@ -17,13 +20,13 @@ use Illuminate\Support\Carbon;
  * @property int $agent_count
  * @property ?Carbon $go_live_date
  */
-class Customer extends Model
+class Customer extends Authenticatable implements CanResetPasswordContract
 {
-    use HasUuids, SoftDeletes;
+    use CanResetPassword, HasUuids, SoftDeletes;
 
-    protected $guarded = ['id', 'uuid', 'agent_api_token_hash', 'stripe_customer_id', 'stripe_subscription_id', 'stripe_agent_item_id', 'agent_api_token'];
+    protected $guarded = ['id', 'uuid', 'agent_api_token_hash', 'stripe_customer_id', 'stripe_subscription_id', 'stripe_agent_item_id', 'agent_api_token', 'password', 'remember_token', 'password_set_at'];
 
-    protected $hidden = ['agent_api_token_hash', 'agent_api_token'];
+    protected $hidden = ['agent_api_token_hash', 'agent_api_token', 'password', 'remember_token'];
 
     /** HasUuids fills the "uuid" column; the primary key stays an integer. */
     public function uniqueIds(): array
@@ -39,6 +42,9 @@ class Customer extends Model
     protected function casts(): array
     {
         return [
+            'password' => 'hashed',
+            'password_set_at' => 'datetime',
+            'last_login_at' => 'datetime',
             'status' => CustomerStatus::class,
             'go_live_date' => 'date',
             'balance_reminder_for' => 'date',
@@ -94,5 +100,19 @@ class Customer extends Model
     public function emailLogs(): HasMany
     {
         return $this->hasMany(EmailLog::class);
+    }
+
+    public function hasPassword(): bool
+    {
+        return filled($this->password);
+    }
+
+    /** Set-password and reset links use our branded email templates. */
+    public function sendPasswordResetNotification($token): void
+    {
+        $link = route('account.password.reset', ['token' => $token, 'email' => $this->email]);
+        app(EmailSender::class)->toCustomer($this->hasPassword() ? 'customer_reset_password' : 'customer_set_password', $this, null, [], [
+            'password_link' => $link,
+        ]);
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\ClientAccountAccess;
 use App\Http\Middleware\OnboardingAccess;
 use App\Http\Middleware\RequireTwoFactor;
 use App\Http\Middleware\SecurityHeaders;
@@ -23,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [SecurityHeaders::class]);
         // Stripe calls this directly; it is verified by its signature instead.
         $middleware->preventRequestForgery(except: ['stripe/webhook', 'brevo/webhook/*']);
-        $middleware->alias(['admin.2fa' => RequireTwoFactor::class, 'onboarding.access' => OnboardingAccess::class]);
+        $middleware->alias(['admin.2fa' => RequireTwoFactor::class, 'onboarding.access' => OnboardingAccess::class, 'client.account' => ClientAccountAccess::class]);
         $middleware->redirectGuestsTo(fn () => route('admin.login'));
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
         // Only trust forwarding headers from our own reverse proxy. Trusting

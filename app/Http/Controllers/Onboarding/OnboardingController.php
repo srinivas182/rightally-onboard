@@ -18,6 +18,7 @@ use App\Services\Billing\DepositService;
 use App\Services\Contracts\ContractRenderer;
 use App\Services\Contracts\ContractSigner;
 use App\Services\Email\EmailSender;
+use App\Services\Onboarding\ClientAccess;
 use App\Services\Onboarding\CouponCheck;
 use App\Services\Onboarding\OnboardingService;
 use App\Services\Onboarding\ResumeLinks;
@@ -88,13 +89,10 @@ class OnboardingController extends Controller
             if (in_array($existing->uuid, $allowed, true) && ResumeLinks::isIncomplete($existing)) {
                 return redirect()->route(ResumeLinks::nextStep($existing)['route'], $existing); // same browser: carry on
             }
-            if (ResumeLinks::isIncomplete($existing)) {
-                app(ResumeLinks::class)->send($existing);
-                $message = __('You’ve already started setting up RightAlly with this email. We’ve emailed you a link to continue where you left off.');
-            } else {
-                app(EmailSender::class)->toCustomer('account_link', $existing);
-                $message = __('An account already exists for this email. We’ve emailed you a link to open it. Contact us if you need a second account.');
-            }
+            $sent = app(ClientAccess::class)->send($existing);
+            $message = $sent === 'resume'
+                ? __('You’ve already started setting up RightAlly with this email. We’ve emailed you a link to continue where you left off.')
+                : __('An account already exists for this email. Sign in at :url, or contact us if you need a second account.', ['url' => route('account.login')]);
             throw ValidationException::withMessages(['email' => $message]);
         }
 
