@@ -20,7 +20,16 @@
 </p>
 
 @if ($paymentError)
-    <div class="alert {{ $clientSecret ? 'alert-danger' : 'alert-warning' }}" role="alert">{{ $paymentError }}</div>
+    <div class="alert {{ $clientSecret ? 'alert-danger' : 'alert-warning' }}" role="alert">{{ $paymentError }}
+        @if ($fixEmail ?? false)
+            <form method="post" action="{{ route('onboarding.email', $customer) }}" class="d-flex gap-2 flex-wrap mt-2">@csrf
+                <label class="visually-hidden" for="fixEmail">{{ __('Email') }}</label>
+                <input type="email" class="form-control form-control-sm" style="max-width:280px" id="fixEmail" name="email" value="{{ old('email', $customer->email) }}" required pattern="[^@\s]+@[^@\s]+\.[A-Za-z]{2,}">
+                <button class="btn btn-sm btn-primary">{{ __('Save and continue') }}</button>
+            </form>
+            @error('email')<div class="small mt-1">{{ $message }}</div>@enderror
+        @endif
+    </div>
 @endif
 
 @if ($clientSecret)

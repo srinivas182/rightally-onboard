@@ -215,6 +215,22 @@ class OnboardingController extends Controller
         return redirect()->route('onboarding.agreement', $customer)->with('delegated', __('We’ve emailed :name at :email a link to review and sign. Receipts will still go to :account.', ['name' => $data['signer_first_name'], 'email' => $data['signer_email'], 'account' => $customer->email]));
     }
 
+    /** Corrects the client's email on the payment step (e.g. an incomplete address saved before stricter checks). */
+    public function updateEmail(Request $request, Customer $customer, AuditLogger $audit): RedirectResponse
+    {
+        $data = $request->validate(['email' => ['required', 'email:rfc,filter', 'regex:/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/', 'max:160']],
+            ['email.regex' => __('Enter a valid email address, for example name@brokerage.com.')]);
+        $email = strtolower($data['email']);
+        if (Customer::where('email', $email)->whereKeyNot($customer->id)->exists()) {
+            throw ValidationException::withMessages(['email' => __('Another account already uses this email. Use a different email, or contact us.')]);
+        }
+        $old = $customer->email;
+        $customer->update(['email' => $email]);
+        $audit->log('customer.email_corrected', "Client corrected their email from {$old} to {$email}", $customer, null, 'client');
+
+        return redirect()->route('onboarding.payment', $customer);
+    }
+
     public function pdf(Customer $customer): StreamedResponse
     {
         $contract = $this->onboarding->currentContract($customer);
@@ -257,11 +273,16 @@ class OnboardingController extends Controller
                 $clientSecret = $deposits->prepare($customer, $contract)['client_secret'];
             } catch (StripeException $e) {
                 report($e);
-                $error = $e->userMessage ?? __('We couldn’t start the payment. Please try again in a minute.');
+                $error = str_contains($e->getMessage(), 'Invalid email')
+                    // e.g. an address saved before stricter checks, like name@gmail with no .com
+                    ? __('Your email address :email looks incomplete, so the payment can’t be set up. Enter your full email below.', ['email' => $customer->email])
+                    : ($e->userMessage ?? __('We couldn’t start the payment. Please try again in a minute.'));
+                $fixEmail = str_contains($e->getMessage(), 'Invalid email');
             }
         }
 
         return view('onboarding.payment', [
+            'fixEmail' => $fixEmail ?? false,
             'customer' => $customer,
             'contract' => $contract,
             'step' => 4,

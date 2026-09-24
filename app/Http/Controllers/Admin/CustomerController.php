@@ -155,7 +155,7 @@ class CustomerController extends Controller
 
     public function updateContact(Request $request, Customer $customer): RedirectResponse
     {
-        $data = $request->validateWithBag('contact', ['email' => ['required', 'email:rfc', 'max:160'], 'phone' => ['required', 'string', 'max:30']]);
+        $data = $request->validateWithBag('contact', ['email' => ['required', 'email:rfc,filter', 'regex:/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/', 'max:160'], 'phone' => ['required', 'string', 'max:30']], ['email.regex' => 'Enter a full email address, e.g. name@brokerage.com.']);
         if (Customer::where('email', strtolower($data['email']))->whereKeyNot($customer->id)->exists()) {
             return back()->withErrors(['email' => 'Another customer already uses this email.'], 'contact');
         }

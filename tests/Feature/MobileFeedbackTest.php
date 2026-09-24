@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\CustomerStatus;
+use App\Http\Middleware\OnboardingAccess;
 use App\Models\Admin;
 use App\Models\Contract;
 use App\Models\Customer;
@@ -140,5 +141,21 @@ class MobileFeedbackTest extends TestCase
         imagepng($img);
         $this->post("/onboard/{$customer->uuid}/agreement/sign", ['consent' => '1', 'typed_name' => 'Ana Ruiz', 'signature' => 'data:image/png;base64,'.base64_encode((string) ob_get_clean())]);
         $this->get("/onboard/{$customer->uuid}/agreement")->assertSee('Continue')->assertSee("/onboard/{$customer->uuid}/schedule", false)->assertDontSee('View agreement');
+    }
+
+    public function test_client_with_an_incomplete_saved_email_can_fix_it_on_the_payment_step(): void
+    {
+        $this->stripe['POST customers'] = fn (Request $r) => str_contains((string) $r['email'], '.')
+            ? ['id' => 'cus_ok'] : ['__status' => 400, 'json' => ['error' => ['type' => 'invalid_request_error', 'message' => 'Invalid email address: '.$r['email']]]];
+        $this->stripe['POST payment_intents'] = ['id' => 'pi_1', 'status' => 'requires_payment_method', 'client_secret' => 'pi_1_secret', 'amount' => 30000];
+        $this->fakeBilling();
+        $customer = $this->billedCustomer(CustomerStatus::ContractSigned);
+        $customer->forceFill(['email' => 'test@gmail', 'stripe_customer_id' => null])->save();
+        $this->withSession([OnboardingAccess::SESSION_KEY => [$customer->uuid]]);
+
+        $this->get("/onboard/{$customer->uuid}/payment")->assertOk()->assertSee('looks incomplete')->assertSee('Save and continue');
+        $this->post("/onboard/{$customer->uuid}/email", ['email' => 'test@gmail'])->assertSessionHasErrors('email');
+        $this->post("/onboard/{$customer->uuid}/email", ['email' => 'test@gmail.com'])->assertRedirect("/onboard/{$customer->uuid}/payment");
+        $this->get("/onboard/{$customer->uuid}/payment")->assertOk()->assertSee('data-secret="pi_1_secret"', false);
     }
 }

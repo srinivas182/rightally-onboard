@@ -30,6 +30,7 @@ Route::prefix('onboard/{customer}')->name('onboarding.')->middleware('onboarding
     Route::get('agreement', [OnboardingController::class, 'agreement'])->name('agreement');
     Route::post('agreement/sign', [OnboardingController::class, 'sign'])->middleware('throttle:onboarding')->name('sign');
     Route::post('agreement/delegate', [OnboardingController::class, 'delegate'])->middleware('throttle:onboarding')->name('delegate');
+    Route::post('email', [OnboardingController::class, 'updateEmail'])->middleware('throttle:onboarding')->name('email');
     Route::get('agreement/pdf', [OnboardingController::class, 'pdf'])->name('pdf');
     Route::get('schedule', [OnboardingController::class, 'schedule'])->name('schedule');
     Route::get('payment', [OnboardingController::class, 'payment'])->middleware('throttle:onboarding')->name('payment');
