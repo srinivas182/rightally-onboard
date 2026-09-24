@@ -45,7 +45,7 @@ class OperationsTest extends TestCase
         $customer = new Customer(['status' => 'draft', 'first_name' => 'A', 'last_name' => 'B', 'title' => 'T', 'company_name' => 'C', 'email' => 'a@b.com',
             'phone_e164' => '+13055550148', 'street' => 'S', 'city' => 'C', 'state_code' => 'FL', 'zip' => '33131']);
         $customer->save();
-        $this->get("/onboard/{$customer->uuid}/agreement")->assertForbidden()->assertSee('This onboarding link has expired')->assertSee('RightAlly');
+        $this->get("/onboard/{$customer->uuid}/agreement")->assertForbidden()->assertSee('This link has expired')->assertSee('RightAlly');
         $this->get('/no-such-page')->assertNotFound()->assertSee('Page not found');
     }
 

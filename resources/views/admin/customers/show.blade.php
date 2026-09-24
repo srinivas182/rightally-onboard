@@ -138,6 +138,14 @@
                 <div class="col-12"><button class="btn btn-sm btn-outline-primary">Save contact</button></div>
             </form>
         </div></div>
+        @unless (\App\Services\Onboarding\ResumeLinks::isIncomplete($customer))
+            @php $accountUrl = \Illuminate\Support\Facades\URL::temporarySignedRoute('account.show', now()->addDays(\App\Support\ClientLinks::days()), ['customer' => $customer->uuid]); @endphp
+            <div class="panel mb-3"><div class="panel-h"><h2>Client account link</h2></div><div class="p-3 p-md-4">
+                <p class="small text-slate mb-2">Their agreement, invoices and receipts, and updating their payment method. A new link each time you open this page, valid {{ \App\Support\ClientLinks::days() }} days.</p>
+                <div class="input-group input-group-sm mb-2"><input class="form-control font-monospace" value="{{ $accountUrl }}" readonly aria-label="Account link"><button class="btn btn-outline-secondary" type="button" data-copy="{{ $accountUrl }}">Copy</button></div>
+                <form method="post" action="{{ route('admin.customers.account-link', $customer) }}">@csrf<button class="btn btn-sm btn-outline-primary"><svg class="ic me-1" aria-hidden="true"><use href="#i-send"/></svg>Email it to {{ $customer->email }}</button></form>
+            </div></div>
+        @endunless
         <div class="panel"><div class="panel-h"><h2>Billing</h2></div><div class="p-3 p-md-4">
             @if ($contract)
                 <dl class="row small mb-3">

@@ -153,6 +153,15 @@ class CustomerController extends Controller
         return back()->with('success', "Link to continue sent to {$customer->email}.");
     }
 
+    /** Emails the client a fresh link to their account page (agreement, invoices, payment method). */
+    public function sendAccountLink(Customer $customer, EmailSender $email): RedirectResponse
+    {
+        $email->toCustomer('account_link', $customer);
+        $this->audit->log('customer.account_link_sent', "Sent an account link to {$customer->email}", $customer);
+
+        return back()->with('success', "Account link sent to {$customer->email}.");
+    }
+
     public function updateContact(Request $request, Customer $customer): RedirectResponse
     {
         $data = $request->validateWithBag('contact', ['email' => ['required', 'email:rfc,filter', 'regex:/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/', 'max:160'], 'phone' => ['required', 'string', 'max:30']], ['email.regex' => 'Enter a full email address, e.g. name@brokerage.com.']);

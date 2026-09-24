@@ -158,4 +158,16 @@ class MobileFeedbackTest extends TestCase
         $this->post("/onboard/{$customer->uuid}/email", ['email' => 'test@gmail.com'])->assertRedirect("/onboard/{$customer->uuid}/payment");
         $this->get("/onboard/{$customer->uuid}/payment")->assertOk()->assertSee('data-secret="pi_1_secret"', false);
     }
+
+    public function test_expired_links_offer_a_new_one_and_admin_can_share_an_account_link(): void
+    {
+        $this->fakeBilling();
+        $customer = $this->billedCustomer(CustomerStatus::Live);
+
+        $this->get("/onboard/{$customer->uuid}/payment")->assertForbidden()->assertSee('Email me a new link')->assertSee('/account', false);
+
+        $this->actingAs($this->admin, 'admin')->get("/admin/customers/{$customer->uuid}")->assertSee('Client account link')->assertSee('/account/'.$customer->uuid.'?expires=', false);
+        $this->post("/admin/customers/{$customer->uuid}/account-link")->assertSessionHas('success');
+        $this->assertSame(1, EmailLog::where('template_key', 'account_link')->count());
+    }
 }

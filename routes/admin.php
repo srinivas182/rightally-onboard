@@ -85,6 +85,7 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::put('{customer}/contact', [CustomerController::class, 'updateContact'])->name('contact');
         Route::delete('{customer}', [CustomerController::class, 'destroy'])->name('destroy');
         Route::post('{customer}/resume-link', [CustomerController::class, 'sendResume'])->middleware('throttle:20,1')->name('resume-link');
+        Route::post('{customer}/account-link', [CustomerController::class, 'sendAccountLink'])->middleware('throttle:20,1')->name('account-link');
         Route::post('{customer}/token', [CustomerController::class, 'newToken'])->name('token');
         Route::post('{customer}/resend-welcome', [CustomerController::class, 'resendWelcome'])->name('resend-welcome');
         Route::post('{customer}/send-email', [CustomerController::class, 'sendEmail'])->name('send-email');
