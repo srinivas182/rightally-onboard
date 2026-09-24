@@ -93,7 +93,7 @@ After the certificate is issued you can switch Cloudflare to "Proxied". Then:
 3. Certbot renewals keep working (HTTP-01 through the proxy).
 
 ## 8. Backups and disaster recovery
-**What's backed up** nightly and before every deploy, in `/var/backups/rightally` (kept 14 days):
+**What's backed up** nightly and before every deploy, in ``~/backups/rightally` on cPanel, `/var/backups/rightally` on a VPS (kept 14 days):
 - `db-*.sql.gz`: the whole database.
 - `files-*.tar.gz`: signed agreement PDFs, drawn signatures, the company signature image, and `.env` (which holds `APP_KEY`).
 

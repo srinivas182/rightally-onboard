@@ -5,12 +5,16 @@
 # (e.g. "b2:rightally-backups" or "s3:bucket/rightally").
 set -euo pipefail
 cd "$(dirname "$0")/.."
-DEST="${BACKUP_DIR:-/var/backups/rightally}"
+# Backup folder: $BACKUP_DIR, else /var/backups/rightally if writable (VPS), else ~/backups/rightally (cPanel).
+if [[ -n "${BACKUP_DIR:-}" ]]; then DEST="$BACKUP_DIR"
+elif mkdir -p /var/backups/rightally 2>/dev/null && [[ -w /var/backups/rightally ]]; then DEST=/var/backups/rightally
+else DEST="$HOME/backups/rightally"; fi
 STAMP="$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$DEST"
 umask 077
 
-env_get() { grep -E "^$1=" .env | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//'; }
+# Reads a value from .env, removing surrounding single or double quotes.
+env_get() { grep -E "^$1=" .env | tail -1 | cut -d= -f2- | sed -e "s/^\"\(.*\)\"$/\1/" -e "s/^'\(.*\)'$/\1/"; }
 DB_NAME="$(env_get DB_DATABASE)"; DB_USER="$(env_get DB_USERNAME)"; DB_PASS="$(env_get DB_PASSWORD)"; DB_HOST="$(env_get DB_HOST)"
 REMOTE="$(env_get BACKUP_RCLONE_REMOTE || true)"
 
