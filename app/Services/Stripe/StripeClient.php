@@ -68,7 +68,7 @@ final class StripeClient
         }
 
         $request = Http::withToken($secret)
-            ->withHeaders(array_filter(['Stripe-Version' => self::API_VERSION, 'Idempotency-Key' => $idempotencyKey]))
+            ->withHeaders(array_filter(['Stripe-Version' => self::API_VERSION, 'Idempotency-Key' => $idempotencyKey ? $this->keyPrefix().'-'.$idempotencyKey : null]))
             ->acceptJson()
             ->timeout(20)
             ->retry(2, 300, fn ($e) => $e instanceof ConnectionException, throw: false);
@@ -105,5 +105,28 @@ final class StripeClient
     private function rememberError(string $message, string $path): void
     {
         Cache::put('health:stripe_last_error', ['message' => mb_substr($message, 0, 500), 'path' => $path, 'at' => now()], now()->addDays(7));
+    }
+
+    /**
+     * Idempotency keys are built from local record numbers, which restart after a
+     * test-data reset. A per-installation prefix (renewed on reset) keeps them unique,
+     * so Stripe never mistakes a new request for an old one.
+     */
+    private function keyPrefix(): string
+    {
+        $prefix = (string) $this->settings->get('stripe', 'idempotency_prefix');
+        if ($prefix === '') {
+            $prefix = self::newKeyPrefix($this->settings);
+        }
+
+        return $prefix;
+    }
+
+    public static function newKeyPrefix(SettingsService $settings): string
+    {
+        $prefix = substr(bin2hex(random_bytes(6)), 0, 10);
+        $settings->setMany('stripe', ['idempotency_prefix' => $prefix]);
+
+        return $prefix;
     }
 }

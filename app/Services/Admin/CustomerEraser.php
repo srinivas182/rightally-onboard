@@ -7,6 +7,7 @@ use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Services\Audit\AuditLogger;
+use App\Services\Settings\SettingsService;
 use App\Services\Stripe\StripeClient;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -81,6 +82,7 @@ final class CustomerEraser
         DB::table('coupons')->update(['times_used' => 0]);
         Storage::disk('local')->deleteDirectory('contracts');
         Storage::disk('local')->deleteDirectory('invoices');
+        StripeClient::newKeyPrefix(app(SettingsService::class)); // record numbers restart, so Stripe request keys must too
         foreach (['health:stripe_last_error', 'health:reconcile_last'] as $key) {
             Cache::forget($key);
         }

@@ -57,6 +57,7 @@ final class SettingsSchema
             'stripe' => [
                 'label' => 'Stripe',
                 'fields' => [
+                    'idempotency_prefix' => ['default' => null, 'rules' => ['nullable', 'string', 'max:20']],
                     'mode' => ['default' => 'test', 'rules' => ['required', 'in:test,live']],
                     'test_publishable_key' => ['default' => null, 'rules' => ['nullable', 'string', 'starts_with:pk_test_', 'max:255']],
                     'test_secret_key' => ['default' => null, 'rules' => ['nullable', 'string', 'starts_with:sk_test_,rk_test_', 'max:255'], 'secret' => true],
