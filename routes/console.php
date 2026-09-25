@@ -52,7 +52,7 @@ Artisan::command('billing:daily', function (BalanceService $balance, SuspensionS
     $this->line('Accounts suspended: '.$suspension->run());
     $this->line('Card expiry warnings sent: '.$cards->send());
     $this->line('Pauses ended: '.$pauses->resumeDue());
-    Cache::forever(SystemHealth::BILLING_RUN_KEY, now());
+    Cache::forever(SystemHealth::BILLING_RUN_KEY, now()->getTimestamp());
 })->purpose('Go-live charges, reminders, renewals, expiries and suspensions');
 
 Artisan::command('agents:sync', function (AgentCountService $agents) {
@@ -78,14 +78,14 @@ Artisan::command('billing:reconcile {--days=3}', function (Reconciler $reconcile
     }
     $r = $reconciler->run((int) $this->option('days'));
     $this->line("Stripe events checked: {$r['checked']}, applied now: {$r['replayed']}, failed: {$r['failed']}");
-    Cache::forever('health:reconcile_last', ['at' => now(), 'replayed' => $r['replayed'], 'failed' => $r['failed']]);
+    Cache::forever('health:reconcile_last', ['at' => now()->getTimestamp(), 'replayed' => $r['replayed'], 'failed' => $r['failed']]);
 })->purpose('Apply any Stripe events the webhook missed');
 
 Schedule::command('onboarding:reminders')->hourly()->withoutOverlapping()->onOneServer();
 Schedule::command('billing:reconcile')->dailyAt('05:00')->timezone(BusinessClock::timezone())->withoutOverlapping()->onOneServer();
 
 // Heartbeat so the dashboard can tell whether cron is running.
-Schedule::call(fn () => Cache::forever(SystemHealth::HEARTBEAT_KEY, now()))->everyFiveMinutes()->name('scheduler-heartbeat')->onOneServer();
+Schedule::call(fn () => Cache::forever(SystemHealth::HEARTBEAT_KEY, now()->getTimestamp()))->everyFiveMinutes()->name('scheduler-heartbeat')->onOneServer();
 
 // Housekeeping.
 Schedule::command('queue:prune-failed --hours=720')->weekly();
@@ -113,7 +113,7 @@ Artisan::command('stripe:check', function (StripeClient $stripe) {
     }
     $last = Cache::get('health:stripe_last_error');
     if ($last) {
-        $this->warn('Last Stripe error ('.$last['at']->diffForHumans().', '.$last['path'].'): '.$last['message']);
+        $this->warn('Last Stripe error ('.(SystemHealth::time($last['at'] ?? null)?->diffForHumans() ?? 'earlier').', '.$last['path'].'): '.$last['message']);
     }
 
     return 0;

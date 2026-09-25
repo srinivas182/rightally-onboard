@@ -27,8 +27,8 @@ class OperationsTest extends TestCase
         app(SettingsService::class)->setMany('stripe', ['test_publishable_key' => 'pk_test_x', 'test_secret_key' => 'sk_test_x', 'test_webhook_secret' => 'whsec_x']);
         app(SettingsService::class)->setMany('email', ['brevo_api_key' => 'xkeysib-x']);
         StripeEvent::create(['stripe_event_id' => 'evt_1', 'type' => 'invoice.paid', 'payload' => [], 'processed_at' => now()]);
-        Cache::forever(SystemHealth::HEARTBEAT_KEY, now());
-        Cache::forever(SystemHealth::BILLING_RUN_KEY, now()->subHours(3));
+        Cache::forever(SystemHealth::HEARTBEAT_KEY, now()->getTimestamp());
+        Cache::forever(SystemHealth::BILLING_RUN_KEY, now()->subHours(3)->getTimestamp());
 
         $this->getJson('/health')->assertOk()->assertJson(['ok' => true]);
     }
@@ -52,5 +52,19 @@ class OperationsTest extends TestCase
     public function test_robots_keep_private_pages_out_of_search(): void
     {
         $this->assertStringContainsString('Disallow: /admin', file_get_contents(public_path('robots.txt')));
+    }
+
+    public function test_system_status_works_with_the_database_cache_used_on_servers(): void
+    {
+        config(['cache.default' => 'database']);
+        $this->seed(RoleSeeder::class);
+        $this->artisan('schedule:run'); // heartbeat
+        Cache::forever(SystemHealth::BILLING_RUN_KEY, now()->subHours(2)->getTimestamp());
+        Cache::forever('health:reconcile_last', ['at' => now()->getTimestamp(), 'replayed' => 0, 'failed' => 0]);
+        Cache::put('health:stripe_last_error', ['message' => 'Stripe 400: test', 'path' => 'customers', 'at' => now()->getTimestamp()], now()->addDay());
+        Cache::forever(SystemHealth::HEARTBEAT_KEY, 'not-a-timestamp'); // unreadable old value: treated as missing
+
+        $this->actingAs(Admin::factory()->superAdmin()->withTwoFactor()->create(), 'admin')
+            ->get('/admin')->assertOk()->assertSee('System status')->assertSee('Stripe 400: test')->assertSee('Last run');
     }
 }

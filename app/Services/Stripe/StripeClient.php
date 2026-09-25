@@ -107,7 +107,7 @@ final class StripeClient
     /** Last Stripe error, shown to super admins in System status so problems are visible without server logs. */
     private function rememberError(string $message, string $path): void
     {
-        Cache::put('health:stripe_last_error', ['message' => mb_substr($message, 0, 500), 'path' => $path, 'at' => now()], now()->addDays(7));
+        Cache::put('health:stripe_last_error', ['message' => mb_substr($message, 0, 500), 'path' => $path, 'at' => now()->getTimestamp()], now()->addDays(7));
     }
 
     /**
