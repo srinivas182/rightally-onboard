@@ -6,7 +6,7 @@
 
 .rail { background: var(--ra-navy); color: #C9D4E6; padding: 1.5rem 1.5rem 1.25rem; display: none; flex-direction: column; gap: 1.25rem; position: sticky; top: 0; height: 100vh; overflow: hidden; }
 // Shorter screens: tighten further so everything fits without scrolling.
-@media (max-height: 760px) { .rail { padding: 1rem 1.25rem; gap: .85rem; } .rail .steps li { padding: .35rem .5rem; } .rail .ledger { padding: .9rem 1rem .4rem; } .rail .ledger .row-l { padding: .3rem 0; font-size: .86rem; } .rail .ledger .today { margin: .4rem -1rem 0; padding: .65rem 1rem; } .rail .ledger .today strong { font-size: 1.25rem; } }
+@media (max-height: 840px) { .rail { padding: 1rem 1.25rem; gap: .85rem; } .rail .steps li { padding: .35rem .5rem; } .rail .ledger { padding: .9rem 1rem .4rem; } .rail .ledger .row-l { padding: .3rem 0; font-size: .86rem; } .rail .ledger .today { margin: .4rem -1rem 0; padding: .65rem 1rem; } .rail .ledger .today strong { font-size: 1.25rem; } }
 @media (min-width: 992px) { .rail { display: flex; } }
 .rail .brand-inv { display: flex; align-items: center; gap: .65rem; color: #fff; font-weight: 600; font-size: 1.45rem; letter-spacing: -.01em; }
 .rail .brand-inv img { width: 34px; height: 34px; }
@@ -113,3 +113,7 @@
 .brand-hero img { height: 44px; width: auto; }
 @media (min-width: 768px) { .brand-hero { padding: 2.25rem 1rem; } .brand-hero img { height: 56px; } }
 .referred { display: inline-block; background: #E3F5EE; color: #0B6B4A; border: 1px solid #B9E4D2; border-radius: 999px; padding: .4rem 1rem; font-weight: 600; }
+
+// Fee breakdown under the monthly/yearly line, e.g. "$500.00 platform + $20.00 × 5 agents".
+.ledger-sub { font-size: .78rem; color: #A9B8D0; margin-top: .1rem; font-weight: 400; }
+.table .ledger-sub { color: var(--ra-slate, #5E6B82); }

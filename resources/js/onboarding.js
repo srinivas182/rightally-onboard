@@ -44,10 +44,13 @@ if (form) {
         setL('balance', money(impl - deposit));
         const yearly = ($('input[name="billing"]:checked') || {}).value === 'year';
         const d = 1 - (pricing.annualDiscount || 0) / 100;
-        setL('monthly', money(yearly
-            ? Math.round(pricing.platform * 12 * d) + billed * Math.round(pricing.perAgent * 12 * d)
-            : pricing.platform + billed * pricing.perAgent));
-        setL('period', yearly ? T('Yearly') : T('Monthly'));
+        const platformFee = yearly ? Math.round(pricing.platform * 12 * d) : pricing.platform;
+        const perAgentFee = yearly ? Math.round(pricing.perAgent * 12 * d) : pricing.perAgent;
+        setL('monthly', money(platformFee + billed * perAgentFee));
+        setL('platformfee', money(platformFee));
+        setL('peragentfee', money(perAgentFee));
+        setL('minnote', entered < pricing.minAgents ? ' ' + T('(minimum)') : '');
+        setL('period', yearly ? T('Yearly fee') : T('Monthly fee'));
         setL('periodfee', yearly ? T('Your yearly fee') : T('Your monthly fee'));
         $$('input[name="billing"]').forEach((r) => r.closest('.choice')?.classList.toggle('is-on', r.checked));
         setL('agents', String(billed));
