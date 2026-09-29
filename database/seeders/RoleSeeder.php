@@ -20,7 +20,7 @@ class RoleSeeder extends Seeder
 
         $starter = [
             'Billing' => ['dashboard', 'customers', 'contracts', 'invoices', 'reports', 'email_templates'],
-            'Sales' => ['dashboard', 'customers', 'contracts', 'coupons', 'quotes', 'reports'],
+            'Sales' => ['dashboard', 'customers', 'calls', 'contracts', 'coupons', 'quotes', 'reports'],
             'Viewer' => ['dashboard', 'customers'],
         ];
 

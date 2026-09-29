@@ -4,7 +4,7 @@
 @section('content')
 <h1 class="h3 mb-4">Settings</h1>
 <ul class="nav nav-tabs tabs-scroll mb-4" role="tablist" data-remember-tab="settings">
-    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'security' => 'Security', 'alerts' => 'Alerts and integrations', 'tax' => 'Tax', 'legal' => 'Legal pages'] + (auth('admin')->user()->isSuperAdmin() ? ['reset' => 'Test data'] : []) as $tab => $label)
+    @foreach (['company' => 'Company', 'pricing' => 'Pricing', 'renewal' => 'Renewal pricing', 'signature' => 'Signature', 'stripe' => 'Stripe', 'email' => 'Email', 'security' => 'Security', 'alerts' => 'Alerts and integrations', 'calls' => 'Calls', 'tax' => 'Tax', 'legal' => 'Legal pages'] + (auth('admin')->user()->isSuperAdmin() ? ['reset' => 'Test data'] : []) as $tab => $label)
         <li class="nav-item"><a class="nav-link {{ $loop->first ? 'active' : '' }}" data-bs-toggle="tab" href="#t-{{ $tab }}">{{ $label }}</a></li>
     @endforeach
 </ul>
@@ -226,6 +226,19 @@
             <div class="d-flex justify-content-between align-items-center border-bottom py-2"><div><b>{{ $lp->title }}</b><div class="small text-slate">Last saved {{ $lp->updated_at->format('M j, Y') }}</div></div>
                 <div class="d-flex gap-2"><a class="btn btn-sm btn-outline-secondary" href="{{ route('legal', $lp->slug) }}" target="_blank" rel="noopener">View</a><a class="btn btn-sm btn-primary" href="{{ route('admin.legal.edit', $lp) }}">Edit</a></div></div>
         @endforeach
+    </div>
+
+    {{-- Calls (GoHighLevel calendar) --}}
+    <div class="tab-pane fade" id="t-calls" role="tabpanel">
+        <form method="post" action="{{ route('admin.settings.update', 'calls') }}">@csrf @method('put')
+            <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" role="switch" id="calls_enabled" name="enabled" value="1" @checked(($v['calls']['enabled'] ?? '1') === '1')><label class="form-check-label" for="calls_enabled">Show “Book a call” (<a href="{{ route('book') }}" target="_blank" rel="noopener">{{ route('book') }}</a>)</label></div>
+            @include('admin.settings._field', ['group' => 'calls', 'key' => 'ghl_calendar_id', 'label' => 'GoHighLevel calendar ID', 'value' => $v['calls']['ghl_calendar_id'] ?? '', 'col' => 'col-sm-8', 'help' => 'From the embed code: api.leadconnectorhq.com/widget/booking/THIS-PART'])
+            <button class="btn btn-primary mt-3" type="submit">Save</button>
+        </form>
+        <hr class="my-4">
+        <h3 class="h6">Webhook for GoHighLevel</h3>
+        <p class="small text-slate">In your GoHighLevel workflow (trigger: Appointment booked, and Appointment status changed), add a <b>Webhook</b> action with this URL. Keep it private: it contains your secret key. Step-by-step: <span class="font-monospace">docs/gohighlevel-calls.md</span>.</p>
+        <div class="input-group input-group-sm"><input class="form-control font-monospace" value="{{ $ghlWebhookUrl }}" readonly aria-label="GoHighLevel webhook URL"><button class="btn btn-outline-secondary" type="button" data-copy="{{ $ghlWebhookUrl }}">Copy</button></div>
     </div>
 
     {{-- Tax --}}

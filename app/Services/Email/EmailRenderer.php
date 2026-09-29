@@ -49,6 +49,7 @@ final class EmailRenderer
         'credit_amount' => 'Credit amount',
         'credit_reason' => 'Reason given for the credit',
         'pause_until' => 'Date the pause ends',
+        'onboarding_link' => 'Link to start onboarding, with the prospect’s coupon (calls)',
         'password_link' => 'Link to create or reset the client’s account password (use in a button)',
         'link_days' => 'How many days client links stay valid (Settings > Security)',
         'resume_link' => 'Link to continue onboarding where the client stopped (use in a button)',

@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\BrevoWebhookController;
+use App\Http\Controllers\GhlWebhookController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\Onboarding\AccountController;
+use App\Http\Controllers\Onboarding\BookCallController;
 use App\Http\Controllers\Onboarding\ClientAuthController;
 use App\Http\Controllers\Onboarding\CouponCheckController;
 use App\Http\Controllers\Onboarding\OnboardingController;
@@ -38,6 +40,11 @@ Route::prefix('onboard/{customer}')->name('onboarding.')->middleware('onboarding
     Route::get('payment/return', [OnboardingController::class, 'paymentReturn'])->name('payment.return');
     Route::get('done', [OnboardingController::class, 'done'])->name('done');
 });
+
+// Book a call (GoHighLevel calendar embedded) and the GoHighLevel webhook for appointments.
+Route::get('/book-a-call', [BookCallController::class, 'show'])->name('book');
+Route::get('/book-a-call/thanks', [BookCallController::class, 'thanks'])->name('book.thanks');
+Route::post('/api/v1/ghl/appointments/{secret}', GhlWebhookController::class)->middleware('throttle:120,1')->name('ghl.appointments');
 
 // Client account: sign in with email and password (first time: create a password from an emailed link).
 Route::controller(ClientAuthController::class)->prefix('account')->name('account.')->group(function () {

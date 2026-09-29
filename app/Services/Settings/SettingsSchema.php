@@ -77,6 +77,15 @@ final class SettingsSchema
                     'team_cc' => ['default' => 'm.sunil@rightally.io, srini@rightally.io', 'rules' => ['nullable', 'string', 'max:500']],
                 ],
             ],
+            'calls' => [
+                'label' => 'Calls',
+                'fields' => [
+                    'enabled' => ['default' => '1', 'rules' => ['boolean']],
+                    // GoHighLevel calendar used on /book-a-call (the ID from the embed code).
+                    'ghl_calendar_id' => ['default' => 'epg292VHDOxISDnnRa4m', 'rules' => ['nullable', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/']],
+                    'ghl_webhook_secret' => ['default' => null, 'rules' => ['nullable', 'string', 'max:100'], 'secret' => true],
+                ],
+            ],
             'security' => [
                 'label' => 'Security',
                 'fields' => [

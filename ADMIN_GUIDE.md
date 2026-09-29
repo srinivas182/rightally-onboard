@@ -43,6 +43,9 @@ Clients can open their own account at `https://onboard.rightally.io/account` (th
 ## Yearly billing
 Clients can choose to pay yearly in advance for a discount (Settings > Pricing sets the discount or switches the option off). Yearly clients show “Yearly” on their customer page; agent-count changes apply at their next yearly charge.
 
+## Calls
+Prospects who aren’t ready to onboard book a call at `/book-a-call` (your GoHighLevel calendar). Each booking appears in **Calls** with the coupon and campaign they came from. Filter by coupon, mark no-shows, add notes, and email an onboarding link (with their coupon) after the call. Calls turn **Onboarded** automatically when that email pays the deposit. Set-up: `docs/gohighlevel-calls.md`.
+
 ## Custom quotes
 When you agree different pricing with a brokerage, create a quote (Custom quotes > New quote) and send them its link. It shows their pricing, can’t be combined with a coupon, and works once. Void it if the deal changes.
 

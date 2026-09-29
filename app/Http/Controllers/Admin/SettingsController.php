@@ -28,6 +28,10 @@ class SettingsController extends Controller
 
     public function index(): View
     {
+        // Secret for the GoHighLevel appointments webhook URL, created on first visit.
+        if (blank($this->settings->get('calls', 'ghl_webhook_secret'))) {
+            $this->settings->setMany('calls', ['ghl_webhook_secret' => Str::random(40)]);
+        }
         // Secret for the Brevo delivery webhook URL, created on first visit.
         if (blank($this->settings->get('email', 'brevo_webhook_token'))) {
             $this->settings->setMany('email', ['brevo_webhook_token' => Str::random(40)]);
@@ -42,6 +46,7 @@ class SettingsController extends Controller
         }
 
         return view('admin.settings.index', [
+            'ghlWebhookUrl' => route('ghl.appointments', $this->settings->get('calls', 'ghl_webhook_secret')),
             'brevoWebhookUrl' => route('brevo.webhook', $this->settings->get('email', 'brevo_webhook_token')),
             'groups' => SettingsSchema::groups(),
             'v' => $values,
@@ -60,6 +65,9 @@ class SettingsController extends Controller
         }
         if ($group === 'pricing') {
             $request->merge(['annual_enabled' => $request->boolean('annual_enabled') ? '1' : '0', 'annual_discount_percent' => $request->input('annual_discount_percent', '10') ?? '10']);
+        }
+        if ($group === 'calls') {
+            $request->merge(['enabled' => $request->boolean('enabled') ? '1' : '0']);
         }
         if ($group === 'alerts') {
             foreach (['email', 'new_signing', 'payment_failed', 'go_lives', 'chargebacks'] as $flag) {

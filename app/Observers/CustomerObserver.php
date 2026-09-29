@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Enums\CustomerStatus as S;
 use App\Models\Customer;
+use App\Services\Calls\GhlAppointments;
 use App\Services\Integrations\TeamAlerts;
 use App\Services\Integrations\Webhooks;
 
@@ -46,6 +47,9 @@ class CustomerObserver
             return;
         }
 
+        if ($event === 'customer.deposit_paid') {
+            GhlAppointments::markOnboarded($customer);
+        }
         $this->webhooks->emit($event, $customer);
         $this->alerts->forCustomerEvent($event, $customer);
     }

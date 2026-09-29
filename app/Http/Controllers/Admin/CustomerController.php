@@ -9,6 +9,7 @@ use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Approval;
+use App\Models\CallBooking;
 use App\Models\Contract;
 use App\Models\Credit;
 use App\Models\Customer;
@@ -100,6 +101,7 @@ class CustomerController extends Controller
             'credits' => Credit::with('creator')->where('customer_id', $customer->id)->latest('id')->get(),
             'pendingApprovals' => Approval::with('requester')->where('customer_id', $customer->id)->where('status', 'pending')->get(),
             'threshold' => ApprovalService::threshold(),
+            'calls' => CallBooking::where('email', $customer->email)->orWhere('customer_id', $customer->id)->orderByDesc('starts_at')->get(),
         ]);
     }
 

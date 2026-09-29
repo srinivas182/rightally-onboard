@@ -70,6 +70,8 @@ class EmailTemplateSeeder extends Seeder
                 "Hi {first_name},\n\nCreate a password to sign in to your RightAlly account for {company_name}. There you can see your agreement, invoices and receipts, and update your payment method.\n\n{button:Create my password|{password_link}}\n\nThe link works for 24 hours. If you didn’t ask for this, you can ignore this email.".$sign],
             'customer_reset_password' => ['Reset your account password', 'A client clicks “Forgot password?”', false, 'Reset your RightAlly account password',
                 "Hi {first_name},\n\nWe received a request to reset the password for your RightAlly account ({company_name}).\n\n{button:Choose a new password|{password_link}}\n\nThe link works for 24 hours. If you didn’t ask for this, you can ignore this email; your password stays the same.".$sign],
+            'call_onboarding_link' => ['Onboarding link after a call', 'Sent from Admin > Calls to someone who booked a call', false, 'Set up RightAlly for {company_name}',
+                "Hi {first_name},\n\nThanks for taking the time to talk with us. When you’re ready, you can set up RightAlly for {company_name} here; it takes about 10 minutes.\n\n{button:Start onboarding|{onboarding_link}}\n\nQuestions? Just reply to this email.".$sign],
             'go_live_changed' => ['Go-live date changed', 'An admin moves the go-live date', true, 'Your RightAlly go-live date is now {go_live_date}',
                 "Hi {first_name},\n\nYour go-live date has moved to {go_live_date}. The remaining implementation fee of {balance_amount} will be charged on that date instead.".$sign],
             'balance_reminder' => ['Balance reminder', '3 days before the go-live charge', false, 'You go live on {go_live_date}',

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\Auth\InvitationController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Auth\PasswordResetController;
 use App\Http\Controllers\Admin\Auth\TwoFactorController;
+use App\Http\Controllers\Admin\CallController;
 use App\Http\Controllers\Admin\ContractController;
 use App\Http\Controllers\Admin\ContractTemplateController;
 use App\Http\Controllers\Admin\CouponController;
@@ -116,6 +117,12 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::get('reports/{report}.csv', [ReportController::class, 'export'])->whereIn('report', ['funnel', 'revenue'])->name('reports.export');
     });
 
+    Route::middleware('can:menu.calls')->prefix('calls')->name('calls.')->group(function () {
+        Route::get('/', [CallController::class, 'index'])->name('index');
+        Route::put('{call}', [CallController::class, 'update'])->name('update');
+        Route::post('{call}/onboarding-link', [CallController::class, 'sendOnboardingLink'])->middleware('throttle:20,1')->name('onboarding-link');
+    });
+
     Route::middleware('can:menu.quotes')->prefix('quotes')->name('quotes.')->group(function () {
         Route::get('/', [QuoteController::class, 'index'])->name('index');
         Route::post('/', [QuoteController::class, 'store'])->name('store');
@@ -165,7 +172,7 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::get('settings/signature/image', [SettingsController::class, 'signature'])->name('settings.signature');
         Route::delete('settings/stripe/live', [SettingsController::class, 'clearStripeLive'])->name('settings.stripe.clear-live');
         Route::put('settings/{group}', [SettingsController::class, 'update'])
-            ->whereIn('group', ['company', 'pricing', 'renewal', 'stripe', 'email', 'security', 'alerts', 'tax'])
+            ->whereIn('group', ['company', 'pricing', 'renewal', 'stripe', 'email', 'security', 'alerts', 'calls', 'tax'])
             ->name('settings.update');
     });
 });

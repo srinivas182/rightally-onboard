@@ -138,6 +138,13 @@
                 <div class="col-12"><button class="btn btn-sm btn-outline-primary">Save contact</button></div>
             </form>
         </div></div>
+        @if ($calls->isNotEmpty())
+            <div class="panel mb-3"><div class="panel-h"><h2>Calls</h2></div>
+                @foreach ($calls as $cl)
+                    <div class="px-3 py-2 border-bottom small d-flex justify-content-between gap-2"><span>{{ $cl->starts_at?->setTimezone($tz)->format('M j, Y g:i A') }}@if ($cl->coupon_code) · coupon {{ $cl->coupon_code }}@endif @if ($cl->source) · {{ $cl->source }}@endif</span><span class="st {{ \App\Models\CallBooking::PILLS[$cl->status] ?? 'st-draft' }}">{{ \App\Models\CallBooking::STATUSES[$cl->status] ?? $cl->status }}</span></div>
+                @endforeach
+            </div>
+        @endif
         @unless (\App\Services\Onboarding\ResumeLinks::isIncomplete($customer))
             <div class="panel mb-3"><div class="panel-h"><h2>Client account</h2></div><div class="p-3 p-md-4">
                 <p class="small mb-2">

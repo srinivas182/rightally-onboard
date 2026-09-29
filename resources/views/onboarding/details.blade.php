@@ -6,7 +6,7 @@
 @section('content')
 @php $v = fn (string $key, $fallback = '') => old($key, $customer?->{$key} ?? ($prefill[$key] ?? $fallback)); @endphp
 <p class="step-kicker">{{ __('Step :n of 5', ['n' => 1]) }}</p>
-@unless ($customer)<p class="small mb-2">{{ __('Already started?') }} <a href="{{ route('account.login') }}">{{ __('Get a link to continue where you left off') }}</a></p>@endunless
+@unless ($customer)<p class="small mb-2">{{ __('Already started?') }} <a href="{{ route('account.login') }}">{{ __('Get a link to continue where you left off') }}</a>@if ((string) app(\App\Services\Settings\SettingsService::class)->get('calls', 'enabled') === '1') · {{ __('Not ready yet?') }} <a href="{{ route('book') }}">{{ __('Book a call') }}</a>@endif</p>@endunless
 <h1>{{ $customer ? __('Update your details') : __('Let’s set up your brokerage on RightAlly') }}</h1>
 <p class="lead">{{ __('Tell us who is signing and where your business is based. These details go on your agreement.') }}</p>
 
