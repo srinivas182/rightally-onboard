@@ -21,6 +21,7 @@
 <ul class="nav nav-tabs mb-3">
     <li class="nav-item"><a class="nav-link {{ $tab === 'upcoming' ? 'active' : '' }}" href="{{ route('admin.calls.index', ['tab' => 'upcoming', 'coupon' => $coupon ?: null, 'status' => $status ?: null]) }}">Upcoming</a></li>
     <li class="nav-item"><a class="nav-link {{ $tab === 'past' ? 'active' : '' }}" href="{{ route('admin.calls.index', ['tab' => 'past', 'coupon' => $coupon ?: null, 'status' => $status ?: null]) }}">Past</a></li>
+    <li class="nav-item"><a class="nav-link {{ $tab === 'all' ? 'active' : '' }}" href="{{ route('admin.calls.index', ['tab' => 'all', 'coupon' => $coupon ?: null, 'status' => $status ?: null]) }}">All</a></li>
 </ul>
 <div class="panel">
     <div class="panel-h">

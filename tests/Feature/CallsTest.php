@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\CustomerStatus;
 use App\Models\Admin;
 use App\Models\CallBooking;
+use App\Models\Coupon;
 use App\Models\EmailLog;
 use App\Services\Settings\SettingsService;
 use Database\Seeders\ContractTemplateSeeder;
@@ -111,5 +112,17 @@ class CallsTest extends TestCase
 
         $this->get('/admin/settings')->assertSee('/api/v1/ghl/appointments/sec_123');
         Carbon::setTestNow();
+    }
+
+    public function test_coupons_list_shows_calls_booked_signed_and_onboarded(): void
+    {
+        Coupon::create(['code' => 'NAR2026', 'name' => 'NAR', 'percent_off' => 10, 'is_active' => true, 'times_used' => 2]);
+        $this->postJson($this->hook, $this->payload())->assertOk();
+        $this->postJson($this->hook, $this->payload(['calendar' => ['appointmentId' => 'apt_9', 'status' => 'cancelled'], 'email' => 'c@x.com']))->assertOk();
+        $this->actingAs(Admin::factory()->superAdmin()->withTwoFactor()->create(), 'admin');
+
+        $this->get('/admin/coupons')->assertOk()->assertSee('Calls booked')->assertSee('Onboarded')
+            ->assertSee('calls?coupon=NAR2026&amp;tab=all', false)->assertSee('/book-a-call?coupon=NAR2026', false);
+        $this->get('/admin/calls?coupon=NAR2026&tab=all')->assertOk()->assertSee('James Okafor');
     }
 }

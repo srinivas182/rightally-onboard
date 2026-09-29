@@ -17,13 +17,14 @@ class CallController extends Controller
 {
     public function index(Request $request): View
     {
-        $tab = $request->query('tab') === 'past' ? 'past' : 'upcoming';
+        $tab = in_array($request->query('tab'), ['past', 'all'], true) ? $request->query('tab') : 'upcoming';
         $coupon = strtoupper(trim((string) $request->query('coupon')));
         $status = array_key_exists((string) $request->query('status'), CallBooking::STATUSES) ? (string) $request->query('status') : '';
 
         $calls = CallBooking::with('customer')
             ->when($tab === 'upcoming', fn ($q) => $q->where('starts_at', '>=', now()->subHour())->orderBy('starts_at'))
             ->when($tab === 'past', fn ($q) => $q->where(fn ($w) => $w->where('starts_at', '<', now()->subHour())->orWhereNull('starts_at'))->orderByDesc('starts_at'))
+            ->when($tab === 'all', fn ($q) => $q->orderByDesc('starts_at'))
             ->when($coupon !== '', fn ($q) => $q->where('coupon_code', $coupon))
             ->when($status !== '', fn ($q) => $q->where('status', $status))
             ->paginate(30)->withQueryString();

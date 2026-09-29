@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\CustomerStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CouponRequest;
+use App\Models\CallBooking;
 use App\Models\Coupon;
+use App\Models\Customer;
 use App\Services\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -21,6 +24,12 @@ class CouponController extends Controller
     {
         return view('admin.coupons.index', [
             'coupons' => Coupon::orderByDesc('is_active')->orderByDesc('created_at')->get(),
+            // Calls booked with each code (GoHighLevel calendar) and clients who went on to pay the deposit.
+            'calls' => CallBooking::whereNotNull('coupon_code')->where('status', '!=', 'cancelled')
+                ->selectRaw('coupon_code, count(*) as n')->groupBy('coupon_code')->pluck('n', 'coupon_code'),
+            'onboarded' => Customer::whereNotNull('coupon_id')
+                ->whereNotIn('status', [CustomerStatus::Draft, CustomerStatus::ContractSigned])
+                ->selectRaw('coupon_id, count(*) as n')->groupBy('coupon_id')->pluck('n', 'coupon_id'),
         ]);
     }
 

@@ -25,7 +25,7 @@
         </div>
     @else
     <div class="table-responsive"><table class="table">
-        <thead><tr><th>Code</th><th>Name</th><th class="text-end">Discount</th><th>Expires</th><th class="text-end">Used</th><th>Share link</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+        <thead><tr><th>Code</th><th>Name</th><th class="text-end">Discount</th><th>Expires</th><th class="text-end" title="Calls booked with this code (not counting cancelled)">Calls booked</th><th class="text-end" title="Agreements signed with this code">Signed</th><th class="text-end" title="Paid the deposit">Onboarded</th><th>Share link</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody>
         @foreach ($coupons as $c)
             @php [$label, $pill] = $status($c); $link = $onboardUrl.'/?coupon='.$c->code; @endphp
@@ -34,15 +34,18 @@
                 <td>{{ $c->name }}</td>
                 <td class="text-end num">{{ rtrim(rtrim((string) $c->percent_off, '0'), '.') }}%</td>
                 <td class="small">{{ $c->expires_on?->format('M j, Y') ?? 'Never' }}</td>
+                <td class="text-end num">@if ($calls[$c->code] ?? 0)<a href="{{ route('admin.calls.index', ['coupon' => $c->code, 'tab' => 'all']) }}">{{ $calls[$c->code] }}</a>@else 0 @endif</td>
                 <td class="text-end num">{{ $c->times_used }}{{ $c->max_uses ? ' / '.$c->max_uses : '' }}</td>
-                <td><button type="button" class="btn btn-link btn-sm p-0" data-copy="{{ $link }}" title="{{ $link }}">Copy link</button></td>
+                <td class="text-end num">{{ $onboarded[$c->id] ?? 0 }}</td>
+                <td class="text-nowrap"><button type="button" class="btn btn-link btn-sm p-0" data-copy="{{ $link }}" title="{{ $link }}">Onboarding link</button><br>
+                    <button type="button" class="btn btn-link btn-sm p-0" data-copy="{{ route('book', ['coupon' => $c->code]) }}" title="{{ route('book', ['coupon' => $c->code]) }}">Book-a-call link</button></td>
                 <td><span class="st {{ $pill }}">{{ $label }}</span></td>
                 <td class="text-end"><button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#coupon{{ $c->id }}">Edit</button></td>
             </tr>
         @endforeach
         </tbody>
     </table></div>
-    <div class="p-3 small text-slate border-top">Used codes can’t be renamed, because signed agreements refer to them. Switch a coupon off instead of deleting it.</div>
+    <div class="p-3 small text-slate border-top"><b>Calls booked</b>: calls booked on the calendar with this code (cancelled calls not counted). <b>Signed</b>: agreements signed with it; this is what the usage limit counts. <b>Onboarded</b>: of those, clients who paid the deposit. Used codes can’t be renamed, because signed agreements refer to them. Switch a coupon off instead of deleting it.</div>
     @endif
 </div>
 
