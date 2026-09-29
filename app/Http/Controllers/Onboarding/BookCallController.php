@@ -30,7 +30,24 @@ class BookCallController extends Controller
             'src' => 'https://api.leadconnectorhq.com/widget/booking/'.$calendarId.($params ? '?'.http_build_query($params) : ''),
             'frameId' => $calendarId.'_rightally',
             'coupon' => $coupon,
+            'referrer' => self::referrer($coupon),
         ]);
+    }
+
+    /**
+     * Coupon codes named after a person read as a referral: CHRISTOPHER-JONES -> "Christopher Jones".
+     * Other codes (e.g. NAR2026) are shown as they are.
+     */
+    public static function referrer(string $coupon): ?string
+    {
+        if ($coupon === '') {
+            return null;
+        }
+        if (preg_match('/^[A-Z]+([-_ ][A-Z]+)+$/', $coupon)) {
+            return ucwords(strtolower(str_replace(['-', '_'], ' ', $coupon)));
+        }
+
+        return $coupon;
     }
 
     public function thanks(Request $request): View

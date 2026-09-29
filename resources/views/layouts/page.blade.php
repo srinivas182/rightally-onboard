@@ -14,10 +14,15 @@
 <body class="bg-surface">
 <a class="skip-link" href="#main">Skip to main content</a>
 @include('partials.icons')
+@hasSection('brand-center')
+    {{-- Landing-style header: large logo, centred, on navy --}}
+    <header class="brand-hero"><a href="{{ url('/') }}"><img src="{{ asset('brand/logo-white.png') }}" alt="RightAlly"></a></header>
+@else
 <header class="border-bottom"><div class="container py-3 d-flex justify-content-between align-items-center" style="max-width:860px">
     <a href="{{ url('/') }}"><img src="{{ asset('brand/logo.png') }}" alt="RightAlly" style="height:28px"></a>
     @yield('header-right')
 </div></header>
+@endif
 <main id="main" tabindex="-1" class="container py-4 py-md-5" style="max-width:860px">
     @include('partials.flash', ['hideErrorSummary' => View::hasSection('field-errors-only')])
     @yield('content')

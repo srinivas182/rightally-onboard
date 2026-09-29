@@ -1,5 +1,6 @@
 @extends('layouts.page')
 @section('title', __('Your call is booked'))
+@section('brand-center', '1')
 @section('content')
 <div class="text-center mx-auto" style="max-width:560px">
     <div class="d-inline-grid rounded-circle mb-3" style="width:64px;height:64px;place-items:center;background:rgba(14,143,99,.12);color:var(--bs-success)">

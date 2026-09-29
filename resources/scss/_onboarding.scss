@@ -107,3 +107,9 @@
 }
 // Phones: keep the footer clear of the fixed "Due today" bar.
 @media (max-width: 991.98px) { .site-foot-dark { padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px)) !important; } }
+
+// Book-a-call header: large centred white logo on navy.
+.brand-hero { background: var(--ra-navy); text-align: center; padding: 1.75rem 1rem; }
+.brand-hero img { height: 44px; width: auto; }
+@media (min-width: 768px) { .brand-hero { padding: 2.25rem 1rem; } .brand-hero img { height: 56px; } }
+.referred { display: inline-block; background: #E3F5EE; color: #0B6B4A; border: 1px solid #B9E4D2; border-radius: 999px; padding: .4rem 1rem; font-weight: 600; }

@@ -48,7 +48,7 @@ class CallsTest extends TestCase
         $this->get('/book-a-call?coupon=nar2026&utm_campaign=fall')->assertOk()
             ->assertSee('api.leadconnectorhq.com/widget/booking/epg292VHDOxISDnnRa4m?', false)
             ->assertSee('coupon_code=NAR2026', false)->assertSee('utm_campaign=fall', false)
-            ->assertSee('Coupon NAR2026 will be kept for you')
+            ->assertSee('You were referred by NAR2026')
             ->assertHeader('Content-Security-Policy');
         $csp = $this->get('/book-a-call')->headers->get('Content-Security-Policy');
         $this->assertStringContainsString('https://link.msgsndr.com', $csp);
@@ -58,6 +58,7 @@ class CallsTest extends TestCase
         $this->get('/?coupon=SPRING');
         $this->get('/book-a-call')->assertSee('coupon_code=SPRING', false);
         $this->get('/')->assertSee('Book a call');
+        $this->get('/book-a-call?coupon=christopher-jones')->assertSee('You were referred by Christopher Jones')->assertSee('coupon_code=CHRISTOPHER-JONES', false)->assertSee('brand/logo-white.png');
     }
 
     public function test_webhook_records_the_booking_and_later_status_changes(): void
