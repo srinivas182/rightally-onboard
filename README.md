@@ -1,7 +1,7 @@
 # RightAlly Onboarding
 
 Client onboarding, electronic agreement signing and Stripe billing for RightAlly
-(Mayura Consultancy Services LLC d/b/a RightAlly).
+(Global MLM Software LLC d/b/a RightAlly).
 
 **Stack:** Laravel 13, PHP 8.3, MySQL 8, Bootstrap 5.3 (Sass, Vite), Stripe, Brevo.
 

@@ -94,7 +94,7 @@ trait FakesBilling
             'deposit_percent' => 10, 'deposit_cents' => 25500, 'balance_cents' => 229500,
             'platform_fee_cents' => 50000, 'per_agent_fee_cents' => 2000, 'min_agents' => 5, 'agent_count' => $agents,
             'term_months' => 12, 'starts_on' => $goLive, 'ends_on' => Carbon::parse($goLive)->addMonthsNoOverflow(12)->subDay()->toDateString(),
-            'company_legal_name' => 'Mayura Consultancy Services LLC', 'company_dba' => 'RightAlly', 'company_address' => '66 West Flagler Street, Suite 900, Miami, FL 33130',
+            'company_legal_name' => 'Global MLM Software LLC', 'company_dba' => 'RightAlly', 'company_address' => '66 West Flagler Street, Suite 900, Miami, FL 33130',
             'company_signatory_name' => 'Srini', 'company_signatory_title' => 'Co-Founder', 'client_typed_name' => 'Maria Alvarez', 'client_title' => 'Managing Broker',
             'rendered_html' => '<p>Terms</p>',
         ]);

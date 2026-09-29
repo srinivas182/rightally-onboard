@@ -61,7 +61,7 @@ class ClientExperienceTest extends TestCase
 
     public function test_privacy_and_terms_are_public_filled_from_settings_and_linked(): void
     {
-        $this->get('/privacy')->assertOk()->assertSee('Privacy Policy')->assertSee('Mayura Consultancy Services LLC')->assertSee('support@rightally.io')->assertDontSee('{{ company_legal_name }}', false);
+        $this->get('/privacy')->assertOk()->assertSee('Privacy Policy')->assertSee('Global MLM Software LLC')->assertSee('support@rightally.io')->assertDontSee('{{ company_legal_name }}', false);
         $this->get('/terms')->assertOk()->assertSee('Fla. Stat. § 668.50');
         $this->get('/')->assertSee(route('legal', 'terms'))->assertSee(route('legal', 'privacy'));
     }

@@ -67,7 +67,7 @@ class DemoSeeder extends Seeder
                 'setup_fee_cents' => 300000, 'discount_percent' => 0, 'discount_cents' => 0, 'implementation_fee_cents' => 300000,
                 'deposit_percent' => 10, 'deposit_cents' => 30000, 'balance_cents' => 270000, 'platform_fee_cents' => 50000, 'per_agent_fee_cents' => 2000,
                 'min_agents' => 5, 'agent_count' => $agents, 'term_months' => 12, 'starts_on' => $goLive->toDateString(), 'ends_on' => $goLive->copy()->addYear()->subDay()->toDateString(),
-                'company_legal_name' => 'Mayura Consultancy Services LLC', 'company_dba' => 'RightAlly', 'company_address' => '66 West Flagler Street, Suite 900, Miami, FL 33130',
+                'company_legal_name' => 'Global MLM Software LLC', 'company_dba' => 'RightAlly', 'company_address' => '66 West Flagler Street, Suite 900, Miami, FL 33130',
                 'company_signatory_name' => 'Srini', 'company_signatory_title' => 'Co-Founder', 'client_typed_name' => "{$first} {$last}", 'client_title' => 'Broker/Owner',
                 'rendered_html' => '<p>Sample agreement for staging.</p>', 'signer_ip' => '203.0.113.'.(10 + $n), 'esign_consent_at' => $goLive->copy()->subDays(30),
             ]);

@@ -28,8 +28,8 @@ class SettingsTest extends TestCase
         $settings = app(SettingsService::class);
 
         $this->assertSame('3000.00', $settings->get('pricing', 'setup_fee'));
-        $this->assertSame('Mayura Consultancy Services LLC', $settings->get('company', 'legal_name'));
-        $this->get('/admin/settings')->assertOk()->assertSee('Mayura Consultancy Services LLC');
+        $this->assertSame('Global MLM Software LLC', $settings->get('company', 'legal_name'));
+        $this->get('/admin/settings')->assertOk()->assertSee('Global MLM Software LLC');
     }
 
     public function test_stripe_secret_is_encrypted_at_rest_and_never_shown(): void

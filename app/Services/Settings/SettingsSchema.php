@@ -17,7 +17,7 @@ final class SettingsSchema
             'company' => [
                 'label' => 'Company',
                 'fields' => [
-                    'legal_name' => ['default' => 'Mayura Consultancy Services LLC', 'rules' => ['required', 'string', 'max:160']],
+                    'legal_name' => ['default' => 'Global MLM Software LLC', 'rules' => ['required', 'string', 'max:160']],
                     'dba' => ['default' => 'RightAlly', 'rules' => ['nullable', 'string', 'max:120']],
                     'address' => ['default' => '66 West Flagler Street, Suite 900, Miami, FL 33130', 'rules' => ['required', 'string', 'max:255']],
                     'phone' => ['default' => null, 'rules' => ['nullable', 'string', 'max:30']],
