@@ -1,1 +1,1 @@
-@include('errors.layout', ['code' => 500, 'title' => 'Something went wrong on our side', 'message' => 'We’ve been notified. Please try again in a few minutes. If it keeps happening, email support@rightally.io.'])
+@include('errors.layout', ['code' => 500, 'title' => 'Something went wrong on our side', 'message' => 'We’ve been notified. Please try again in a few minutes. If it keeps happening, email info@rightally.io.'])

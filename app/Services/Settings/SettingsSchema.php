@@ -21,7 +21,7 @@ final class SettingsSchema
                     'dba' => ['default' => 'RightAlly', 'rules' => ['nullable', 'string', 'max:120']],
                     'address' => ['default' => '66 West Flagler Street, Suite 900, Miami, FL 33130', 'rules' => ['required', 'string', 'max:255']],
                     'phone' => ['default' => null, 'rules' => ['nullable', 'string', 'max:30']],
-                    'support_email' => ['default' => 'support@rightally.io', 'rules' => ['required', 'email', 'max:160']],
+                    'support_email' => ['default' => 'info@rightally.io', 'rules' => ['required', 'email', 'max:160']],
                 ],
             ],
             'pricing' => [
