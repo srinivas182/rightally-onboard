@@ -218,7 +218,7 @@ final class DepositService
         return $invoice;
     }
 
-    private function ensureStripeCustomer(Customer $customer): string
+    public function ensureStripeCustomer(Customer $customer): string
     {
         if ($customer->stripe_customer_id) {
             return $customer->stripe_customer_id;

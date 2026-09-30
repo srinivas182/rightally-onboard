@@ -23,7 +23,7 @@ class Quote extends Model
 
     protected function casts(): array
     {
-        return ['deposit_percent' => 'decimal:2', 'expires_at' => 'datetime', 'voided_at' => 'datetime', 'used_at' => 'datetime'];
+        return ['deposit_percent' => 'decimal:2', 'expires_at' => 'datetime', 'voided_at' => 'datetime', 'used_at' => 'datetime', 'is_existing_client' => 'boolean', 'first_charge_on' => 'date'];
     }
 
     public function isUsable(): bool

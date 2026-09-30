@@ -44,7 +44,7 @@ final class OnboardingService
                 'quote_id' => $custom?->id,
             ]);
 
-            $this->createDraftContract($customer, $quote);
+            $this->createDraftContract($customer, $quote, $custom);
 
             return $customer;
         });
@@ -62,7 +62,7 @@ final class OnboardingService
             $custom = $customer->quote_id ? \App\Models\Quote::find($customer->quote_id) : null;
             $quote = $this->quotes->quote((int) $details['agents'], $custom ? null : $coupon, $custom, (string) ($details['billing'] ?? 'month'));
             $customer->update($this->customerAttributes($details, $quote));
-            $contract->update($this->snapshot($quote) + ['contract_template_id' => $this->activeTemplate()->id]);
+            $contract->update($this->snapshot($quote) + $this->kind($custom));
 
             return $customer->fresh();
         });
@@ -75,22 +75,40 @@ final class OnboardingService
 
     public function currentContract(Customer $customer): ?Contract
     {
-        return $customer->contracts()->where('type', ContractType::Initial)->latest('id')->first();
+        return $customer->contracts()->whereIn('type', [ContractType::Initial, ContractType::Existing])->latest('id')->first();
     }
 
-    public function activeTemplate(): ContractTemplate
+    public function activeTemplate(ContractType $type = ContractType::Initial): ContractTemplate
     {
-        return ContractTemplate::where('type', ContractType::Initial)->where('is_active', true)->whereNotNull('published_at')->latest('published_at')->first()
+        return ContractTemplate::where('type', $type)->where('is_active', true)->whereNotNull('published_at')->latest('published_at')->first()
             ?? throw new RuntimeException('No published agreement template. Publish one in Contracts > Templates.');
     }
 
-    private function createDraftContract(Customer $customer, Quote $quote): Contract
+    /**
+     * Agreement type, template and term: existing clients (custom quote marked "existing client")
+     * get the subscription-only agreement with their own term and first charge date.
+     *
+     * @return array<string, mixed>
+     */
+    private function kind(?\App\Models\Quote $custom): array
     {
-        $contract = Contract::create($this->snapshot($quote) + [
+        if ($custom?->is_existing_client) {
+            return [
+                'type' => ContractType::Existing,
+                'contract_template_id' => $this->activeTemplate(ContractType::Existing)->id,
+                'term_months' => (int) ($custom->term_months ?? 12),
+                'first_charge_on' => $custom->first_charge_on?->toDateString(),
+            ];
+        }
+
+        return ['type' => ContractType::Initial, 'contract_template_id' => $this->activeTemplate()->id, 'term_months' => 12, 'first_charge_on' => null];
+    }
+
+    private function createDraftContract(Customer $customer, Quote $quote, ?\App\Models\Quote $custom = null): Contract
+    {
+        $contract = Contract::create($this->snapshot($quote) + $this->kind($custom) + [
             'number' => 'TMP-'.Str::random(12),
             'customer_id' => $customer->id,
-            'contract_template_id' => $this->activeTemplate()->id,
-            'type' => ContractType::Initial,
             'status' => ContractStatus::Draft,
         ]);
         // Numbers come from the row id so two sign-ups can never collide.
@@ -119,7 +137,6 @@ final class OnboardingService
             'per_agent_fee_cents' => $quote->perAgentFeeCents,
             'min_agents' => $quote->minAgents,
             'agent_count' => $quote->agentsBilled,
-            'term_months' => 12,
             'go_live_days' => $quote->goLiveDays,
             'billing_interval' => $quote->billingInterval,
             'annual_discount_percent' => $quote->billingInterval === 'year' ? $quote->annualDiscountPercent : 0,

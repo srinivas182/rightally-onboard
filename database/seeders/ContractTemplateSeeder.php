@@ -17,6 +17,7 @@ class ContractTemplateSeeder extends Seeder
     {
         $this->seed(ContractType::Initial, 'RightAlly Platform Subscription and Implementation Agreement', 'initial-agreement-v1.html');
         $this->seed(ContractType::Renewal, 'RightAlly Renewal Agreement', 'renewal-agreement-v1.html');
+        $this->seed(ContractType::Existing, 'RightAlly Platform Subscription Agreement (existing clients)', 'existing-client-agreement-v1.html');
     }
 
     private function seed(ContractType $type, string $title, string $file): void

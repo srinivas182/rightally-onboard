@@ -22,6 +22,7 @@ final class SampleEmailValues
             'signer_name' => 'Robert Alvarez', 'requested_by' => 'Maria Alvarez', 'signing_link' => url('/'),
             'alert_title' => 'New signing: Sunline Realty Group', 'alert_text' => 'Maria Alvarez (Miami, FL) signed for 8 agents. Source: NAR2026 link.', 'alert_link' => url('/admin'),
             'refund_amount' => '$120.00', 'refund_reason' => 'Billed for 6 extra agents in error', 'credit_amount' => '$100.00', 'credit_reason' => 'Downtime on Oct 3', 'pause_until' => 'January 15, 2027',
+            'first_charge_date' => 'November 1, 2026', 'service_end_date' => 'October 31, 2026', 'end_charges' => 'No further charges will be made after that date.', 'book_call_link' => url('/book-a-call'),
             'onboarding_link' => url('/?coupon=NAR2026'), 'password_link' => url('/account'), 'link_days' => '90', 'resume_link' => url('/'), 'next_step' => 'review and sign your agreement',
             'login_code' => '482913', 'code_minutes' => '10',
             'fee_table' => [['Paid today', '$255.00'], ['Due on go-live, Oct 23, 2026', '$2,295.00'], ['Monthly from Nov 22, 2026', '$660.00']],

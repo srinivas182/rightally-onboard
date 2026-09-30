@@ -52,6 +52,9 @@ final class ContractRenderer
         'previous_agreement_number' => 'Agreement being renewed (renewals)',
         'fee_table' => 'The fee summary table',
         'billing_terms' => 'Annual billing paragraph (empty for monthly billing)',
+        'first_charge_date' => 'Existing clients: date of the first subscription charge under this agreement',
+        'term_clause' => 'Existing clients: the term (fixed months, or month to month)',
+        'termination_clause' => 'Existing clients: how the subscription can end (depends on the term)',
     ];
 
     public function __construct(private readonly SettingsService $settings) {}
@@ -105,6 +108,13 @@ final class ContractRenderer
             'agent_count' => (string) $contract->agent_count,
             'monthly_fee' => Money::format($contract->monthlyFeeCents()),
             'annual_discount' => rtrim(rtrim(number_format((float) $contract->annual_discount_percent, 2), '0'), '.'),
+            'first_charge_date' => $contract->first_charge_on ? Carbon::parse($contract->first_charge_on)->format('F j, Y') : '',
+            'term_clause' => $contract->term_months > 0
+                ? 'This Agreement has a minimum term of '.$contract->term_months.' months starting on the First Charge Date (the “Minimum Term”). It does not renew automatically; RightAlly will offer a renewal agreement at least forty-five (45) days before the Minimum Term ends. If Client does not sign it, this Agreement expires at the end of the Minimum Term.'
+                : 'This Agreement continues month to month from the First Charge Date. Either party may end it with written notice (email is enough); the Subscription Services then end at the end of the billing period in which notice is given, and no further Subscription Fees are charged.',
+            'termination_clause' => $contract->term_months > 0
+                ? 'Client commits to the full Minimum Term. If Client terminates before the end of the Minimum Term, or RightAlly terminates for Client’s material breach (including non-payment), all Subscription Fees for the rest of the Minimum Term become immediately due, calculated at the agent count at the time of termination. RightAlly may, at its discretion, agree to end the Subscription Services earlier without that charge.'
+                : 'Either party may end the Subscription Services as described in Section 4. RightAlly may also end them for Client’s material breach (including non-payment). Fees already charged are not refunded.',
             'billing_terms' => $contract->isAnnual()
                 ? 'Client has chosen annual billing. Instead of monthly charges, the Subscription Fee for each twelve (12) month period is charged in advance, less a '
                     .rtrim(rtrim(number_format((float) $contract->annual_discount_percent, 2), '0'), '.').'% discount ('.Money::format($contract->annualFeeCents()).' at '.max($contract->min_agents, $contract->agent_count).' agents), with the first annual charge thirty (30) days after the Go-Live Date. The agent count on each annual billing date applies for that year. Annual Subscription Fees are non-refundable.'
@@ -120,6 +130,21 @@ final class ContractRenderer
     public function feeTableHtml(Contract $contract): string
     {
         $v = $this->values($contract);
+        if ($contract->type === ContractType::Existing) {
+            $rows = [
+                ['Set-up / implementation fee', 'None'],
+                ['First charge date', $v['first_charge_date']],
+                ['Term', $contract->term_months > 0 ? $contract->term_months.' months' : 'Month to month'],
+                ['Platform fee per month', $v['platform_fee']],
+                ["Per agent per month (minimum {$v['min_agents']})", $v['per_agent_fee']],
+                ["<b>Monthly fee at {$v['agent_count']} agents</b>", '<b>'.e($v['monthly_fee']).'</b>'],
+            ];
+            if ($contract->isAnnual()) {
+                $rows[] = ["<b>Billed yearly in advance ({$v['annual_discount']}% discount)</b>", '<b>'.e(Money::format($contract->annualFeeCents())).' a year</b>'];
+            }
+
+            return $this->feeRows('Fee summary', $rows);
+        }
         if ($contract->type === ContractType::Renewal) {
             $rows = [
                 ['Renewal term', "{$v['term_start_date']} to {$v['term_end_date']}"],

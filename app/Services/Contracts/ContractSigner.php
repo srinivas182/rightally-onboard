@@ -49,7 +49,14 @@ final class ContractSigner
 
             $isRenewal = $contract->type === ContractType::Renewal;
             // Renewals keep the term dates set when they were offered; new agreements start at the target go-live date.
-            $goLive = $isRenewal ? $contract->starts_on->copy() : BusinessClock::today()->addDays((int) ($contract->go_live_days ?? $this->settings->get('pricing', 'go_live_days')));
+            $goLive = match (true) {
+                $isRenewal => $contract->starts_on->copy(),
+                $contract->type === ContractType::Existing => BusinessClock::today(), // already live
+                default => BusinessClock::today()->addDays((int) ($contract->go_live_days ?? $this->settings->get('pricing', 'go_live_days'))),
+            };
+            // Existing clients are already live: the term runs from their first charge date.
+            $isExisting = $contract->type === ContractType::Existing;
+            $termStart = $isExisting ? ($contract->first_charge_on?->copy() ?? BusinessClock::today()) : $goLive;
             $now = now();
 
             $contract->forceFill([
@@ -63,8 +70,9 @@ final class ContractSigner
                 'signed_at' => $now,
                 'signer_ip' => $ip,
                 'signer_user_agent' => $userAgent ? substr($userAgent, 0, 1000) : null,
-                'starts_on' => $goLive->toDateString(),
-                'ends_on' => $goLive->copy()->addMonthsNoOverflow($contract->term_months)->subDay()->toDateString(),
+                'starts_on' => $termStart->toDateString(),
+                // Month-to-month (existing clients with term 0) has no end date.
+                'ends_on' => $contract->term_months > 0 ? $termStart->copy()->addMonthsNoOverflow($contract->term_months)->subDay()->toDateString() : null,
             ]);
             $contract->setRelation('customer', $customer);
 

@@ -38,6 +38,7 @@ class Contract extends Model
             'esign_consent_at' => 'datetime',
             'signed_at' => 'datetime',
             'signature_requested_at' => 'datetime',
+            'first_charge_on' => 'date',
         ];
     }
 

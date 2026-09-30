@@ -38,6 +38,8 @@ Route::prefix('onboard/{customer}')->name('onboarding.')->middleware('onboarding
     Route::get('schedule', [OnboardingController::class, 'schedule'])->name('schedule');
     Route::get('payment', [OnboardingController::class, 'payment'])->middleware('throttle:onboarding')->name('payment');
     Route::get('payment/return', [OnboardingController::class, 'paymentReturn'])->name('payment.return');
+    Route::post('existing/activate', [OnboardingController::class, 'existingActivate'])->middleware('throttle:onboarding')->name('existing.activate');
+    Route::get('existing/return', [OnboardingController::class, 'existingReturn'])->name('existing.return');
     Route::get('done', [OnboardingController::class, 'done'])->name('done');
 });
 

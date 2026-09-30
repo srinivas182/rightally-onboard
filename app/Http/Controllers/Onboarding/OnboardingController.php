@@ -257,6 +257,9 @@ class OnboardingController extends Controller
         if (! $contract) {
             return redirect()->route('onboarding.agreement', $customer);
         }
+        if (\App\Services\Onboarding\ExistingClientActivation::isExisting($contract)) {
+            return $this->existingPayment($customer, $contract);
+        }
         $existing = $this->depositInvoice($customer);
         if ($existing && in_array($existing->status, [InvoiceStatus::Paid, InvoiceStatus::Processing], true)) {
             return redirect()->route('onboarding.done', $customer);
@@ -313,12 +316,90 @@ class OnboardingController extends Controller
     public function done(Customer $customer): View|RedirectResponse
     {
         $contract = $this->signedContractOrNull($customer);
+        if (\App\Services\Onboarding\ExistingClientActivation::isExisting($contract)) {
+            return $customer->status === \App\Enums\CustomerStatus::Live
+                ? view('onboarding.done-existing', ['customer' => $customer, 'contract' => $contract, 'step' => 5] + $this->ledger($contract))
+                : redirect()->route('onboarding.payment', $customer);
+        }
         $invoice = $this->depositInvoice($customer);
         if (! $contract || ! $invoice || ! in_array($invoice->status, [InvoiceStatus::Paid, InvoiceStatus::Processing], true)) {
             return redirect()->route('onboarding.payment', $customer);
         }
 
         return view('onboarding.done', ['customer' => $customer, 'contract' => $contract, 'invoice' => $invoice, 'step' => 5] + $this->ledger($contract));
+    }
+
+    // ---- Existing clients: confirm the payment method on file; nothing charged today ----
+
+    private function existingPayment(Customer $customer, \App\Models\Contract $contract): View|RedirectResponse
+    {
+        if ($customer->status === \App\Enums\CustomerStatus::Live) {
+            return redirect()->route('onboarding.done', $customer);
+        }
+        $activation = app(\App\Services\Onboarding\ExistingClientActivation::class);
+        $stripe = app(StripeClient::class);
+        $saved = null;
+        $clientSecret = null;
+        $error = null;
+        if (! $stripe->isConfigured()) {
+            $error = __('Online payments aren’t switched on yet. Please contact us to finish.');
+        } else {
+            try {
+                $saved = request()->boolean('new') ? null : $activation->savedMethod($customer);
+                if (! $saved) {
+                    $clientSecret = $activation->setupIntent($customer->fresh());
+                }
+            } catch (StripeException $e) {
+                report($e);
+                $error = $e->userMessage ?? __('We couldn’t load your payment details. Please try again in a minute.');
+            }
+        }
+
+        return view('onboarding.payment-existing', [
+            'customer' => $customer, 'contract' => $contract, 'step' => 4,
+            'savedLabel' => $saved ? $activation->label($saved) : null,
+            'clientSecret' => $clientSecret, 'publishableKey' => $stripe->publishableKey(), 'paymentError' => $error,
+        ] + $this->ledger($contract));
+    }
+
+    public function existingActivate(Customer $customer): RedirectResponse
+    {
+        $contract = $this->signedContractOrNull($customer);
+        abort_unless(\App\Services\Onboarding\ExistingClientActivation::isExisting($contract), 404);
+        $activation = app(\App\Services\Onboarding\ExistingClientActivation::class);
+        $saved = $activation->savedMethod($customer);
+        if (! $saved) {
+            return redirect()->route('onboarding.payment', $customer);
+        }
+        $activation->activate($customer, $contract, $saved);
+
+        return redirect()->route('onboarding.done', $customer);
+    }
+
+    public function existingReturn(Request $request, Customer $customer, StripeClient $stripe): RedirectResponse
+    {
+        $contract = $this->signedContractOrNull($customer);
+        abort_unless(\App\Services\Onboarding\ExistingClientActivation::isExisting($contract), 404);
+        try {
+            $si = $stripe->get('setup_intents/'.(string) $request->query('setup_intent'), ['expand' => ['payment_method']]);
+        } catch (StripeException $e) {
+            report($e);
+
+            return redirect()->route('onboarding.payment', $customer)->with('warning', __('We couldn’t confirm your payment method. Please try again.'));
+        }
+        if (($si['customer'] ?? null) !== $customer->stripe_customer_id) {
+            abort(403);
+        }
+        if (($si['status'] ?? '') === 'succeeded' && is_array($si['payment_method'] ?? null)) {
+            app(\App\Services\Onboarding\ExistingClientActivation::class)->activate($customer, $contract, $si['payment_method']);
+
+            return redirect()->route('onboarding.done', $customer);
+        }
+        if (($si['status'] ?? '') === 'processing') {
+            return redirect()->route('onboarding.payment', $customer)->with('status', __('Your bank account is being verified. We’ll finish as soon as your bank confirms.'));
+        }
+
+        return redirect()->route('onboarding.payment', ['customer' => $customer, 'new' => 1])->with('warning', $si['last_setup_error']['message'] ?? __('That didn’t go through. Please try again.'));
     }
 
     private function depositInvoice(Customer $customer): ?Invoice

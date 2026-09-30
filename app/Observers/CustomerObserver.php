@@ -33,7 +33,7 @@ class CustomerObserver
         $event = match (true) {
             $to === S::ContractSigned && $from === S::Draft => 'customer.signed',
             $to === S::AwaitingGoLive && $from === S::ContractSigned => 'customer.deposit_paid',
-            $to === S::Live && in_array($from, [S::AwaitingGoLive, S::BalanceFailed], true) => 'customer.live',
+            $to === S::Live && in_array($from, [S::AwaitingGoLive, S::BalanceFailed, S::ContractSigned], true) => 'customer.live', // ContractSigned: existing clients
             in_array($to, [S::PaymentFailed, S::BalanceFailed], true) => 'payment.failed',
             $to === S::Suspended => 'customer.suspended',
             $to === S::Paused => 'customer.paused',

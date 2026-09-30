@@ -33,10 +33,11 @@ final class SubscriptionService
         $sub = $this->stripe->post('subscriptions', array_filter([
             'customer' => $customer->stripe_customer_id,
             'default_payment_method' => $customer->stripe_payment_method_id,
-            'items' => [
-                ['price' => $platformPrice, 'quantity' => 1],
+            'items' => array_values(array_filter([
+                // No platform line when the platform fee is $0 (e.g. existing clients who only pay per agent).
+                $contract->platform_fee_cents > 0 ? ['price' => $platformPrice, 'quantity' => 1] : null,
                 ['price' => $agentPrice, 'quantity' => max($contract->min_agents, $customer->agent_count)],
-            ],
+            ])),
             // Trial until the first charge date: nothing is billed before go-live + 30 days.
             'trial_end' => $firstCharge->isFuture() ? $firstCharge->getTimestamp() : null,
             'proration_behavior' => 'none',
@@ -87,6 +88,12 @@ final class SubscriptionService
     /** 30 days after the go-live date, 9:00 AM Miami time. */
     public function firstChargeAt(Customer $customer): Carbon
     {
+        // Existing clients: the first charge date on their agreement.
+        $first = $customer->contracts()->where('status', \App\Enums\ContractStatus::Signed)->latest('signed_at')->value('first_charge_on');
+        if ($first) {
+            return Carbon::parse(Carbon::parse($first)->toDateString().' 09:00', BusinessClock::timezone());
+        }
+
         return Carbon::parse($customer->go_live_date->toDateString().' 09:00', BusinessClock::timezone())->addDays(30);
     }
 
