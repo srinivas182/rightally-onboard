@@ -93,6 +93,7 @@ class ExistingAndEndingTest extends TestCase
         Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/v1/subscriptions') && count($r['items']) === 1 // no $0 platform line
             && (int) $r['trial_end'] === Carbon::parse('2026-10-15 09:00', 'America/New_York')->getTimestamp());
         $this->assertSame(0, Invoice::count()); // nothing charged today
+        $this->assertDatabaseHas('activity_logs', ['action' => 'customer.old_subscription_stopped']);
         $this->assertSame(1, EmailLog::where('template_key', 'existing_client_welcome')->count());
         $this->get("/onboard/{$customer->uuid}/done")->assertSee('You’re all set');
     }

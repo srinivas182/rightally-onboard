@@ -101,9 +101,17 @@ final class ExistingClientActivation
                 }
                 if (($old['status'] ?? '') !== 'canceled') {
                     $this->stripe->post('subscriptions/'.$oldSub, ['cancel_at_period_end' => 'true', 'metadata' => ['replaced_by' => 'rightally-onboard']]);
+                    $this->audit->log('customer.old_subscription_stopped', "Old Stripe subscription {$oldSub} for {$customer->company_name} set to stop at the end of its paid period", $customer, null, 'system');
                 }
             } catch (Throwable $e) {
-                report($e); // flagged on the customer page: check the old subscription in Stripe
+                report($e);
+                // Tell the team so the old subscription is stopped by hand; the new one still starts.
+                $this->email->toTeam('team_alert', [
+                    'alert_title' => "Check old Stripe subscription: {$customer->company_name}",
+                    'alert_text' => "{$customer->company_name} moved to their new agreement, but the old subscription {$oldSub} couldn’t be set to stop automatically ({$e->getMessage()}). In Stripe, open it and choose Cancel subscription > At end of current period, so they aren’t charged twice.",
+                    'alert_link' => route('admin.customers.show', $customer),
+                ]);
+                $this->audit->log('customer.old_subscription_not_stopped', "Old Stripe subscription {$oldSub} for {$customer->company_name} could not be stopped automatically", $customer, ['error' => $e->getMessage()], 'system');
             }
         }
 

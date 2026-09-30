@@ -180,6 +180,7 @@
                     <dt class="col-5 fw-normal text-slate">Monthly</dt><dd class="col-7">{{ $m($contract->platform_fee_cents) }} + {{ $m($contract->per_agent_fee_cents) }} × {{ $customer->agent_count }} = <b>{{ $m($contract->monthlyFeeCents($customer->agent_count)) }}</b></dd>
                     @if ($contract->isAnnual())<dt class="col-5 fw-normal text-slate">Billing</dt><dd class="col-7"><b>Yearly</b>, {{ $m($contract->annualFeeCents($customer->agent_count)) }} a year ({{ rtrim(rtrim((string) $contract->annual_discount_percent, '0'), '.') }}% off)</dd>@endif
                     <dt class="col-5 fw-normal text-slate">Payment method</dt><dd class="col-7">{{ $customer->payment_method_label ?? '—' }}</dd>
+                    @if ($customer->old_stripe_subscription_id)<dt class="col-5 fw-normal text-slate">Old subscription</dt><dd class="col-7 small"><span class="font-monospace">{{ $customer->old_stripe_subscription_id }}</span><div class="text-slate">Set to stop at the end of its paid period (see Activity).</div></dd>@endif
                     @if ($customer->stripe_customer_id)<dt class="col-5 fw-normal text-slate">Stripe</dt><dd class="col-7 font-monospace small">{{ $customer->stripe_customer_id }}</dd>@endif
                 </dl>
                 <ol class="tl">
