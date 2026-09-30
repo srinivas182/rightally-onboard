@@ -56,6 +56,8 @@ class Customer extends Authenticatable implements CanResetPasswordContract
             'agents_notified_at' => 'datetime',
             'suspended_at' => 'datetime',
             'paused_until' => 'date',
+            'service_ends_on' => 'date',
+            'end_requested_at' => 'datetime',
             'email_bounced_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Quote;
 use App\Services\Audit\AuditLogger;
 use App\Services\Settings\SettingsService;
+use App\Services\Stripe\StripeClient;
 use App\Support\BusinessClock;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
@@ -57,10 +58,10 @@ class QuoteController extends Controller
             $d['deposit_percent'] = 0;
             if (! empty($d['old_stripe_subscription_id'])) {
                 try {
-                    $old = app(\App\Services\Stripe\StripeClient::class)->get('subscriptions/'.$d['old_stripe_subscription_id']);
+                    $old = app(StripeClient::class)->get('subscriptions/'.$d['old_stripe_subscription_id']);
                     $stripeCustomer = $old['customer'] ?? null;
                     if (empty($d['first_charge_on']) && ! empty($old['current_period_end'])) {
-                        $d['first_charge_on'] = \Illuminate\Support\Carbon::createFromTimestamp($old['current_period_end'])->setTimezone(BusinessClock::timezone())->toDateString();
+                        $d['first_charge_on'] = Carbon::createFromTimestamp($old['current_period_end'])->setTimezone(BusinessClock::timezone())->toDateString();
                     }
                 } catch (\Throwable $e) {
                     return back()->withInput()->withErrors(['old_stripe_subscription_id' => 'Couldn’t find that subscription in Stripe ('.$e->getMessage().').']);

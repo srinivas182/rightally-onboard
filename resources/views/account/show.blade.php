@@ -35,6 +35,9 @@
 @if ($customer->status === \App\Enums\CustomerStatus::ContractSigned && $unpaid->isEmpty())
     <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2"><div>{{ __('Your agreement is signed. Pay the deposit to reserve your go-live date.') }}</div><a class="btn btn-primary btn-sm" href="{{ route('onboarding.payment', $customer) }}">{{ __('Pay deposit') }}</a></div>
 @endif
+@if ($customer->end_type && $customer->service_ends_on && ! in_array($customer->status, [\App\Enums\CustomerStatus::Cancelled, \App\Enums\CustomerStatus::Expired], true))
+    <div class="alert alert-warning">{{ __('Your RightAlly service ends on :date. No charges after that date.', ['date' => $customer->service_ends_on->translatedFormat('F j, Y')]) }}</div>
+@endif
 @if ($customer->status === \App\Enums\CustomerStatus::Paused && $customer->paused_until)
     <div class="alert alert-secondary">{{ __('Your subscription is paused until :date.', ['date' => $customer->paused_until->translatedFormat('F j, Y')]) }}</div>
 @endif

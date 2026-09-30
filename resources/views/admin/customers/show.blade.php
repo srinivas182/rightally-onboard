@@ -32,12 +32,21 @@
                     <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#suspendModal">Suspend account…</button></li>
                 @endif
                 @if ($customer->stripe_customer_id)<li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#creditModal">Add a credit…</button></li>@endif
-                @if ($customer->status === \App\Enums\CustomerStatus::Paused)
+                @if ($customer->end_type && $customer->service_ends_on && ! in_array($customer->status, [\App\Enums\CustomerStatus::Cancelled, \App\Enums\CustomerStatus::Expired], true))
+    <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div><b>Service ends on {{ $customer->service_ends_on->format('M j, Y') }}</b> ({{ \App\Services\Billing\ServiceEnding::TYPES[$customer->end_type] ?? $customer->end_type }}). Reason: {{ \App\Services\Billing\ServiceEnding::REASONS[$customer->end_reason] ?? $customer->end_reason }}@if ($customer->end_notes) · {{ $customer->end_notes }}@endif. No charges after that date.</div>
+        <form method="post" action="{{ route('admin.customers.end-service.undo', $customer) }}">@csrf<button class="btn btn-sm btn-outline-dark" data-confirm="Cancel the scheduled end? Billing continues as normal.">Undo</button></form>
+    </div>
+@endif
+@if ($customer->status === \App\Enums\CustomerStatus::Paused)
                     <li><form method="post" action="{{ route('admin.customers.resume', $customer) }}">@csrf<button class="dropdown-item" data-confirm="Resume now? Monthly charges restart on the next billing date.">Resume subscription now</button></form></li>
                 @elseif (! $pauseProblem)
                     <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#pauseModal">Pause subscription…</button></li>
                 @endif
-                @if ($termination)<li><button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#terminateModal">Early termination…</button></li>@endif
+                @if (in_array($customer->status, [\App\Enums\CustomerStatus::Live, \App\Enums\CustomerStatus::PaymentFailed, \App\Enums\CustomerStatus::Suspended, \App\Enums\CustomerStatus::Paused], true) && ! $customer->end_type)
+                    <li><button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#endModal">End service…</button></li>
+                @endif
+                @if ($termination)<li><button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#terminateModal">Early termination (with fee)…</button></li>@endif
                 @if (auth('admin')->user()->isSuperAdmin())<li><hr class="dropdown-divider"></li><li><button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete customer…</button></li>@endif
             </ul>
         </div>
@@ -321,6 +330,27 @@
     </form></div></div>
 @if ($errors->delete->any())<div data-open-modal="#deleteModal" hidden></div>@endif
 @endif
+
+{{-- End service --}}
+@php $endContract = $contract; @endphp
+<div class="modal fade" id="endModal" tabindex="-1" aria-labelledby="endTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{{ route('admin.customers.end-service', $customer) }}">@csrf
+        <div class="modal-header"><h2 class="modal-title h5" id="endTitle">End service for {{ $customer->company_name }}</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body">
+            <p class="small text-slate">Stripe is updated straight away, so no charge happens after the end. The client is emailed. Records stay for accounting; they move to Former customers when the service ends.</p>
+            <div class="form-check mb-2"><input class="form-check-input" type="radio" name="type" value="term_end" id="endTerm" @disabled(! $endContract?->ends_on) @checked($endContract?->ends_on)><label class="form-check-label" for="endTerm"><b>At the end of the current term</b>@if ($endContract?->ends_on) ({{ $endContract->ends_on->format('M j, Y') }})@else (month to month: no term end)@endif<div class="small text-slate">Keeps billing until then. No renewal.</div></label></div>
+            <div class="form-check mb-2"><input class="form-check-input" type="radio" name="type" value="period_end" id="endPeriod" @checked(! $endContract?->ends_on)><label class="form-check-label" for="endPeriod"><b>At the end of the current billing period</b><div class="small text-slate">This period is already paid; nothing more is charged. Waives the rest of any term.</div></label></div>
+            <div class="form-check mb-2"><input class="form-check-input" type="radio" name="type" value="now_no_fee" id="endNow"><label class="form-check-label" for="endNow"><b>Now, no fee</b><div class="small text-slate">Stops today. Needs a second admin’s approval.</div></label></div>
+            @if ($termination)<p class="small mb-3">To stop now <b>and charge the rest of the term</b>, use <a href="#" data-bs-toggle="modal" data-bs-target="#terminateModal">Early termination (with fee)</a>.</p>@endif
+            <div class="row g-2">
+                <div class="col-sm-6"><label class="form-label small" for="endReason">Reason</label><select class="form-select form-select-sm" id="endReason" name="reason" required>@foreach (\App\Services\Billing\ServiceEnding::REASONS as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select></div>
+                <div class="col-12"><label class="form-label small" for="endNotes">Notes</label><textarea class="form-control form-control-sm" id="endNotes" name="notes" rows="2" maxlength="1000" placeholder="What they told you"></textarea></div>
+            </div>
+            @if ($errors->end->any())<div class="alert alert-danger small mt-3 mb-0">{{ $errors->end->first() }}</div>@endif
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-link" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger">End service</button></div>
+    </form></div></div>
+@if ($errors->end->any())<div data-open-modal="#endModal" hidden></div>@endif
 
 {{-- Send custom email --}}
 <div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered">

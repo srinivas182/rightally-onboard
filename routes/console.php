@@ -8,6 +8,7 @@ use App\Services\Billing\BalanceService;
 use App\Services\Billing\CardExpiryWarnings;
 use App\Services\Billing\PauseService;
 use App\Services\Billing\RenewalService;
+use App\Services\Billing\ServiceEnding;
 use App\Services\Billing\SuspensionService;
 use App\Services\Integrations\TeamAlerts;
 use App\Services\Onboarding\DepositReminders;
@@ -52,6 +53,7 @@ Artisan::command('billing:daily', function (BalanceService $balance, SuspensionS
     $this->line('Accounts suspended: '.$suspension->run());
     $this->line('Card expiry warnings sent: '.$cards->send());
     $this->line('Pauses ended: '.$pauses->resumeDue());
+    $this->line('Services ended: '.app(ServiceEnding::class)->finalizeDue());
     Cache::forever(SystemHealth::BILLING_RUN_KEY, now()->getTimestamp());
 })->purpose('Go-live charges, reminders, renewals, expiries and suspensions');
 

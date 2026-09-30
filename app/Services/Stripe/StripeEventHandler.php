@@ -9,6 +9,7 @@ use App\Services\Audit\AuditLogger;
 use App\Services\Billing\DepositService;
 use App\Services\Billing\DisputeService;
 use App\Services\Billing\InvoiceEvents;
+use App\Services\Billing\ServiceEnding;
 use Throwable;
 
 /**
@@ -91,6 +92,11 @@ final class StripeEventHandler
         $customer = Customer::where('stripe_subscription_id', $sub['id'] ?? '')->first();
         if ($customer) {
             $this->audit->log('subscription.ended', "Stripe subscription ended for {$customer->company_name}", $customer, ['status' => $sub['status'] ?? null], 'system');
+            // Scheduled end reached, or cancelled directly in Stripe: the service ends here too.
+            if (! $customer->end_type) {
+                $customer->update(['end_type' => 'period_end', 'end_reason' => 'other', 'end_notes' => 'Subscription cancelled in Stripe', 'service_ends_on' => now()->toDateString()]);
+            }
+            app(ServiceEnding::class)->finalize($customer->fresh());
         }
     }
 }

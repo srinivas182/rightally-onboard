@@ -24,6 +24,7 @@ use App\Services\Billing\EarlyTerminationService;
 use App\Services\Billing\GoLiveService;
 use App\Services\Billing\PauseService;
 use App\Services\Billing\RefundService;
+use App\Services\Billing\ServiceEnding;
 use App\Services\Email\EmailSender;
 use App\Services\Onboarding\ClientAccess;
 use App\Services\Onboarding\ResumeLinks;
@@ -169,6 +170,31 @@ class CustomerController extends Controller
             'resume' => "Link to continue onboarding sent to {$customer->email}.",
             default => 'A link was sent a moment ago. Try again in a minute.',
         });
+    }
+
+    /** End service: at term end / period end (scheduled now), or now without fee (second-admin approval). */
+    public function endService(Request $request, Customer $customer, ServiceEnding $ending, ApprovalService $approvals): RedirectResponse
+    {
+        $data = $request->validateWithBag('end', [
+            'type' => ['required', 'in:term_end,period_end,now_no_fee'],
+            'reason' => ['required', 'in:'.implode(',', array_keys(ServiceEnding::REASONS))],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ]);
+        if ($data['type'] === 'now_no_fee') {
+            $approvals->request('end_now', $customer, 0, ['reason' => $data['reason']], $data['notes'] ?: ServiceEnding::REASONS[$data['reason']], $request->user('admin'));
+
+            return back()->with('success', 'Ending service now (no fee) needs a second admin. Sent for approval.');
+        }
+        $endsOn = $ending->schedule($customer, $data['type'], $data['reason'], $data['notes'] ?? null, $request->user('admin'));
+
+        return back()->with('success', "Service will end on {$endsOn->format('M j, Y')}. Stripe won’t charge after that. The client has been emailed.");
+    }
+
+    public function undoEnd(Customer $customer, ServiceEnding $ending): RedirectResponse
+    {
+        $ending->undo($customer);
+
+        return back()->with('success', 'The scheduled end is cancelled. Service and billing continue as normal.');
     }
 
     public function updateContact(Request $request, Customer $customer): RedirectResponse

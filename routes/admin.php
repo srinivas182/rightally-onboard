@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailTemplateController;
+use App\Http\Controllers\Admin\FormerCustomerController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\QuoteController;
 use App\Http\Controllers\Admin\ReportController;
@@ -95,6 +96,8 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
         Route::post('{customer}/terminate', [CustomerController::class, 'terminate'])->name('terminate');
         Route::post('{customer}/invoices/{invoice}/refund', [CustomerController::class, 'refund'])->name('refund');
         Route::post('{customer}/credit', [CustomerController::class, 'credit'])->name('credit');
+        Route::post('{customer}/end-service', [CustomerController::class, 'endService'])->name('end-service');
+        Route::post('{customer}/end-service/undo', [CustomerController::class, 'undoEnd'])->name('end-service.undo');
         Route::post('{customer}/pause', [CustomerController::class, 'pause'])->name('pause');
         Route::post('{customer}/resume', [CustomerController::class, 'resume'])->name('resume');
     });
@@ -115,6 +118,12 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
     Route::middleware('can:menu.reports')->group(function () {
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('reports/{report}.csv', [ReportController::class, 'export'])->whereIn('report', ['funnel', 'revenue'])->name('reports.export');
+    });
+
+    Route::middleware('can:menu.customers')->prefix('former-customers')->name('former.')->group(function () {
+        Route::get('/', [FormerCustomerController::class, 'index'])->name('index');
+        Route::get('export', [FormerCustomerController::class, 'export'])->name('export');
+        Route::post('{customer}/win-back', [FormerCustomerController::class, 'winBack'])->middleware('throttle:20,1')->name('win-back');
     });
 
     Route::middleware('can:menu.calls')->prefix('calls')->name('calls.')->group(function () {

@@ -38,6 +38,7 @@ return [
         'contracts' => ['label' => 'Contracts', 'icon' => 'file', 'route' => 'admin.contracts.index', 'group' => 'main'],
         'invoices' => ['label' => 'Invoices', 'icon' => 'receipt', 'route' => 'admin.invoices.index', 'group' => 'main'],
         'coupons' => ['label' => 'Coupons', 'icon' => 'tag', 'route' => 'admin.coupons.index', 'group' => 'main'],
+        'former' => ['label' => 'Former customers', 'icon' => 'users', 'route' => 'admin.former.index', 'group' => 'main', 'permission' => 'customers'],
         'calls' => ['label' => 'Calls', 'icon' => 'cal', 'route' => 'admin.calls.index', 'group' => 'main'],
         'quotes' => ['label' => 'Custom quotes', 'icon' => 'quote', 'route' => 'admin.quotes.index', 'group' => 'main'],
         'reports' => ['label' => 'Reports', 'icon' => 'chart', 'route' => 'admin.reports.index', 'group' => 'main'],

@@ -46,6 +46,12 @@ Clients can choose to pay yearly in advance for a discount (Settings > Pricing s
 ## Calls
 Prospects who aren’t ready to onboard book a call at `/book-a-call` (your GoHighLevel calendar). Each booking appears in **Calls** with the coupon and campaign they came from. Filter by coupon, mark no-shows, add notes, and email an onboarding link (with their coupon) after the call. Calls turn **Onboarded** automatically when that email pays the deposit. Set-up: `docs/gohighlevel-calls.md`.
 
+## Moving existing clients over
+For clients who were live before this app (already billed in Stripe): **Custom quotes > New quote > tick “Existing client”**. Enter their current Stripe subscription ID (Stripe > Customers > their subscription), per-agent fee, platform fee (0 if they only pay per agent), minimum agents and term (month to month, 6, 12 or 24 months). The first charge date defaults to their current renewal date. Send them the link: they sign a subscription-only agreement and confirm the card already on file (or add a new one). Nothing is charged that day; their old subscription stops renewing and the new one starts on the first charge date, so they’re never charged twice.
+
+## Ending a customer’s service
+Customer page > Actions > **End service**: at the end of the term (keeps billing until then), at the end of the current billing period (nothing more charged), or now without a fee (needs a second admin). To stop now and charge the rest of the term, use **Early termination (with fee)**. Stripe is updated immediately; the client is emailed; a scheduled end can be undone. Ended customers move to **Former customers**: when they onboarded and ended, months active, reason, revenue to date, last payment, CSV export and a win-back email.
+
 ## Custom quotes
 When you agree different pricing with a brokerage, create a quote (Custom quotes > New quote) and send them its link. It shows their pricing, can’t be combined with a coupon, and works once. Void it if the deal changes.
 

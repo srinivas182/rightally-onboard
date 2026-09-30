@@ -39,6 +39,7 @@ class Approval extends Model
             'early_termination' => 'Early termination',
             'refund' => 'Refund',
             'credit' => 'Credit on next charge',
+            'end_now' => 'End service now (no fee)',
             default => $this->action,
         };
     }

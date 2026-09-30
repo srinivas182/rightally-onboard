@@ -41,8 +41,10 @@ class AppServiceProvider extends ServiceProvider
 
         // One gate per admin menu. Super admins pass every gate.
         Gate::before(fn (Admin $admin) => $admin->isSuperAdmin() ? true : null);
-        foreach (array_keys(config('rightally.menus')) as $menu) {
-            Gate::define("menu.{$menu}", fn (Admin $admin) => $admin->hasMenu($menu));
+        foreach (config('rightally.menus') as $menu => $cfg) {
+            // Some menus share another menu's permission (e.g. Former customers uses Customers).
+            $perm = $cfg['permission'] ?? $menu;
+            Gate::define("menu.{$menu}", fn (Admin $admin) => $admin->hasMenu($perm));
         }
 
         RateLimiter::for('admin-login', fn (Request $request) => [

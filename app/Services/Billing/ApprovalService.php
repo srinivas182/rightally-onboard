@@ -88,14 +88,27 @@ final class ApprovalService
         }
     }
 
+    private function endNow(Customer $customer, Approval $approval): string
+    {
+        app(ServiceEnding::class)->endNow($customer, (string) ($approval->payload['reason'] ?? 'other'), $approval->reason);
+
+        return 'Service ended immediately, no fee';
+    }
+
+    public function needsApprovalForEnd(): bool
+    {
+        return true;
+    }
+
     private function execute(Approval $approval, Admin $admin): string
     {
         $customer = $approval->customer;
 
         return match ($approval->action) {
-            'early_termination' => ($i = $this->termination->terminate($customer, $admin, $approval->reason))
+            'early_termination' => ($customer->update(['end_type' => 'now_fee', 'end_reason' => $customer->end_reason ?? 'other', 'end_notes' => $approval->reason, 'service_ends_on' => now()->toDateString()]) && ($i = $this->termination->terminate($customer, $admin, $approval->reason)))
                 ? "Invoice {$i->number} for ".Money::format($i->amount_cents).' issued' : 'Terminated; nothing further due',
             'refund' => 'Refunded '.Money::format($approval->amount_cents).' on '.$this->refunds->refund(Invoice::findOrFail($approval->payload['invoice_id']), $approval->amount_cents, $approval->reason, $admin)->invoice->number,
+            'end_now' => $this->endNow($customer, $approval),
             'credit' => 'Credit '.Money::format($this->credits->credit($customer, $approval->amount_cents, $approval->reason, $admin, $approval->id)->amount_cents).' applied',
             default => throw new \RuntimeException('Unknown action'),
         };

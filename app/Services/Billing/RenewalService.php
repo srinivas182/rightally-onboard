@@ -39,7 +39,7 @@ final class RenewalService
     {
         return Contract::with('customer')
             ->where('status', ContractStatus::Signed)
-            ->whereHas('customer', fn ($q) => $q->whereIn('status', self::ACTIVE))
+            ->whereHas('customer', fn ($q) => $q->whereIn('status', self::ACTIVE)->whereNull('end_type')) // no renewals once an end is scheduled
             ->get()
             ->filter(fn (Contract $c) => ! Contract::where('previous_contract_id', $c->id)->where('status', ContractStatus::Signed)->exists());
     }

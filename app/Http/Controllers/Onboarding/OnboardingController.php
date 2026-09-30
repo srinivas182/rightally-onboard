@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Onboarding;
 
 use App\Enums\ContractStatus;
+use App\Enums\CustomerStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Http\Controllers\Controller;
@@ -20,6 +21,7 @@ use App\Services\Contracts\ContractSigner;
 use App\Services\Email\EmailSender;
 use App\Services\Onboarding\ClientAccess;
 use App\Services\Onboarding\CouponCheck;
+use App\Services\Onboarding\ExistingClientActivation;
 use App\Services\Onboarding\OnboardingService;
 use App\Services\Onboarding\ResumeLinks;
 use App\Services\Pricing\QuoteCalculator;
@@ -257,7 +259,7 @@ class OnboardingController extends Controller
         if (! $contract) {
             return redirect()->route('onboarding.agreement', $customer);
         }
-        if (\App\Services\Onboarding\ExistingClientActivation::isExisting($contract)) {
+        if (ExistingClientActivation::isExisting($contract)) {
             return $this->existingPayment($customer, $contract);
         }
         $existing = $this->depositInvoice($customer);
@@ -316,8 +318,8 @@ class OnboardingController extends Controller
     public function done(Customer $customer): View|RedirectResponse
     {
         $contract = $this->signedContractOrNull($customer);
-        if (\App\Services\Onboarding\ExistingClientActivation::isExisting($contract)) {
-            return $customer->status === \App\Enums\CustomerStatus::Live
+        if (ExistingClientActivation::isExisting($contract)) {
+            return $customer->status === CustomerStatus::Live
                 ? view('onboarding.done-existing', ['customer' => $customer, 'contract' => $contract, 'step' => 5] + $this->ledger($contract))
                 : redirect()->route('onboarding.payment', $customer);
         }
@@ -331,12 +333,12 @@ class OnboardingController extends Controller
 
     // ---- Existing clients: confirm the payment method on file; nothing charged today ----
 
-    private function existingPayment(Customer $customer, \App\Models\Contract $contract): View|RedirectResponse
+    private function existingPayment(Customer $customer, Contract $contract): View|RedirectResponse
     {
-        if ($customer->status === \App\Enums\CustomerStatus::Live) {
+        if ($customer->status === CustomerStatus::Live) {
             return redirect()->route('onboarding.done', $customer);
         }
-        $activation = app(\App\Services\Onboarding\ExistingClientActivation::class);
+        $activation = app(ExistingClientActivation::class);
         $stripe = app(StripeClient::class);
         $saved = null;
         $clientSecret = null;
@@ -365,8 +367,8 @@ class OnboardingController extends Controller
     public function existingActivate(Customer $customer): RedirectResponse
     {
         $contract = $this->signedContractOrNull($customer);
-        abort_unless(\App\Services\Onboarding\ExistingClientActivation::isExisting($contract), 404);
-        $activation = app(\App\Services\Onboarding\ExistingClientActivation::class);
+        abort_unless(ExistingClientActivation::isExisting($contract), 404);
+        $activation = app(ExistingClientActivation::class);
         $saved = $activation->savedMethod($customer);
         if (! $saved) {
             return redirect()->route('onboarding.payment', $customer);
@@ -379,7 +381,7 @@ class OnboardingController extends Controller
     public function existingReturn(Request $request, Customer $customer, StripeClient $stripe): RedirectResponse
     {
         $contract = $this->signedContractOrNull($customer);
-        abort_unless(\App\Services\Onboarding\ExistingClientActivation::isExisting($contract), 404);
+        abort_unless(ExistingClientActivation::isExisting($contract), 404);
         try {
             $si = $stripe->get('setup_intents/'.(string) $request->query('setup_intent'), ['expand' => ['payment_method']]);
         } catch (StripeException $e) {
@@ -391,7 +393,7 @@ class OnboardingController extends Controller
             abort(403);
         }
         if (($si['status'] ?? '') === 'succeeded' && is_array($si['payment_method'] ?? null)) {
-            app(\App\Services\Onboarding\ExistingClientActivation::class)->activate($customer, $contract, $si['payment_method']);
+            app(ExistingClientActivation::class)->activate($customer, $contract, $si['payment_method']);
 
             return redirect()->route('onboarding.done', $customer);
         }

@@ -3,6 +3,7 @@
 namespace App\Services\Onboarding;
 
 use App\Enums\ContractStatus;
+use App\Enums\ContractType;
 use App\Enums\CustomerStatus;
 use App\Models\Contract;
 use App\Models\Customer;
@@ -13,6 +14,7 @@ use App\Services\Billing\PaymentMethods;
 use App\Services\Billing\SubscriptionService;
 use App\Services\Email\EmailSender;
 use App\Services\Stripe\StripeClient;
+use App\Services\Stripe\StripeException;
 use App\Support\BusinessClock;
 use Illuminate\Support\Carbon;
 use Throwable;
@@ -69,7 +71,7 @@ final class ExistingClientActivation
             'payment_method_options' => ['us_bank_account' => ['verification_method' => 'automatic']], 'metadata' => ['customer_uuid' => $customer->uuid, 'type' => 'existing_client']];
         try {
             $si = $this->stripe->post('setup_intents', $params);
-        } catch (\App\Services\Stripe\StripeException $e) {
+        } catch (StripeException $e) {
             if (! str_contains($e->getMessage(), 'us_bank_account')) {
                 throw $e;
             }
@@ -123,6 +125,6 @@ final class ExistingClientActivation
 
     public static function isExisting(?Contract $contract): bool
     {
-        return $contract?->type === \App\Enums\ContractType::Existing && $contract->status === ContractStatus::Signed;
+        return $contract?->type === ContractType::Existing && $contract->status === ContractStatus::Signed;
     }
 }

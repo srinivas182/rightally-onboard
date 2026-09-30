@@ -27,7 +27,7 @@ class AdminUserController extends Controller
         return view('admin.admins.index', [
             'admins' => Admin::with('role')->orderBy('name')->get(),
             'roles' => Role::withCount('admins')->orderByDesc('is_system')->orderBy('name')->get(),
-            'menus' => config('rightally.menus'),
+            'menus' => collect(config('rightally.menus'))->reject(fn ($m) => isset($m['permission']))->all(), // shared-permission menus aren't separate choices
         ]);
     }
 

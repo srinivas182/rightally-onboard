@@ -6,7 +6,7 @@ Tick each item before the first real client signs.
 - [ ] Global MLM Software LLC is active on Sunbiz (if the LLC is renamed later, update Settings > Company; existing signed agreements keep the name they were signed under).
 - [ ] Fictitious name "RightAlly" registered on Sunbiz for Global MLM Software LLC.
 - [ ] A Florida attorney has reviewed the Privacy Policy and Terms of Use drafts (Settings > Legal pages).
-- [ ] A Florida attorney has reviewed the agreement (including the pause clause in Section 5 and the annual billing paragraph in Section 2(d)) and renewal templates (Admin > Contracts > Templates). If they change wording: create a new version, edit, publish.
+- [ ] A Florida attorney has reviewed the agreement (including the pause clause in Section 5, the annual billing paragraph in Section 2(d), and the new existing-client subscription agreement) and renewal templates (Admin > Contracts > Templates). If they change wording: create a new version, edit, publish.
 - [ ] Settings > Company: legal name, DBA, address, phone and support email are correct.
 - [ ] Settings > Pricing and Renewal pricing are correct.
 - [ ] Settings > Signature: name, title, and signature style or image.

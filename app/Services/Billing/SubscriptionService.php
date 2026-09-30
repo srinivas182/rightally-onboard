@@ -2,6 +2,7 @@
 
 namespace App\Services\Billing;
 
+use App\Enums\ContractStatus;
 use App\Models\Contract;
 use App\Models\Customer;
 use App\Services\Stripe\StripeClient;
@@ -89,7 +90,7 @@ final class SubscriptionService
     public function firstChargeAt(Customer $customer): Carbon
     {
         // Existing clients: the first charge date on their agreement.
-        $first = $customer->contracts()->where('status', \App\Enums\ContractStatus::Signed)->latest('signed_at')->value('first_charge_on');
+        $first = $customer->contracts()->where('status', ContractStatus::Signed)->latest('signed_at')->value('first_charge_on');
         if ($first) {
             return Carbon::parse(Carbon::parse($first)->toDateString().' 09:00', BusinessClock::timezone());
         }

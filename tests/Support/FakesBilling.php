@@ -38,10 +38,8 @@ trait FakesBilling
             'POST invoices' => ['id' => 'in_1', 'status' => 'draft'],
             'GET prices' => fn (Request $r) => ['data' => []],
             'POST prices' => fn (Request $r) => ['id' => 'price_'.$r['lookup_key']],
-            'POST subscriptions' => fn (Request $r) => ! isset($r['items']) ? ['id' => 'sub_1'] : ['id' => 'sub_1', 'items' => ['data' => [
-                ['id' => 'si_platform', 'price' => ['id' => $r['items'][0]['price']]],
-                ['id' => 'si_agent', 'price' => ['id' => $r['items'][1]['price']]],
-            ]]],
+            'POST subscriptions' => fn (Request $r) => ! isset($r['items']) ? ['id' => 'sub_1'] : ['id' => 'sub_1', 'items' => ['data' => collect($r['items'])->values()
+                ->map(fn ($item, $i) => ['id' => $i === count($r['items']) - 1 ? 'si_agent' : 'si_platform', 'price' => ['id' => $item['price']]])->all()]],
             'POST subscription_items' => ['id' => 'si_agent'],
             'DELETE subscriptions' => ['id' => 'sub_1', 'status' => 'canceled'],
         ];
