@@ -12,6 +12,7 @@ use App\Services\Billing\ServiceEnding;
 use App\Services\Billing\SuspensionService;
 use App\Services\Integrations\TeamAlerts;
 use App\Services\Onboarding\DepositReminders;
+use App\Services\Onboarding\LeadFollowUps;
 use App\Services\Stripe\Reconciler;
 use App\Services\Stripe\StripeClient;
 use App\Support\BusinessClock;
@@ -120,3 +121,6 @@ Artisan::command('stripe:check', function (StripeClient $stripe) {
 
     return 0;
 })->purpose('Test the Stripe keys saved in Settings and show the last Stripe error');
+
+// Follow-up emails to people who started onboarding but haven't signed (hourly; quiet hours respected).
+Schedule::call(fn () => app(LeadFollowUps::class)->run())->hourly()->name('lead-follow-ups')->withoutOverlapping();

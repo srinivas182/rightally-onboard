@@ -64,13 +64,13 @@ class SettingsController extends Controller
             $request->merge(['enabled' => $request->boolean('enabled') ? '1' : '0']);
         }
         if ($group === 'pricing') {
-            $request->merge(['annual_enabled' => $request->boolean('annual_enabled') ? '1' : '0', 'annual_discount_percent' => $request->input('annual_discount_percent', '10') ?? '10']);
+            $request->merge(['require_coupon' => $request->boolean('require_coupon') ? '1' : '0', 'annual_enabled' => $request->boolean('annual_enabled') ? '1' : '0', 'annual_discount_percent' => $request->input('annual_discount_percent', '10') ?? '10']);
         }
         if ($group === 'calls') {
             $request->merge(['enabled' => $request->boolean('enabled') ? '1' : '0']);
         }
         if ($group === 'alerts') {
-            foreach (['email', 'new_signing', 'payment_failed', 'go_lives', 'chargebacks'] as $flag) {
+            foreach (['email', 'new_signing', 'new_lead', 'follow_ups', 'payment_failed', 'go_lives', 'chargebacks'] as $flag) {
                 $request->merge([$flag => $request->boolean($flag) ? '1' : '0']);
             }
         }

@@ -5,7 +5,7 @@
 @php
     $m = fn (int $c) => \App\Support\Money::format($c);
     $pct = fn (int $a, int $b) => $b ? round($a / $b * 100).'%' : '—';
-    $totals = ['started' => $funnel->sum('started'), 'signed' => $funnel->sum('signed'), 'paid' => $funnel->sum('paid'), 'live' => $funnel->sum('live')];
+    $totals = ['started' => $funnel->sum('started'), 'details' => $funnel->sum('details'), 'signed' => $funnel->sum('signed'), 'paid' => $funnel->sum('paid'), 'live' => $funnel->sum('live')];
 @endphp
 <h1 class="h3 mb-4">Reports</h1>
 <ul class="nav nav-tabs tabs-scroll mb-3" role="tablist" data-remember-tab="reports">
@@ -21,17 +21,17 @@
         <div class="col-sm-3 d-flex gap-2"><button class="btn btn-primary btn-sm flex-grow-1">Show</button><a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.reports.export', ['report' => 'funnel', 'from' => $from, 'to' => $to, 'group' => $group]) }}">CSV</a></div>
     </div></form>
     <div class="row g-3 mb-3">
-        @foreach (['started' => 'Started', 'signed' => 'Signed', 'paid' => 'Paid deposit', 'live' => 'Live'] as $k => $l)
-            <div class="col-6 col-lg-3"><div class="kpi"><div class="l">{{ $l }}</div><div class="v num">{{ $totals[$k] }}</div>
+        @foreach (['started' => 'Started', 'details' => 'Details done', 'signed' => 'Signed', 'paid' => 'Paid deposit', 'live' => 'Live'] as $k => $l)
+            <div class="col-6 col-lg"><div class="kpi"><div class="l">{{ $l }}</div><div class="v num">{{ $totals[$k] }}</div>
                 <div class="small text-slate">@if ($k === 'started')clients who began @else{{ $pct($totals[$k], $totals['started']) }} of started @endif</div></div></div>
         @endforeach
     </div>
     <div class="panel">
         @if ($funnel->isEmpty())<div class="p-4 text-center text-slate">No one started onboarding in this period.</div>@else
         <div class="table-responsive"><table class="table">
-            <thead><tr><th>{{ $groups[$group] }}</th><th class="text-end">Started</th><th class="text-end">Signed</th><th class="text-end">Paid</th><th class="text-end">Live</th><th class="text-end">Start → sign</th><th class="text-end">Sign → pay</th><th class="text-end">Start → live</th></tr></thead>
+            <thead><tr><th>{{ $groups[$group] }}</th><th class="text-end">Started</th><th class="text-end">Details done</th><th class="text-end">Signed</th><th class="text-end">Paid</th><th class="text-end">Live</th><th class="text-end">Start → sign</th><th class="text-end">Sign → pay</th><th class="text-end">Start → live</th></tr></thead>
             <tbody>@foreach ($funnel as $r)
-                <tr><td>{{ $r['group'] }}</td><td class="text-end num">{{ $r['started'] }}</td><td class="text-end num">{{ $r['signed'] }}</td><td class="text-end num">{{ $r['paid'] }}</td><td class="text-end num">{{ $r['live'] }}</td>
+                <tr><td>{{ $r['group'] }}</td><td class="text-end num">{{ $r['started'] }}</td><td class="text-end num">{{ $r['details'] }}</td><td class="text-end num">{{ $r['signed'] }}</td><td class="text-end num">{{ $r['paid'] }}</td><td class="text-end num">{{ $r['live'] }}</td>
                     <td class="text-end num">{{ $pct($r['signed'], $r['started']) }}</td><td class="text-end num">{{ $pct($r['paid'], $r['signed']) }}</td><td class="text-end num fw-semibold">{{ $pct($r['live'], $r['started']) }}</td></tr>
             @endforeach</tbody>
         </table></div>@endif

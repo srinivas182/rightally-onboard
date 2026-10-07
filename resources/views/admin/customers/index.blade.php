@@ -23,12 +23,13 @@
         <div class="p-4 p-md-5 text-center text-slate">{{ $q || $status ? 'No customers match these filters.' : 'Customers appear here as soon as someone starts onboarding.' }}</div>
     @else
     <div class="table-responsive"><table class="table table-hover">
-        <thead><tr><th>Customer</th><th>Status</th><th>Go-live</th><th class="text-end">Agents</th><th>Payment method</th><th>Source</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+        <thead><tr><th>Customer</th><th>Status</th><th>Stopped at</th><th>Go-live</th><th class="text-end">Agents</th><th>Payment method</th><th>Source</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
         <tbody>
         @foreach ($customers as $c)
             <tr>
-                <td><a class="fw-semibold text-reset text-decoration-none" href="{{ route('admin.customers.show', $c) }}">{{ $c->company_name }}</a><div class="small text-slate">{{ $c->fullName() }}, {{ $c->city }} {{ $c->state_code }}</div></td>
+                <td><a class="fw-semibold text-reset text-decoration-none" href="{{ route('admin.customers.show', $c) }}">{{ $c->company_name }}</a><div class="small text-slate">{{ $c->fullName() }}{{ $c->city ? ', '.$c->city.' '.$c->state_code : '' }}</div></td>
                 <td><span class="st {{ $c->status->pill() }}">{{ $c->status->label() }}</span></td>
+                <td class="small">@if (\App\Services\Onboarding\ResumeLinks::isIncomplete($c)){{ \App\Models\Customer::STAGES[$c->onboarding_stage ?? ($c->status === \App\Enums\CustomerStatus::ContractSigned ? 'payment' : 'agreement')] ?? '—' }}<div class="text-slate">{{ $c->updated_at->diffForHumans() }}</div>@else<span class="text-slate">—</span>@endif</td>
                 <td class="small text-nowrap">{{ $c->go_live_date?->format('M j, Y') ?? '—' }}</td>
                 <td class="text-end num">{{ $c->agent_count }}</td>
                 <td class="small">{{ $c->payment_method_label ?? '—' }}</td>

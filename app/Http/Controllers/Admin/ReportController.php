@@ -32,9 +32,9 @@ class ReportController extends Controller
         return response()->streamDownload(function () use ($stats, $report, $from, $to, $group) {
             $out = fopen('php://output', 'w');
             if ($report === 'funnel') {
-                fputcsv($out, [ReportStats::GROUPS[$group], 'Started', 'Signed', 'Paid deposit', 'Live', 'Started to live %']);
+                fputcsv($out, [ReportStats::GROUPS[$group], 'Started', 'Details done', 'Signed', 'Paid deposit', 'Live', 'Started to live %']);
                 foreach ($stats->funnel($from, $to, $group) as $r) {
-                    fputcsv($out, [$r['group'], $r['started'], $r['signed'], $r['paid'], $r['live'], $r['started'] ? round($r['live'] / $r['started'] * 100, 1) : 0]);
+                    fputcsv($out, [$r['group'], $r['started'], $r['details'], $r['signed'], $r['paid'], $r['live'], $r['started'] ? round($r['live'] / $r['started'] * 100, 1) : 0]);
                 }
             } else {
                 fputcsv($out, ['Month', 'Deposits', 'Go-live balances', 'Monthly fees', 'Yearly fees', 'Early termination', 'Total (net of refunds and tax)']);

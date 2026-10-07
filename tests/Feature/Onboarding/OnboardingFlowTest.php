@@ -72,8 +72,7 @@ class OnboardingFlowTest extends TestCase
             ->assertOk()
             ->assertSee('value="NAR2026"', false)
             ->assertSee('NAR2026 applied from your link')
-            ->assertSee('$255.00')   // deposit after 15% off
-            ->assertSee('District of Columbia');
+            ->assertSee('$255.00');  // deposit after 15% off
     }
 
     public function test_details_create_customer_and_draft_agreement_with_exact_prices(): void

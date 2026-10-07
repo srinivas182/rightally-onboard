@@ -46,7 +46,7 @@
 .ob .lead { font-size: 1.05rem; color: var(--ra-slate); margin-bottom: 2rem; max-width: 56ch; }
 .ob fieldset legend { font-size: 1rem; font-weight: 600; margin-bottom: .9rem; }
 .locked { background: var(--ra-mist) !important; color: var(--ra-slate); }
-.coupon-ok { color: var(--bs-success); }
+.coupon-ok { color: #0A6E4C; } // darker green: 5.9:1 on white (WCAG AA)
 .fee-mini { border: 1px solid var(--ra-line); border-radius: .75rem; padding: 1rem; }
 
 .m-ledger { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; background: var(--ra-navy); color: #fff; padding: .85rem 1rem calc(.85rem + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: space-between; align-items: center; }
@@ -117,3 +117,8 @@
 // Fee breakdown under the monthly/yearly line, e.g. "$500.00 platform + $20.00 × 5 agents".
 .ledger-sub { font-size: .78rem; color: #A9B8D0; margin-top: .1rem; font-weight: 400; }
 .table .ledger-sub { color: var(--ra-slate, #5E6B82); }
+
+// Address suggestions under "Street address" (Google Places)
+.addr-suggest { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; margin: .25rem 0 0; background: var(--ra-surface, #fff); border: 1px solid var(--ra-line); border-radius: .6rem; box-shadow: 0 8px 24px rgba(4, 21, 39, .12); overflow: hidden; }
+.addr-suggest li { padding: .6rem .85rem; cursor: pointer; font-size: .95rem; }
+.addr-suggest li:hover, .addr-suggest li[aria-selected="true"] { background: #EEF2F8; }

@@ -1,21 +1,25 @@
 @extends('layouts.onboarding')
 @section('title', __('Your details'))
-@if ($turnstileSiteKey)
+@if ($turnstileSiteKey && $part === 'about')
     @push('head')<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}"></script>@endpush
 @endif
 @section('content')
 @php $v = fn (string $key, $fallback = '') => old($key, $customer?->{$key} ?? ($prefill[$key] ?? $fallback)); @endphp
-<p class="step-kicker">{{ __('Step :n of 5', ['n' => 1]) }}</p>
-@unless ($customer)<p class="small mb-2">{{ __('Already started?') }} <a href="{{ route('account.login') }}">{{ __('Get a link to continue where you left off') }}</a>@if ((string) app(\App\Services\Settings\SettingsService::class)->get('calls', 'enabled') === '1') · {{ __('Not ready yet?') }} <a href="{{ route('book') }}">{{ __('Book a call') }}</a>@endif</p>@endunless
-@if ($customer)
-    <h1>{{ __('Update your details') }}</h1>
-    <p class="lead">{{ __('These details go on your agreement.') }}</p>
-@else
+@php $requireCoupon = (string) app(\App\Services\Settings\SettingsService::class)->get('pricing', 'require_coupon') === '1' && ! $customQuote; @endphp
+<p class="step-kicker">{{ __('Step :n of 5', ['n' => 1]) }} · <span class="fw-normal">{{ $part === 'about' ? __('part 1 of 2') : __('part 2 of 2') }}</span></p>
+@if ($part === 'about')
+    @unless ($customer)<p class="small mb-2">{{ __('Already started?') }} <a href="{{ route('account.login') }}">{{ __('Get a link to continue where you left off') }}</a>@if ((string) app(\App\Services\Settings\SettingsService::class)->get('calls', 'enabled') === '1') · {{ __('Not ready yet?') }} <a href="{{ route('book', array_filter(['coupon' => $couponCode ?: null])) }}">{{ __('Book a call') }}</a>@endif</p>@endunless
     @php $referrer = ($quote->coupon && ! $customQuote) ? \App\Http\Controllers\Onboarding\BookCallController::referrer($quote->coupon->code) : null; @endphp
     @if ($referrer)<p class="mb-2"><span class="referred">{{ __('You were referred by :name', ['name' => $referrer]) }}</span></p>@endif
-    <h1>{{ __('Welcome to RightAlly, let’s get you started') }}</h1>
-    <p class="lead">{{ __('Launch your brokerage’s own revenue share program: your plan, your rules, your brand. It works alongside the tools your agents already use, so there’s nothing to replace.') }}</p>
-    <p class="small text-slate mb-4"><svg class="ic me-1" aria-hidden="true"><use href="#i-clock"/></svg>{{ __('About 10 minutes: your details, sign the agreement, review your payment schedule, pay the deposit.') }}</p>
+    <h1>{{ $customer ? __('About you') : __('Welcome to RightAlly, let’s get you started') }}</h1>
+    @unless ($customer)
+        <p class="lead">{{ __('Launch your brokerage’s own revenue share program: your plan, your rules, your brand. It works alongside the tools your agents already use, so there’s nothing to replace.') }}</p>
+        <p class="small text-slate mb-1"><svg class="ic me-1" aria-hidden="true"><use href="#i-tag"/></svg>{{ __('From :price a month for :n agents. Every fee is shown before you sign.', ['price' => \App\Support\Money::format($quote->platformFeeCents + $quote->minAgents * $quote->perAgentFeeCents), 'n' => $quote->minAgents]) }}</p>
+        <p class="small text-slate mb-4"><svg class="ic me-1" aria-hidden="true"><use href="#i-clock"/></svg>{{ __('About 10 minutes: your details, sign the agreement, review your payment schedule, pay the deposit.') }}</p>
+    @endunless
+@else
+    <h1>{{ __('Your brokerage') }}</h1>
+    <p class="lead">{{ __('Your team size and business address go on your agreement. Your price updates as you type.') }}</p>
 @endif
 
 @include('partials.flash', ['hideErrorSummary' => false])
@@ -28,10 +32,12 @@
 @endif
 
 <form method="post" action="{{ $action }}" novalidate id="detailsForm"
-      data-pricing='@json($quote->forBrowser())' data-coupon-url="{{ route('onboarding.coupon') }}">
+      data-pricing='@json($quote->forBrowser())' data-coupon-url="{{ route('onboarding.coupon') }}" data-coupon-code="{{ $quote->coupon?->code }}"
+      @if ($part === 'brokerage' && $mapsKey) data-maps-key="{{ $mapsKey }}" @endif>
     @csrf
     @if ($method === 'put') @method('put') @endif
 
+    @if ($part === 'about')
     <fieldset class="mb-4"><legend>{{ __('About you') }}</legend>
         <p class="small text-slate mt-n1">{{ __('The person signing for the brokerage. These details go on your agreement.') }}</p>
         <div class="row g-3">
@@ -57,6 +63,30 @@
         </div>
     </fieldset>
 
+    @unless ($customQuote)
+    <fieldset class="mb-4"><legend>{{ $requireCoupon ? __('Referral code') : __('Coupon') }} @unless ($requireCoupon)<span class="fw-normal text-slate">({{ __('optional') }})</span>@endunless</legend>
+        @if ($requireCoupon)<p class="small text-slate mt-n1">{{ __('RightAlly is currently by invitation. Enter the code from your referral or invitation.') }} <a href="{{ route('book') }}">{{ __('No code? Book a call') }}</a></p>@endif
+        <label class="visually-hidden" for="coupon">{{ __('Coupon code') }}</label>
+        <div class="input-group has-validation" style="max-width:420px">
+            <div class="coupon-field flex-grow-1">
+                <input class="form-control text-uppercase @error('coupon') is-invalid @enderror" id="coupon" name="coupon" value="{{ $couponCode }}" placeholder="{{ __('Enter code') }}" @if ($requireCoupon) required @endif aria-describedby="couponMsg" maxlength="40" autocomplete="off">
+                <button type="button" class="coupon-clear {{ $couponCode ? '' : 'd-none' }}" id="couponClear" aria-label="{{ __('Remove coupon') }}" title="{{ __('Remove coupon') }}">×</button>
+            </div>
+            <button class="btn btn-outline-primary" type="button" id="couponApply">{{ __('Apply') }}</button>
+        </div>
+        @php
+            $msg = $errors->first('coupon') ?: $couponMessage;
+            $ok = ! $msg && $quote->coupon;
+        @endphp
+        <div id="couponMsg" class="mt-2 small {{ $msg ? 'text-danger' : ($ok ? 'coupon-ok' : 'text-slate') }}" aria-live="polite">
+            @if ($msg){{ $msg }}@elseif ($ok){{ __($fromLink ? ':code applied from your link. :pct% off your implementation fee.' : ':code applied. :pct% off your implementation fee.', ['code' => $quote->coupon->code, 'pct' => rtrim(rtrim(number_format($quote->discountPercent, 2), '0'), '.')]) }}@endif
+        </div>
+    </fieldset>
+    @endunless
+    <input type="hidden" id="agents" value="{{ $quote->minAgents }}">
+    @endif
+
+    @if ($part === 'brokerage')
     <fieldset class="mb-4"><legend>{{ __('Your team') }}</legend>
         <div class="row g-3 align-items-start">
             <div class="col-sm-6"><label class="form-label" for="agents">{{ __('Number of agents') }}</label>
@@ -106,37 +136,28 @@
     </fieldset>
     @endif
 
-    @unless ($customQuote)
-    <fieldset class="mb-4"><legend>{{ __('Coupon') }} <span class="fw-normal text-slate">({{ __('optional') }})</span></legend>
-        <label class="visually-hidden" for="coupon">{{ __('Coupon code') }}</label>
-        <div class="input-group has-validation" style="max-width:420px">
-            <div class="coupon-field flex-grow-1">
-                <input class="form-control text-uppercase @error('coupon') is-invalid @enderror" id="coupon" name="coupon" value="{{ $couponCode }}" placeholder="{{ __('Enter code') }}" aria-describedby="couponMsg" maxlength="40" autocomplete="off">
-                <button type="button" class="coupon-clear {{ $couponCode ? '' : 'd-none' }}" id="couponClear" aria-label="{{ __('Remove coupon') }}" title="{{ __('Remove coupon') }}">×</button>
-            </div>
-            <button class="btn btn-outline-primary" type="button" id="couponApply">{{ __('Apply') }}</button>
-        </div>
-        @php
-            $msg = $errors->first('coupon') ?: $couponMessage;
-            $ok = ! $msg && $quote->coupon;
-        @endphp
-        <div id="couponMsg" class="mt-2 small {{ $msg ? 'text-danger' : ($ok ? 'coupon-ok' : 'text-slate') }}" aria-live="polite">
-            @if ($msg){{ $msg }}@elseif ($ok){{ __($fromLink ? ':code applied from your link. :pct% off your implementation fee.' : ':code applied. :pct% off your implementation fee.', ['code' => $quote->coupon->code, 'pct' => rtrim(rtrim(number_format($quote->discountPercent, 2), '0'), '.')]) }}@endif
-        </div>
-    </fieldset>
-    @endunless
 
-    @if ($turnstileSiteKey)
+
+    @if ($quote->coupon && ! $customQuote)
+        <p class="small mb-4"><span class="coupon-ok">{{ __(':code applied: :pct% off your set-up fee.', ['code' => $quote->coupon->code, 'pct' => rtrim(rtrim(number_format($quote->discountPercent, 2), '0'), '.')]) }}</span> <a href="{{ route('onboarding.details', $customer) }}">{{ __('Change') }}</a></p>
+    @endif
+    @endif
+
+    @if ($part === 'about' && $turnstileSiteKey)
         <div class="mb-3">
             <div class="cf-turnstile" data-sitekey="{{ $turnstileSiteKey }}" data-theme="auto"></div>
             @error('turnstile')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
         </div>
     @endif
 
-    <p class="small text-slate">{{ __('By continuing you agree to our') }} <a href="{{ route('legal', 'terms') }}" target="_blank" rel="noopener">{{ __('Terms of Use') }}</a> {{ __('and') }} <a href="{{ route('legal', 'privacy') }}" target="_blank" rel="noopener">{{ __('Privacy Policy') }}</a>.</p>
-    <div class="d-flex flex-column flex-sm-row gap-2">
-        <button class="btn btn-primary btn-lg px-5" type="submit">{{ $customer ? __('Save and review agreement') : __('Continue to agreement') }}</button>
-        @if ($customer)<a class="btn btn-link" href="{{ route('onboarding.agreement', $customer) }}">{{ __('Cancel') }}</a>@endif
-    </div>
+    @if ($part === 'about')
+        <p class="small text-slate">{{ __('We’ll save your progress so you can finish later, and we may email you about your set-up.') }} {{ __('By continuing you agree to our') }} <a href="{{ route('legal', 'terms') }}" target="_blank" rel="noopener">{{ __('Terms of Use') }}</a> {{ __('and') }} <a href="{{ route('legal', 'privacy') }}" target="_blank" rel="noopener">{{ __('Privacy Policy') }}</a>.</p>
+        <button class="btn btn-primary btn-lg px-5" type="submit">{{ __('Next') }} →</button>
+    @else
+        <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
+            <button class="btn btn-primary btn-lg px-5" type="submit">{{ __('Continue to agreement') }}</button>
+            <a class="btn btn-link" href="{{ route('onboarding.details', $customer) }}">← {{ __('Back to About you') }}</a>
+        </div>
+    @endif
 </form>
 @endsection

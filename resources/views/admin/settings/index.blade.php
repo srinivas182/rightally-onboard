@@ -34,7 +34,8 @@
                 @include('admin.settings._field', ['group' => 'pricing', 'key' => 'deposit_percent', 'label' => 'Deposit', 'value' => $v['pricing']['deposit_percent'], 'suffix' => '%', 'type' => 'number', 'step' => '0.01', 'col' => 'col-sm-4'])
                 @include('admin.settings._field', ['group' => 'pricing', 'key' => 'go_live_days', 'label' => 'Go-live after', 'value' => $v['pricing']['go_live_days'], 'suffix' => 'days', 'type' => 'number', 'col' => 'col-sm-4'])
                 <div class="col-sm-4"><label class="form-label">Yearly billing option</label>
-                    <div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" role="switch" id="annual_enabled" name="annual_enabled" value="1" @checked($v['pricing']['annual_enabled'] === '1')><label class="form-check-label" for="annual_enabled">Offer yearly prepay</label></div></div>
+                    <div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" role="switch" id="annual_enabled" name="annual_enabled" value="1" @checked($v['pricing']['annual_enabled'] === '1')><label class="form-check-label" for="annual_enabled">Offer yearly prepay</label></div>
+                    <div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" role="switch" id="require_coupon" name="require_coupon" value="1" @checked(($v['pricing']['require_coupon'] ?? '1') === '1')><label class="form-check-label" for="require_coupon">Invitation only: a valid coupon or custom quote is needed to start</label></div></div>
                 @include('admin.settings._field', ['group' => 'pricing', 'key' => 'annual_discount_percent', 'label' => 'Yearly discount', 'value' => $v['pricing']['annual_discount_percent'], 'suffix' => '%', 'type' => 'number', 'col' => 'col-sm-4', 'help' => 'Off the 12 monthly fees when paid yearly in advance.'])
                 @include('admin.settings._field', ['group' => 'pricing', 'key' => 'platform_fee', 'label' => 'Platform fee per month', 'value' => $v['pricing']['platform_fee'], 'prefix' => '$', 'type' => 'number', 'step' => '0.01', 'col' => 'col-sm-4'])
                 @include('admin.settings._field', ['group' => 'pricing', 'key' => 'per_agent_fee', 'label' => 'Per agent per month', 'value' => $v['pricing']['per_agent_fee'], 'prefix' => '$', 'type' => 'number', 'step' => '0.01', 'col' => 'col-sm-4'])
@@ -161,6 +162,18 @@
                 @foreach (\App\Services\Integrations\TeamAlerts::KINDS as $k => $label)
                     <div class="col-sm-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="al_{{ $k }}" name="{{ $k }}" value="1" @checked($v['alerts'][$k] === '1')><label class="form-check-label" for="al_{{ $k }}">{{ $label }}</label></div></div>
                 @endforeach
+            </div>
+            @include('admin.settings._field', ['group' => 'alerts', 'key' => 'lead_recipients', 'label' => 'New-lead email goes to', 'value' => $v['alerts']['lead_recipients'] ?? '', 'col' => 'col-12', 'help' => 'Comma-separated. Sent when someone finishes “About you”, with everything they entered.'])
+            <div class="form-check form-switch my-3"><input class="form-check-input" type="checkbox" role="switch" id="al_follow_ups" name="follow_ups" value="1" @checked(($v['alerts']['follow_ups'] ?? '1') === '1')><label class="form-check-label" for="al_follow_ups">Follow-up emails to people who started but didn’t sign (4 emails over 7 days, 8am–8pm Eastern; edit them in Email templates)</label></div>
+            <h3 class="h6 mt-4">GoHighLevel contacts</h3>
+            <p class="small text-slate">Every new lead becomes a GHL contact (tag <span class="font-monospace">rightally-lead</span> and their coupon), then tagged as they sign, pay, go live or end. In GHL: Settings > Private Integrations > create one with the <b>Contacts (view and edit)</b> scope, and copy your Location ID from Settings > Business Profile.</p>
+            <div class="row g-3">
+                @include('admin.settings._field', ['group' => 'alerts', 'key' => 'ghl_token', 'label' => 'Private Integration token', 'value' => $v['alerts']['ghl_token'] ?? '', 'col' => 'col-sm-7', 'secret' => true])
+                @include('admin.settings._field', ['group' => 'alerts', 'key' => 'ghl_location_id', 'label' => 'Location ID', 'value' => $v['alerts']['ghl_location_id'] ?? '', 'col' => 'col-sm-5'])
+            </div>
+            <h3 class="h6 mt-4">Address suggestions</h3>
+            <div class="row g-3">
+                @include('admin.settings._field', ['group' => 'alerts', 'key' => 'google_maps_key', 'label' => 'Google Maps API key', 'value' => $v['alerts']['google_maps_key'] ?? '', 'col' => 'col-12', 'help' => 'Optional. With a key, “Street address” suggests US addresses and fills in city, state and ZIP. In Google Cloud: enable Maps JavaScript API and Places API (New); restrict the key to the website onboard.rightally.io/*. Blank = people type the address.'])
             </div>
             @include('admin.settings._field', ['group' => 'alerts', 'key' => 'slack_webhook_url', 'label' => 'Slack incoming webhook URL', 'value' => $v['alerts']['slack_webhook_url'], 'col' => 'col-12', 'secret' => true, 'placeholder' => 'https://hooks.slack.com/services/…', 'help' => 'Optional. In Slack: Apps > Incoming Webhooks > Add to a channel, then paste the URL here.'])
             <button class="btn btn-primary mt-3" type="submit">Save alerts</button>

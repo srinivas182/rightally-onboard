@@ -42,12 +42,83 @@ final class OnboardingService
                 'utm' => $tracking['utm'] ?? null,
                 'onboarding_started_at' => now(),
                 'quote_id' => $custom?->id,
+                'onboarding_stage' => 'agreement',
             ]);
 
             $this->createDraftContract($customer, $quote, $custom);
 
             return $customer;
         });
+    }
+
+    /**
+     * Screen 1a: saves the person as a lead (no address, agents or agreement yet).
+     *
+     * @param  array<string, mixed>  $about  validated AboutRequest data
+     */
+    public function startLead(array $about, ?Coupon $coupon, array $tracking = [], ?\App\Models\Quote $custom = null): Customer
+    {
+        $quote = $this->quotes->quote(1, $coupon, $custom);
+
+        return Customer::create($this->aboutAttributes($about) + [
+            'status' => CustomerStatus::Draft,
+            'onboarding_stage' => 'brokerage',
+            'source' => $tracking['source'] ?? null,
+            'utm' => $tracking['utm'] ?? null,
+            'onboarding_started_at' => now(),
+            'quote_id' => $custom?->id,
+            'coupon_id' => $custom ? null : $coupon?->id,
+            'agent_count' => $quote->minAgents,
+        ]);
+    }
+
+    /** Screen 1a again (going back): updates the person; re-prices the draft agreement if there is one. */
+    public function updateAbout(Customer $customer, array $about, ?Coupon $coupon): Customer
+    {
+        return DB::transaction(function () use ($customer, $about, $coupon) {
+            $customer->update($this->aboutAttributes($about) + ['coupon_id' => $customer->quote_id ? null : $coupon?->id]);
+            $contract = $this->draftContract($customer);
+            if ($contract) {
+                $custom = $customer->quote_id ? \App\Models\Quote::find($customer->quote_id) : null;
+                $quote = $this->quotes->quote((int) ($customer->agent_count_entered ?? $contract->agent_count), $custom ? null : $coupon, $custom, $contract->billing_interval);
+                $contract->update($this->snapshot($quote) + $this->kind($custom));
+            }
+
+            return $customer->fresh();
+        });
+    }
+
+    /**
+     * Screen 1b: agents, address and billing. Creates (or re-prices) the draft agreement.
+     *
+     * @param  array<string, mixed>  $b  validated BrokerageRequest data
+     */
+    public function saveBrokerage(Customer $customer, array $b, ?Coupon $coupon): Customer
+    {
+        return DB::transaction(function () use ($customer, $b, $coupon) {
+            $custom = $customer->quote_id ? \App\Models\Quote::find($customer->quote_id) : null;
+            $quote = $this->quotes->quote((int) $b['agents'], $custom ? null : $coupon, $custom, (string) ($b['billing'] ?? 'month'));
+            $customer->update([
+                'street' => $b['street'], 'city' => $b['city'], 'state_code' => $b['state_code'], 'zip' => $b['zip'], 'country_code' => 'US',
+                'agent_count' => $quote->agentsBilled, 'agent_count_entered' => $quote->agentsEntered,
+                'onboarding_stage' => 'agreement',
+            ]);
+            $contract = $this->draftContract($customer);
+            $contract
+                ? $contract->update($this->snapshot($quote) + $this->kind($custom))
+                : $this->createDraftContract($customer, $quote, $custom);
+
+            return $customer->fresh();
+        });
+    }
+
+    /** @return array<string, mixed> */
+    private function aboutAttributes(array $d): array
+    {
+        return [
+            'first_name' => $d['first_name'], 'last_name' => $d['last_name'], 'title' => $d['title'], 'company_name' => $d['company_name'],
+            'email' => strtolower($d['email']), 'phone_e164' => $d['phone_e164'],
+        ];
     }
 
     /** Update details before signing; the draft agreement is re-priced. */

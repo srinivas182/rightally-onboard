@@ -46,6 +46,15 @@ Clients can choose to pay yearly in advance for a discount (Settings > Pricing s
 ## Calls
 Prospects who aren’t ready to onboard book a call at `/book-a-call` (your GoHighLevel calendar). Each booking appears in **Calls** with the coupon and campaign they came from. Filter by coupon, mark no-shows, add notes, and email an onboarding link (with their coupon) after the call. Calls turn **Onboarded** automatically when that email pays the deposit. Set-up: `docs/gohighlevel-calls.md`.
 
+## Leads, invitation-only and follow-ups
+Onboarding step 1 has two screens: **About you** (name, title, email, phone, brokerage, referral code) and **Your brokerage** (agents, address, billing). Clicking *Next* on the first screen saves the person as a lead:
+- **Invitation only** (Settings > Pricing): a valid coupon or custom-quote link is needed to start. Switch it off to accept anyone.
+- **Lead email** goes to the addresses in Settings > Alerts (*New-lead email goes to*), with everything they entered.
+- **GoHighLevel**: with a Private Integration token and Location ID in Settings > Alerts, each lead becomes a GHL contact tagged `rightally-lead` and `coupon:<code>`, then `rightally-signed`, `rightally-paid`, `rightally-live` or `rightally-ended` as they progress.
+- **Customers > Not completed** shows *Stopped at* (Brokerage details, Agreement, Payment); resume links open that exact screen.
+- **Follow-ups**: four emails (about 1 hour, 1 day, 3 days and 7 days after they stopped), 8am–8pm Eastern only. They stop when the person signs, books a call or clicks the stop link. Edit them in Email templates (*Follow-up 1–4*); switch them off in Settings > Alerts.
+- **Address suggestions**: add a Google Maps key in Settings > Alerts (enable *Maps JavaScript API* and *Places API (New)*, restrict the key to `onboard.rightally.io/*`). Without a key, people type the address.
+
 ## Moving existing clients over
 For clients who were live before this app (already billed in Stripe): **Custom quotes > New quote > tick “Existing client”**. Enter their current Stripe subscription ID (Stripe > Customers > their subscription), per-agent fee, platform fee (0 if they only pay per agent), minimum agents and term (month to month, 6, 12 or 24 months). The first charge date defaults to their current renewal date. Send them the link: they sign a subscription-only agreement and confirm the card already on file (or add a new one). Nothing is charged that day; their old subscription stops renewing and the new one starts on the first charge date, so they’re never charged twice.
 

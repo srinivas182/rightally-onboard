@@ -15,6 +15,7 @@ use App\Support\Money;
 final class TeamAlerts
 {
     public const KINDS = [
+        'new_lead' => 'New lead (finished “About you”; email goes to the lead recipients)',
         'new_signing' => 'New signing',
         'payment_failed' => 'Payment failures',
         'go_lives' => 'Daily go-live summary',

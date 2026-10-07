@@ -1,5 +1,6 @@
 
 import './password-toggle';
+import { initAddressAutocomplete } from './address-autocomplete';
 // Interface text helper: fills :placeholders.
 const T = (key, vars = {}) => Object.entries(vars).reduce((t, [k, v]) => t.replace(`:${k}`, v), key);
 // Client onboarding: live pricing, coupon check, agent stepper and signature pad.
@@ -28,7 +29,8 @@ if (form) {
     const help = $('#agHelp');
     const couponInput = $('#coupon');
     const couponMsg = $('#couponMsg');
-    let coupon = { code: pricing.discountPercent > 0 && couponInput ? couponInput.value.trim().toUpperCase() : '', percent: pricing.discountPercent };
+    // On "Your brokerage" the code was entered on the previous screen, so it comes from the form.
+    let coupon = { code: pricing.discountPercent > 0 ? (couponInput ? couponInput.value.trim().toUpperCase() : (form.dataset.couponCode || '')) : '', percent: pricing.discountPercent };
 
     const render = () => {
         const entered = Math.max(1, parseInt(agentsInput.value, 10) || 1);
@@ -55,7 +57,7 @@ if (form) {
         $$('input[name="billing"]').forEach((r) => r.closest('.choice')?.classList.toggle('is-on', r.checked));
         setL('agents', String(billed));
         $$('[data-l-disc]').forEach((el) => el.classList.toggle('d-none', !discount));
-        help.textContent = entered < pricing.minAgents
+        if (help) help.textContent = entered < pricing.minAgents
             ? T('Billed at the :min-agent minimum. You can add agents any time.', { min: pricing.minAgents })
             : T('Agents who will use RightAlly. You can change this later.');
     };
@@ -115,6 +117,7 @@ if (form) {
 
     form.addEventListener('submit', () => { $$('button[type="submit"]', form).forEach((b) => { b.disabled = true; }); });
     render();
+    if (form.dataset.mapsKey) initAddressAutocomplete(form.dataset.mapsKey);
 }
 
 // ---- Step 2: agreement ----------------------------------------------

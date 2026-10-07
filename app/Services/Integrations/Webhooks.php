@@ -22,6 +22,7 @@ use Illuminate\Support\Str;
 final class Webhooks
 {
     public const EVENTS = [
+        'customer.lead' => 'New lead (finished “About you”)',
         'customer.signed' => 'Agreement signed',
         'customer.deposit_paid' => 'Deposit paid (or bank payment started)',
         'customer.live' => 'Went live (balance paid)',

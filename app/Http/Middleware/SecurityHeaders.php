@@ -25,12 +25,12 @@ class SecurityHeaders
         $csp = implode('; ', [
             "default-src 'self'",
             // Cloudflare Turnstile on the onboarding form.
-            "script-src 'self' 'nonce-{$nonce}' https://challenges.cloudflare.com https://js.stripe.com https://link.msgsndr.com{$dev}",
+            "script-src 'self' 'nonce-{$nonce}' https://challenges.cloudflare.com https://js.stripe.com https://link.msgsndr.com https://maps.googleapis.com{$dev}", // + Google Maps (address suggestions, only with a key)
             'frame-src https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com https://*.stripe.com https://api.leadconnectorhq.com https://*.leadconnectorhq.com https://link.msgsndr.com', // GoHighLevel booking calendar
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com{$dev}",
             "font-src 'self' https://fonts.gstatic.com data:",
-            "img-src 'self' data: blob: https://*.stripe.com",
-            "connect-src 'self' https://api.stripe.com https://*.stripe.com{$dev}",
+            "img-src 'self' data: blob: https://*.stripe.com https://maps.gstatic.com https://maps.googleapis.com",
+            "connect-src 'self' https://api.stripe.com https://*.stripe.com https://maps.googleapis.com https://places.googleapis.com{$dev}",
             "frame-ancestors 'none'",
             "form-action 'self'",
             "base-uri 'self'",

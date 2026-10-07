@@ -57,7 +57,8 @@
     @php $resumeUrl = app(\App\Services\Onboarding\ResumeLinks::class)->link($customer); @endphp
     <div class="alert alert-warning">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div><b>Onboarding not finished.</b> Next step for the client: {{ \App\Services\Onboarding\ResumeLinks::nextStep($customer)['label'] }}. Started {{ $customer->onboarding_started_at?->setTimezone($tz)->format('M j, g:i A') }}.</div>
+            <div><b>Onboarding not finished.</b> Stopped at: <b>{{ \App\Models\Customer::STAGES[$customer->onboarding_stage ?? 'agreement'] ?? '—' }}</b>. Next step for the client: {{ \App\Services\Onboarding\ResumeLinks::nextStep($customer)['label'] }}.
+                <div class="small mt-1">Follow-up emails: {{ $customer->follow_up_unsubscribed_at ? 'stopped by the client on '.$customer->follow_up_unsubscribed_at->setTimezone($tz)->format('M j') : $customer->follow_up_step.' of '.count(\App\Services\Onboarding\LeadFollowUps::AFTER_HOURS).' sent'.($customer->follow_up_last_at ? ' (last '.$customer->follow_up_last_at->setTimezone($tz)->format('M j, g:i A').')' : '') }} · GoHighLevel: {{ $customer->ghl_contact_id ? 'synced' : 'not synced' }}</div> Started {{ $customer->onboarding_started_at?->setTimezone($tz)->format('M j, g:i A') }}.</div>
             <form method="post" action="{{ route('admin.customers.resume-link', $customer) }}">@csrf<button class="btn btn-sm btn-primary"><svg class="ic me-1" aria-hidden="true"><use href="#i-send"/></svg>Email link to continue</button></form>
         </div>
         <div class="input-group input-group-sm mt-2"><input class="form-control font-monospace" value="{{ $resumeUrl }}" readonly aria-label="Link to continue"><button class="btn btn-outline-secondary" type="button" data-copy="{{ $resumeUrl }}">Copy link</button></div>

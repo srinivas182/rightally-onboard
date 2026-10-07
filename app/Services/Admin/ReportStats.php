@@ -38,6 +38,8 @@ final class ReportStats
         })->map(fn (Collection $g, string $key) => [
             'group' => $key,
             'started' => $g->count(),
+            // Finished both details screens (has an agreement, signed or not, or got further).
+            'details' => $g->filter(fn ($c) => $c->onboarding_stage !== 'brokerage')->count(),
             'signed' => $g->filter(fn ($c) => $c->contracts->isNotEmpty())->count(),
             'paid' => $g->filter(fn ($c) => $c->invoices->whereIn('status.value', ['paid', 'processing'])->isNotEmpty() || ! in_array($c->status, [CustomerStatus::Draft, CustomerStatus::ContractSigned], true))->count(),
             'live' => $g->filter(fn ($c) => $c->live_at !== null)->count(),

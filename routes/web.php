@@ -10,7 +10,9 @@ use App\Http\Controllers\Onboarding\CouponCheckController;
 use App\Http\Controllers\Onboarding\OnboardingController;
 use App\Http\Controllers\Onboarding\RenewalController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Models\Customer;
 use App\Services\Admin\SystemHealth;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,11 +27,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [OnboardingController::class, 'start'])->name('home');
 Route::get('/{slug}', [LegalPageController::class, 'show'])->whereIn('slug', ['privacy', 'terms'])->name('legal');
 Route::post('/start', [OnboardingController::class, 'store'])->middleware('throttle:onboarding')->name('onboarding.store');
+Route::post('/start/about', [OnboardingController::class, 'storeLead'])->middleware('throttle:onboarding')->name('onboarding.lead');
 Route::post('/coupon/check', CouponCheckController::class)->middleware('throttle:coupon-check')->name('onboarding.coupon');
 
 Route::prefix('onboard/{customer}')->name('onboarding.')->middleware('onboarding.access')->group(function () {
     Route::get('details', [OnboardingController::class, 'editDetails'])->name('details');
     Route::put('details', [OnboardingController::class, 'updateDetails'])->middleware('throttle:onboarding')->name('details.update');
+    Route::get('brokerage', [OnboardingController::class, 'brokerage'])->name('brokerage');
+    Route::put('brokerage', [OnboardingController::class, 'saveBrokerage'])->middleware('throttle:onboarding')->name('brokerage.save');
     Route::get('agreement', [OnboardingController::class, 'agreement'])->name('agreement');
     Route::post('agreement/sign', [OnboardingController::class, 'sign'])->middleware('throttle:onboarding')->name('sign');
     Route::post('agreement/delegate', [OnboardingController::class, 'delegate'])->middleware('throttle:onboarding')->name('delegate');
@@ -42,6 +47,17 @@ Route::prefix('onboard/{customer}')->name('onboarding.')->middleware('onboarding
     Route::get('existing/return', [OnboardingController::class, 'existingReturn'])->name('existing.return');
     Route::get('done', [OnboardingController::class, 'done'])->name('done');
 });
+
+// One-click stop for follow-up reminders (signed link in each email).
+Route::get('/follow-ups/stop/{customer:uuid}', function (Customer $customer) {
+    if (! $customer->follow_up_unsubscribed_at) {
+        $customer->timestamps = false;
+        $customer->forceFill(['follow_up_unsubscribed_at' => now()])->save();
+        app(AuditLogger::class)->log('customer.follow_ups_stopped', "{$customer->email} stopped follow-up reminders", $customer, null, 'client');
+    }
+
+    return view('onboarding.follow-ups-stopped');
+})->middleware(['signed', 'throttle:20,1'])->name('followups.stop');
 
 // Book a call (GoHighLevel calendar embedded) and the GoHighLevel webhook for appointments.
 Route::get('/book-a-call', [BookCallController::class, 'show'])->name('book');

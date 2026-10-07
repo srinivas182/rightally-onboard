@@ -57,6 +57,8 @@ class Customer extends Authenticatable implements CanResetPasswordContract
             'suspended_at' => 'datetime',
             'paused_until' => 'date',
             'service_ends_on' => 'date',
+            'follow_up_last_at' => 'datetime',
+            'follow_up_unsubscribed_at' => 'datetime',
             'end_requested_at' => 'datetime',
             'email_bounced_at' => 'datetime',
             'cancelled_at' => 'datetime',
@@ -117,4 +119,16 @@ class Customer extends Authenticatable implements CanResetPasswordContract
             'password_link' => $link,
         ]);
     }
+
+    protected static function booted(): void
+    {
+        // Where onboarding stands: past Draft, the stage follows the status.
+        static::saving(function (Customer $c) {
+            if ($c->isDirty('status') && $c->status !== CustomerStatus::Draft) {
+                $c->onboarding_stage = $c->status === CustomerStatus::ContractSigned ? 'payment' : 'done';
+            }
+        });
+    }
+
+    public const STAGES = ['brokerage' => 'Brokerage details', 'agreement' => 'Agreement', 'payment' => 'Payment', 'done' => 'Done'];
 }

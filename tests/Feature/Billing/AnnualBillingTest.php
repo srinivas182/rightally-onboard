@@ -41,8 +41,6 @@ class AnnualBillingTest extends TestCase
 
     public function test_client_can_choose_yearly_billing_and_the_agreement_says_so(): void
     {
-        $this->get('/')->assertSee('Subscription billing')->assertSee('Save 10%');
-
         $this->post('/start', ['first_name' => 'Maria', 'last_name' => 'Alvarez', 'title' => 'Owner', 'company_name' => 'Sunline Realty Group',
             'email' => 'maria@sunlinerealty.com', 'phone' => '3055550148', 'agents' => 8, 'street' => '1 Main St', 'city' => 'Miami',
             'state_code' => 'FL', 'zip' => '33131', 'billing' => 'year'])->assertRedirect();

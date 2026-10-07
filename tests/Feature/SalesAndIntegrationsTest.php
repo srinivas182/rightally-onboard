@@ -113,7 +113,7 @@ class SalesAndIntegrationsTest extends TestCase
         $this->get('/admin/reports?from=2025-01-01&to=2026-12-31&group=source')->assertOk()
             ->assertSee('Onboarding funnel')->assertSee('facebook spring')->assertSee('Monthly recurring revenue')->assertSee('Next 3 months');
         $csv = $this->get('/admin/reports/funnel.csv?from=2025-01-01&to=2026-12-31')->streamedContent();
-        $this->assertStringContainsString('Source,Started,Signed,"Paid deposit",Live', $csv);
+        $this->assertStringContainsString('Source,Started,"Details done",Signed,"Paid deposit",Live', $csv);
         $this->assertStringContainsString('Month,Deposits', $this->get('/admin/reports/revenue.csv')->streamedContent());
     }
 

@@ -8,9 +8,12 @@ use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\OnboardingAccess;
+use App\Http\Requests\Onboarding\AboutRequest;
+use App\Http\Requests\Onboarding\BrokerageRequest;
 use App\Http\Requests\Onboarding\DetailsRequest;
 use App\Http\Requests\Onboarding\SignRequest;
 use App\Models\Contract;
+use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Quote;
@@ -22,6 +25,7 @@ use App\Services\Email\EmailSender;
 use App\Services\Onboarding\ClientAccess;
 use App\Services\Onboarding\CouponCheck;
 use App\Services\Onboarding\ExistingClientActivation;
+use App\Services\Onboarding\LeadEvents;
 use App\Services\Onboarding\OnboardingService;
 use App\Services\Onboarding\ResumeLinks;
 use App\Services\Pricing\QuoteCalculator;
@@ -40,7 +44,6 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -60,101 +63,198 @@ class OnboardingController extends Controller
 
     // ---- Step 1: details ------------------------------------------------
 
+    // ---- Step 1a: About you ---------------------------------------------
+
     public function start(Request $request): View
     {
         $this->captureTracking($request);
         $custom = $this->sessionQuote($request);
         $quoteProblem = $request->filled('quote') && ! $custom
-            ? __('This quote link has expired or has already been used. You can continue at our standard pricing, or reply to your quote email for a new link.')
+            ? __('This quote link has expired or has already been used. Reply to your quote email for a new link.')
             : null;
-        $code = $custom ? '' : strtoupper(trim((string) ($request->query('coupon') ?? old('coupon', ''))));
+        $code = $custom ? '' : strtoupper(trim((string) ($request->query('coupon') ?? old('coupon', $request->session()->get('onboarding.tracking.coupon_link', '')))));
         $check = $this->coupons->check($code);
 
         return view('onboarding.details', $this->detailsViewData(null, $code, $check, $custom) + [
-            'action' => route('onboarding.store'),
+            'part' => 'about',
+            'action' => route('onboarding.lead'),
             'method' => 'post',
             'fromLink' => $request->has('coupon'),
             'quoteProblem' => $quoteProblem,
         ]);
     }
 
+    /** 1a "Next": checks the invitation code, saves the person as a lead, and moves to 1b. */
+    public function storeLead(AboutRequest $request): RedirectResponse
+    {
+        if (! $this->turnstile->verify($request->input('cf-turnstile-response'), $request->ip())) {
+            throw ValidationException::withMessages(['turnstile' => __('Please confirm you’re not a robot, then try again.')]);
+        }
+        if ($existing = $this->existingAccount($request, (string) $request->validated('email'))) {
+            return $existing;
+        }
+        $custom = $this->sessionQuote($request);
+        $coupon = $this->invitation($custom, (string) $request->validated('coupon'));
+
+        $tracking = $request->session()->get('onboarding.tracking', []);
+        $customer = $this->onboarding->startLead($request->validated() + ['phone_e164' => $request->input('phone_e164')], $coupon, [
+            'source' => $custom ? "Custom quote: {$custom->label}" : $this->sourceLabel($tracking, $coupon?->code),
+            'utm' => $tracking['utm'] ?? null,
+        ], $custom);
+        OnboardingAccess::remember($request, $customer->uuid);
+        app(LeadEvents::class)->created($customer);
+
+        return redirect()->route('onboarding.brokerage', $customer);
+    }
+
+    /**
+     * Single-step submission of every detail (older links and integrations): same checks, then straight to the agreement.
+     */
     public function store(DetailsRequest $request): RedirectResponse
     {
         if (! $this->turnstile->verify($request->input('cf-turnstile-response'), $request->ip())) {
             throw ValidationException::withMessages(['turnstile' => __('Please confirm you’re not a robot, then try again.')]);
         }
-
-        // One email, one account: send the existing client a link instead of creating a duplicate.
-        $existing = Customer::where('email', strtolower((string) $request->validated('email')))->first();
-        if ($existing) {
-            $allowed = (array) $request->session()->get(OnboardingAccess::SESSION_KEY, []);
-            if (in_array($existing->uuid, $allowed, true) && ResumeLinks::isIncomplete($existing)) {
-                return redirect()->route(ResumeLinks::nextStep($existing)['route'], $existing); // same browser: carry on
-            }
-            $sent = app(ClientAccess::class)->send($existing);
-            $message = $sent === 'resume'
-                ? __('You’ve already started setting up RightAlly with this email. We’ve emailed you a link to continue where you left off.')
-                : __('An account already exists for this email. Sign in at :url, or contact us if you need a second account.', ['url' => route('account.login')]);
-            throw ValidationException::withMessages(['email' => $message]);
+        if ($existing = $this->existingAccount($request, (string) $request->validated('email'))) {
+            return $existing;
         }
-
         $custom = $this->sessionQuote($request);
-        $check = $custom ? ['coupon' => null, 'message' => null] : $this->coupons->check($request->validated('coupon'));
-        if ($check['message']) {
-            throw ValidationException::withMessages(['coupon' => $check['message']]);
-        }
+        $coupon = $this->invitation($custom, (string) $request->validated('coupon'));
 
         $tracking = $request->session()->get('onboarding.tracking', []);
-        $customer = $this->onboarding->start($request->validated() + ['phone_e164' => $request->input('phone_e164')], $check['coupon'], [
-            'source' => $custom ? "Custom quote: {$custom->label}" : $this->sourceLabel($tracking, $check['coupon']?->code),
+        $customer = $this->onboarding->start($request->validated() + ['phone_e164' => $request->input('phone_e164')], $coupon, [
+            'source' => $custom ? "Custom quote: {$custom->label}" : $this->sourceLabel($tracking, $coupon?->code),
             'utm' => $tracking['utm'] ?? null,
         ], $custom);
-
         OnboardingAccess::remember($request, $customer->uuid);
+        app(LeadEvents::class)->created($customer);
 
         return redirect()->route('onboarding.agreement', $customer);
     }
 
+    /** Back to 1a for a saved lead (before signing). */
     public function editDetails(Customer $customer): View|RedirectResponse
     {
-        if (! $this->onboarding->draftContract($customer)) {
+        if (! ResumeLinks::isIncomplete($customer) || $customer->status !== CustomerStatus::Draft) {
             return redirect()->route('onboarding.agreement', $customer);
         }
-        $code = old('coupon', $customer->coupon?->code ?? '');
-
         $custom = $customer->quote_id ? Quote::find($customer->quote_id) : null;
+        $code = $custom ? '' : (string) old('coupon', $customer->coupon?->code ?? '');
 
-        return view('onboarding.details', $this->detailsViewData($customer, $custom ? '' : $code, $custom ? ['coupon' => null, 'message' => null] : $this->coupons->check($code), $custom) + [
+        return view('onboarding.details', $this->detailsViewData($customer, $code, $custom ? ['coupon' => null, 'message' => null] : $this->coupons->check($code), $custom) + [
+            'part' => 'about',
             'action' => route('onboarding.details.update', $customer),
             'method' => 'put',
             'fromLink' => false,
         ]);
     }
 
-    public function updateDetails(DetailsRequest $request, Customer $customer): RedirectResponse
+    public function updateDetails(Request $request, Customer $customer): RedirectResponse
     {
-        if (Customer::where('email', strtolower((string) $request->validated('email')))->whereKeyNot($customer->id)->exists()) {
-            throw ValidationException::withMessages(['email' => __('Another account already uses this email. Use a different email, or contact us.')]);
-        }
-        $check = $this->coupons->check($request->validated('coupon'));
-        if ($check['message']) {
-            throw ValidationException::withMessages(['coupon' => $check['message']]);
-        }
-
-        try {
-            $this->onboarding->update($customer, $request->validated() + ['phone_e164' => $request->input('phone_e164')], $check['coupon']);
-        } catch (RuntimeException) {
+        if ($customer->status !== CustomerStatus::Draft) {
             return redirect()->route('onboarding.agreement', $customer);
         }
+        $data = app(AboutRequest::class)->validated();
+        if (Customer::where('email', strtolower((string) $data['email']))->whereKeyNot($customer->id)->exists()) {
+            throw ValidationException::withMessages(['email' => __('Another account already uses this email. Use a different email, or contact us.')]);
+        }
+        $custom = $customer->quote_id ? Quote::find($customer->quote_id) : null;
+        $coupon = $this->invitation($custom, (string) ($data['coupon'] ?? ''));
+        $this->onboarding->updateAbout($customer, $data + ['phone_e164' => $request->input('phone_e164')], $coupon);
+        if ($request->filled('street')) { // every detail in one go (older form): finish 1b too
+            $this->onboarding->saveBrokerage($customer->fresh(), app(BrokerageRequest::class)->validated(), $coupon);
+
+            return redirect()->route('onboarding.agreement', $customer);
+        }
+
+        return redirect()->route('onboarding.brokerage', $customer);
+    }
+
+    // ---- Step 1b: Your brokerage ----------------------------------------
+
+    public function brokerage(Customer $customer): View|RedirectResponse
+    {
+        if ($customer->status !== CustomerStatus::Draft) {
+            return redirect()->route('onboarding.agreement', $customer);
+        }
+        $custom = $customer->quote_id ? Quote::find($customer->quote_id) : null;
+        $code = $custom ? '' : (string) ($customer->coupon?->code ?? '');
+
+        return view('onboarding.details', $this->detailsViewData($customer, $code, $custom ? ['coupon' => null, 'message' => null] : $this->coupons->check($code), $custom) + [
+            'part' => 'brokerage',
+            'action' => route('onboarding.brokerage.save', $customer),
+            'method' => 'put',
+            'fromLink' => false,
+        ]);
+    }
+
+    public function saveBrokerage(BrokerageRequest $request, Customer $customer): RedirectResponse
+    {
+        if ($customer->status !== CustomerStatus::Draft) {
+            return redirect()->route('onboarding.agreement', $customer);
+        }
+        $custom = $customer->quote_id ? Quote::find($customer->quote_id) : null;
+        $coupon = null;
+        if (! $custom && $customer->coupon) {
+            $check = $this->coupons->check($customer->coupon->code);
+            if ($check['message']) {
+                // The code expired or ran out since 1a: send them back to fix it.
+                return redirect()->route('onboarding.details', $customer)->withErrors(['coupon' => $check['message']]);
+            }
+            $coupon = $check['coupon'];
+        }
+        $this->onboarding->saveBrokerage($customer, $request->validated(), $coupon);
 
         return redirect()->route('onboarding.agreement', $customer);
     }
 
+    /**
+     * Invitation check: with "Require a valid coupon" on (Settings > Pricing), a valid coupon
+     * or custom quote is needed to continue. With it off, a coupon is optional but must be valid.
+     */
+    private function invitation(?Quote $custom, string $code): ?Coupon
+    {
+        if ($custom) {
+            return null;
+        }
+        $code = strtoupper(trim($code));
+        if ($code === '' && (string) $this->settings->get('pricing', 'require_coupon') === '1') {
+            throw ValidationException::withMessages(['coupon' => __('RightAlly is currently by invitation. Enter your referral code, or book a call and we’ll get you set up.')]);
+        }
+        $check = $this->coupons->check($code);
+        if ($check['message']) {
+            throw ValidationException::withMessages(['coupon' => $check['message']]);
+        }
+
+        return $check['coupon'];
+    }
+
+    /** One email, one account: carry on in the same browser, otherwise email the person a link. */
+    private function existingAccount(Request $request, string $email): ?RedirectResponse
+    {
+        $existing = Customer::where('email', strtolower($email))->first();
+        if (! $existing) {
+            return null;
+        }
+        $allowed = (array) $request->session()->get(OnboardingAccess::SESSION_KEY, []);
+        if (in_array($existing->uuid, $allowed, true) && ResumeLinks::isIncomplete($existing)) {
+            return redirect()->route(ResumeLinks::nextStep($existing)['route'], $existing);
+        }
+        $sent = app(ClientAccess::class)->send($existing);
+        $message = $sent === 'resume'
+            ? __('You’ve already started setting up RightAlly with this email. We’ve emailed you a link to continue where you left off.')
+            : __('An account already exists for this email. Sign in at :url, or contact us if you need a second account.', ['url' => route('account.login')]);
+        throw ValidationException::withMessages(['email' => $message]);
+    }
+
     // ---- Step 2: review and sign ---------------------------------------
 
-    public function agreement(Customer $customer): View
+    public function agreement(Customer $customer): View|RedirectResponse
     {
         $contract = $this->onboarding->currentContract($customer);
+        if (! $contract && $customer->status === CustomerStatus::Draft) {
+            return redirect()->route('onboarding.brokerage', $customer); // "Your brokerage" not done yet
+        }
         abort_unless($contract, 404);
         $contract->loadMissing('template', 'customer');
 
@@ -457,6 +557,7 @@ class OnboardingController extends Controller
             'agents' => $agents,
             'phone' => $customer ? UsPhone::format($customer->phone_e164) : '',
             'turnstileSiteKey' => $this->turnstile->enabled() ? $this->turnstile->siteKey() : null,
+            'mapsKey' => (string) $this->settings->get('alerts', 'google_maps_key') ?: null,
             'step' => 1,
             'ledger' => [
                 'setup' => $quote->setupFeeCents,

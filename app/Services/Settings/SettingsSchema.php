@@ -29,6 +29,8 @@ final class SettingsSchema
                 'fields' => [
                     'setup_fee' => ['default' => '3000.00', 'rules' => ['required', 'numeric', 'min:0', 'max:1000000'], 'type' => 'money'],
                     'deposit_percent' => ['default' => '10', 'rules' => ['required', 'numeric', 'min:0', 'max:100']],
+                    // Invitation-only: a valid coupon (or custom quote) is needed to start onboarding.
+                    'require_coupon' => ['default' => '1', 'rules' => ['boolean']],
                     'annual_enabled' => ['default' => '1', 'rules' => ['boolean']],
                     'annual_discount_percent' => ['default' => '10', 'rules' => ['nullable', 'numeric', 'min:0', 'max:50']],
                     'go_live_days' => ['default' => '30', 'rules' => ['required', 'integer', 'min:1', 'max:365']],
@@ -101,6 +103,15 @@ final class SettingsSchema
                     'email' => ['default' => '1', 'rules' => ['boolean']],
                     'slack_webhook_url' => ['default' => null, 'rules' => ['nullable', 'url:https', 'starts_with:https://hooks.slack.com/', 'max:255'], 'secret' => true],
                     'new_signing' => ['default' => '1', 'rules' => ['boolean']],
+                    'new_lead' => ['default' => '1', 'rules' => ['boolean']],
+                    // Who gets the new-lead email (comma-separated). Separate from the team CC list.
+                    'lead_recipients' => ['default' => 'm.sunil@mayuraconsultancy.com, srinivas@mayuraconsultancy.com', 'rules' => ['nullable', 'string', 'max:500']],
+                    'follow_ups' => ['default' => '1', 'rules' => ['boolean']],
+                    // Google Maps (Places API) browser key for address autocomplete; blank = type the address.
+                    'google_maps_key' => ['default' => null, 'rules' => ['nullable', 'string', 'max:120', 'regex:/^[A-Za-z0-9_-]+$/']],
+                    // GoHighLevel: sync leads as contacts (Private Integration token + Location ID).
+                    'ghl_token' => ['default' => null, 'rules' => ['nullable', 'string', 'max:255'], 'secret' => true],
+                    'ghl_location_id' => ['default' => null, 'rules' => ['nullable', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/']],
                     'payment_failed' => ['default' => '1', 'rules' => ['boolean']],
                     'go_lives' => ['default' => '1', 'rules' => ['boolean']],
                     'chargebacks' => ['default' => '1', 'rules' => ['boolean']],

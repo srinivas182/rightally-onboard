@@ -27,9 +27,11 @@ final class ResumeLinks
     /** @return array{route: string, label: string} */
     public static function nextStep(Customer $customer): array
     {
-        return $customer->status === CustomerStatus::ContractSigned
-            ? ['route' => 'onboarding.payment', 'label' => 'add your payment method and pay the deposit']
-            : ['route' => 'onboarding.agreement', 'label' => 'review and sign your agreement'];
+        return match (true) {
+            $customer->status === CustomerStatus::ContractSigned => ['route' => 'onboarding.payment', 'label' => 'add your payment method and pay the deposit'],
+            $customer->onboarding_stage === 'brokerage' => ['route' => 'onboarding.brokerage', 'label' => 'add your brokerage details'],
+            default => ['route' => 'onboarding.agreement', 'label' => 'review and sign your agreement'],
+        };
     }
 
     public function link(Customer $customer): string

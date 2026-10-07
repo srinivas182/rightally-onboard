@@ -3,8 +3,10 @@
 namespace App\Observers;
 
 use App\Enums\CustomerStatus as S;
+use App\Jobs\SyncGhlContact;
 use App\Models\Customer;
 use App\Services\Calls\GhlAppointments;
+use App\Services\Integrations\GhlContacts;
 use App\Services\Integrations\TeamAlerts;
 use App\Services\Integrations\Webhooks;
 
@@ -47,6 +49,10 @@ class CustomerObserver
             return;
         }
 
+        // GoHighLevel: tag the contact with the new stage.
+        if (isset(GhlContacts::STAGE_TAGS[$event]) && app(GhlContacts::class)->isConfigured()) {
+            SyncGhlContact::dispatch($customer->id, [GhlContacts::STAGE_TAGS[$event]]);
+        }
         if ($event === 'customer.deposit_paid') {
             GhlAppointments::markOnboarded($customer);
         }
