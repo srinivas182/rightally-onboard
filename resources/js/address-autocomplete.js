@@ -4,14 +4,15 @@ const $ = (s, r = document) => r.querySelector(s);
 
 function loadGoogle(key) {
     if (window.google?.maps?.importLibrary) return Promise.resolve();
+    // Google calls our "callback" once it has finished setting up (with loading=async this is
+    // later than the script's load event).
     return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('Google Maps took too long to start')), 15000);
+        window.__raMapsReady = () => { clearTimeout(timer); resolve(); };
         const s = document.createElement('script');
-        s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&loading=async&libraries=places`;
+        s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&loading=async&libraries=places&callback=__raMapsReady`;
         s.async = true;
-        const nonce = document.querySelector('meta[name="csp-nonce"]')?.content;
-        if (nonce) s.nonce = nonce;
-        s.onload = () => (window.google?.maps?.importLibrary ? resolve() : reject(new Error('maps')));
-        s.onerror = reject;
+        s.onerror = () => { clearTimeout(timer); reject(new Error('Google Maps script blocked or unreachable')); };
         document.head.appendChild(s);
     });
 }
@@ -22,7 +23,7 @@ export async function initAddressAutocomplete(key) {
     let places;
     try {
         await loadGoogle(key);
-        places = await window.google.maps.importLibrary('places');
+        places = window.google.maps.importLibrary ? await window.google.maps.importLibrary('places') : window.google.maps.places;
     } catch (e) {
         console.warn('[RightAlly] Address suggestions unavailable: Google Maps did not load.', e); // typing still works
         return;
@@ -67,7 +68,7 @@ export async function initAddressAutocomplete(key) {
                 const c = (place.addressComponents || []).find((x) => x.types.includes(type));
                 return c ? (short ? c.shortText : c.longText) : '';
             };
-            street.value = [get('street_number'), get('route')].filter(Boolean).join(' ') || prediction.mainText?.text || street.value;
+            street.value = [get('street_number'), get('route', true)].filter(Boolean).join(' ') || prediction.mainText?.text || street.value;
             const city = get('locality') || get('sublocality') || get('postal_town') || get('administrative_area_level_3');
             if (city) $('#city').value = city;
             const state = get('administrative_area_level_1', true);
