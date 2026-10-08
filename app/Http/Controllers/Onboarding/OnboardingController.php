@@ -75,6 +75,15 @@ class OnboardingController extends Controller
         $code = $custom ? '' : strtoupper(trim((string) ($request->query('coupon') ?? old('coupon', $request->session()->get('onboarding.tracking.coupon_link', '')))));
         $check = $this->coupons->check($code);
 
+        // Invitation only: without a valid code (or custom quote) show the invitation page, not the form.
+        if (! $custom && (string) $this->settings->get('pricing', 'require_coupon') === '1' && ($code === '' || ! $check['coupon'])) {
+            return view('onboarding.invite', [
+                'code' => $code,
+                'error' => $code !== '' ? ($check['message'] ?: __('That code isn’t valid.')) : null,
+                'quoteProblem' => $quoteProblem,
+            ]);
+        }
+
         return view('onboarding.details', $this->detailsViewData(null, $code, $check, $custom) + [
             'part' => 'about',
             'action' => route('onboarding.lead'),

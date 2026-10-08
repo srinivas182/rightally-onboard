@@ -56,7 +56,11 @@ class TwoPartOnboardingTest extends TestCase
 
     public function test_invitation_only_needs_a_valid_code_to_start(): void
     {
-        $this->get('/')->assertOk()->assertSee('Referral code')->assertSee('part 1 of 2')->assertSee('No code? Book a call')
+        // No code: the invitation page, not the form.
+        $this->get('/')->assertOk()->assertSee('RightAlly is currently by invitation')->assertSee('Book a call with us')->assertDontSee('First name');
+        $this->get('/?coupon=nope')->assertOk()->assertSee('is-invalid', false)->assertDontSee('First name');
+        // Valid code: the form.
+        $this->get('/?coupon=christopher-jones')->assertOk()->assertSee('Referral code')->assertSee('part 1 of 2')->assertSee('First name')
             ->assertDontSee('Number of agents');
         $this->post('/start/about', $this->about(['coupon' => '']))->assertSessionHasErrors('coupon');
         $this->assertStringContainsString('by invitation', session('errors')->first('coupon'));
@@ -125,7 +129,7 @@ class TwoPartOnboardingTest extends TestCase
         $c = Customer::firstOrFail();
         $res = $this->get("/onboard/{$c->uuid}/brokerage")->assertSee('data-maps-key="AIzaTestKey123"', false);
         $this->assertStringContainsString('https://places.googleapis.com', $res->headers->get('Content-Security-Policy'));
-        $this->get('/')->assertDontSee('data-maps-key', false); // not on "About you"
+        $this->get('/?coupon=christopher-jones')->assertDontSee('data-maps-key', false); // not on "About you"
     }
 
     public function test_admin_sees_where_people_stopped_and_resume_links_open_that_screen(): void
