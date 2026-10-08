@@ -23,11 +23,16 @@ export async function initAddressAutocomplete(key) {
     try {
         await loadGoogle(key);
         places = await window.google.maps.importLibrary('places');
-    } catch {
-        return; // typing still works
+    } catch (e) {
+        console.warn('[RightAlly] Address suggestions unavailable: Google Maps did not load.', e); // typing still works
+        return;
     }
     const { AutocompleteSuggestion, AutocompleteSessionToken } = places;
-    if (!AutocompleteSuggestion) return;
+    if (!AutocompleteSuggestion) {
+        console.warn('[RightAlly] Address suggestions unavailable: enable "Places API (New)" for this key.');
+        return;
+    }
+    console.info('[RightAlly] Address suggestions ready.');
 
     const list = document.createElement('ul');
     list.className = 'addr-suggest list-unstyled d-none';
@@ -69,7 +74,7 @@ export async function initAddressAutocomplete(key) {
             if (state && $('#state_code')) $('#state_code').value = state;
             const zip = get('postal_code');
             if (zip) $('#zip').value = zip;
-        } catch { /* keep what they typed */ }
+        } catch (e) { console.warn('[RightAlly] Could not read the chosen address:', e?.message || e); }
         token = new AutocompleteSessionToken(); // one billing session per chosen address
     };
 
@@ -80,10 +85,13 @@ export async function initAddressAutocomplete(key) {
         timer = setTimeout(async () => {
             try {
                 const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
-                    input: q, sessionToken: token, includedRegionCodes: ['us'], includedPrimaryTypes: ['street_address', 'premise', 'subpremise'],
+                    input: q, sessionToken: token, includedRegionCodes: ['us'], region: 'us',
                 });
                 items = (suggestions || []).map((s) => s.placePrediction).filter(Boolean).slice(0, 5);
-            } catch { items = []; }
+            } catch (e) {
+                console.warn('[RightAlly] Address suggestion request failed:', e?.message || e);
+                items = [];
+            }
             list.innerHTML = '';
             items.forEach((p, i) => {
                 const li = document.createElement('li');

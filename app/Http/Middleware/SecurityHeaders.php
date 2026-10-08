@@ -21,16 +21,23 @@ class SecurityHeaders
         $response = $next($request);
 
         $dev = app()->isLocal() ? ' http://localhost:5173 ws://localhost:5173 http://127.0.0.1:5173 ws://127.0.0.1:5173' : '';
+        // Google Maps (address suggestions) needs Google's documented allowances, only on the screen that uses it.
+        $maps = $request->routeIs('onboarding.brokerage')
+            ? ['script' => " https://*.googleapis.com https://*.gstatic.com https://*.google.com https://*.ggpht.com https://*.googleusercontent.com blob: 'unsafe-eval'",
+                'connect' => ' https://*.googleapis.com https://*.google.com https://*.gstatic.com data: blob:',
+                'img' => ' https://*.googleapis.com https://*.gstatic.com https://*.google.com https://*.googleusercontent.com',
+                'frame' => ' https://*.google.com', 'worker' => "; worker-src 'self' blob:"]
+            : ['script' => '', 'connect' => '', 'img' => '', 'frame' => '', 'worker' => ''];
 
         $csp = implode('; ', [
             "default-src 'self'",
             // Cloudflare Turnstile on the onboarding form.
-            "script-src 'self' 'nonce-{$nonce}' https://challenges.cloudflare.com https://js.stripe.com https://link.msgsndr.com https://maps.googleapis.com{$dev}", // + Google Maps (address suggestions, only with a key)
-            'frame-src https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com https://*.stripe.com https://api.leadconnectorhq.com https://*.leadconnectorhq.com https://link.msgsndr.com', // GoHighLevel booking calendar
+            "script-src 'self' 'nonce-{$nonce}' https://challenges.cloudflare.com https://js.stripe.com https://link.msgsndr.com https://maps.googleapis.com{$maps['script']}{$dev}", // + Google Maps (address suggestions, only with a key)
+            'frame-src https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com https://*.stripe.com https://api.leadconnectorhq.com https://*.leadconnectorhq.com https://link.msgsndr.com'.$maps['frame'], // GoHighLevel booking calendar
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com{$dev}",
             "font-src 'self' https://fonts.gstatic.com data:",
-            "img-src 'self' data: blob: https://*.stripe.com https://maps.gstatic.com https://maps.googleapis.com",
-            "connect-src 'self' https://api.stripe.com https://*.stripe.com https://maps.googleapis.com https://places.googleapis.com{$dev}",
+            "img-src 'self' data: blob: https://*.stripe.com https://maps.gstatic.com https://maps.googleapis.com{$maps['img']}",
+            "connect-src 'self' https://api.stripe.com https://*.stripe.com https://maps.googleapis.com https://places.googleapis.com{$maps['connect']}{$dev}".$maps['worker'],
             "frame-ancestors 'none'",
             "form-action 'self'",
             "base-uri 'self'",
