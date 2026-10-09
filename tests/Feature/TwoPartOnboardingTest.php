@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\CustomerStatus;
+use App\Models\ActivityLog;
 use App\Models\Admin;
 use App\Models\CallBooking;
 use App\Models\Contract;
@@ -185,5 +186,27 @@ class TwoPartOnboardingTest extends TestCase
         Carbon::setTestNow(now()->addHours(2));
         $this->assertSame(0, app(LeadFollowUps::class)->run());
         $this->assertSame('payment', Customer::where('email', 'pat@bay.com')->value('onboarding_stage'));
+    }
+
+    public function test_activity_records_every_onboarding_step_and_the_emails(): void
+    {
+        $this->post('/start/about', $this->about());
+        $c = Customer::firstOrFail();
+        $this->put("/onboard/{$c->uuid}/brokerage", $this->brokerage());
+        $this->get("/onboard/{$c->uuid}/agreement");
+        $this->get("/onboard/{$c->uuid}/agreement"); // second view: not logged again
+        $this->put("/onboard/{$c->uuid}/details", $this->about(['title' => 'Broker/Owner']));
+
+        $actions = ActivityLog::where('subject_id', $c->id)->pluck('action')->all();
+        foreach (['onboarding.started', 'lead.alert_sent', 'onboarding.brokerage_added', 'onboarding.agreement_opened', 'onboarding.about_updated'] as $a) {
+            $this->assertContains($a, $actions);
+        }
+        $this->assertSame(1, collect($actions)->filter(fn ($a) => $a === 'onboarding.agreement_opened')->count());
+
+        $this->actingAs(Admin::factory()->superAdmin()->withTwoFactor()->create(), 'admin');
+        $this->get("/admin/customers/{$c->uuid}")
+            ->assertSee('started onboarding for Harbor Point Realty: About you completed, referral code CHRISTOPHER-JONES')
+            ->assertSee('Client added brokerage details: 12 agents, 400 N Ashley Dr, Tampa FL 33602, monthly billing')
+            ->assertSee('Client opened agreement')->assertSee('Client updated About you: title');
     }
 }

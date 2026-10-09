@@ -13,6 +13,7 @@ use App\Models\CallBooking;
 use App\Models\Contract;
 use App\Models\Credit;
 use App\Models\Customer;
+use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Invoice;
 use App\Services\Admin\CustomerEraser;
@@ -94,7 +95,11 @@ class CustomerController extends Controller
                 ->where(fn ($q) => $q->where(fn ($w) => $w->where('subject_type', $customer->getMorphClass())->where('subject_id', $customer->id))
                     ->orWhere(fn ($w) => $w->where('subject_type', (new Contract)->getMorphClass())->whereIn('subject_id', $customer->contracts->pluck('id')))
                     ->orWhere(fn ($w) => $w->where('subject_type', (new Invoice)->getMorphClass())->whereIn('subject_id', $customer->invoices->pluck('id'))))
-                ->latest('id')->limit(100)->get(),
+                ->latest('id')->limit(100)->get()
+                // Emails sent to the client appear in the same timeline.
+                ->concat(EmailLog::where('customer_id', $customer->id)->latest('id')->limit(100)->get()
+                    ->map(fn ($e) => (object) ['description' => 'Email: “'.$e->subject.'” to '.$e->to_email.' ('.$e->status.')', 'created_at' => $e->created_at, 'admin' => null, 'actor_type' => 'email', 'ip' => null, 'is_email' => true]))
+                ->sortByDesc('created_at')->values()->take(150),
             'customEmails' => EmailTemplate::where('is_system', false)->where('is_enabled', true)->orderBy('name')->get(),
             'newToken' => session('agent_token'),
             'pauseProblem' => $pauses->canPause($customer),

@@ -12,6 +12,7 @@ use App\Http\Requests\Onboarding\AboutRequest;
 use App\Http\Requests\Onboarding\BrokerageRequest;
 use App\Http\Requests\Onboarding\DetailsRequest;
 use App\Http\Requests\Onboarding\SignRequest;
+use App\Models\ActivityLog;
 use App\Models\Contract;
 use App\Models\Coupon;
 use App\Models\Customer;
@@ -111,6 +112,8 @@ class OnboardingController extends Controller
             'utm' => $tracking['utm'] ?? null,
         ], $custom);
         OnboardingAccess::remember($request, $customer->uuid);
+        $this->logStep($customer, 'onboarding.started', "{$customer->fullName()} ({$customer->title}) started onboarding for {$customer->company_name}: About you completed"
+            .($coupon ? ", referral code {$coupon->code}" : ($custom ? ", custom quote {$custom->label}" : '')).($customer->source ? ", source {$customer->source}" : ''));
         app(LeadEvents::class)->created($customer);
 
         return redirect()->route('onboarding.brokerage', $customer);
@@ -136,6 +139,7 @@ class OnboardingController extends Controller
             'utm' => $tracking['utm'] ?? null,
         ], $custom);
         OnboardingAccess::remember($request, $customer->uuid);
+        $this->logStep($customer, 'onboarding.started', "{$customer->fullName()} started onboarding for {$customer->company_name} with all details in one step".($coupon ? " (code {$coupon->code})" : ''));
         app(LeadEvents::class)->created($customer);
 
         return redirect()->route('onboarding.agreement', $customer);
@@ -169,7 +173,10 @@ class OnboardingController extends Controller
         }
         $custom = $customer->quote_id ? Quote::find($customer->quote_id) : null;
         $coupon = $this->invitation($custom, (string) ($data['coupon'] ?? ''));
+        $before = $customer->only(['first_name', 'last_name', 'title', 'company_name', 'email', 'phone_e164', 'coupon_id']);
         $this->onboarding->updateAbout($customer, $data + ['phone_e164' => $request->input('phone_e164')], $coupon);
+        $changed = array_keys(array_diff_assoc(array_map('strval', $customer->fresh()->only(array_keys($before))), array_map('strval', $before)));
+        $this->logStep($customer, 'onboarding.about_updated', 'Client updated About you'.($changed ? ': '.str_replace(['_e164', '_id', '_'], ['', '', ' '], implode(', ', $changed)) : ' (no changes)'));
         if ($request->filled('street')) { // every detail in one go (older form): finish 1b too
             $this->onboarding->saveBrokerage($customer->fresh(), app(BrokerageRequest::class)->validated(), $coupon);
 
@@ -212,7 +219,10 @@ class OnboardingController extends Controller
             }
             $coupon = $check['coupon'];
         }
-        $this->onboarding->saveBrokerage($customer, $request->validated(), $coupon);
+        $first = $customer->onboarding_stage === 'brokerage';
+        $c = $this->onboarding->saveBrokerage($customer, $request->validated(), $coupon);
+        $this->logStep($c, $first ? 'onboarding.brokerage_added' : 'onboarding.brokerage_updated', ($first ? 'Client added brokerage details: ' : 'Client changed brokerage details: ')
+            ."{$c->agent_count_entered} agents, {$c->street}, {$c->city} {$c->state_code} {$c->zip}, ".($request->validated('billing') === 'year' ? 'yearly' : 'monthly').' billing');
 
         return redirect()->route('onboarding.agreement', $customer);
     }
@@ -265,6 +275,9 @@ class OnboardingController extends Controller
             return redirect()->route('onboarding.brokerage', $customer); // "Your brokerage" not done yet
         }
         abort_unless($contract, 404);
+        if (! $contract->isSigned()) {
+            $this->logOnce($customer, 'onboarding.agreement_opened', "Client opened agreement {$contract->number} to review");
+        }
         $contract->loadMissing('template', 'customer');
 
         return view('onboarding.agreement', [
@@ -368,6 +381,9 @@ class OnboardingController extends Controller
         if (! $contract) {
             return redirect()->route('onboarding.agreement', $customer);
         }
+        if ($customer->status === CustomerStatus::ContractSigned) {
+            $this->logOnce($customer, 'onboarding.payment_opened', 'Client opened the payment step');
+        }
         if (ExistingClientActivation::isExisting($contract)) {
             return $this->existingPayment($customer, $contract);
         }
@@ -438,6 +454,21 @@ class OnboardingController extends Controller
         }
 
         return view('onboarding.done', ['customer' => $customer, 'contract' => $contract, 'invoice' => $invoice, 'step' => 5] + $this->ledger($contract));
+    }
+
+    /** Records an onboarding step in the customer's Activity (client, with IP). */
+    private function logStep(Customer $customer, string $action, string $text): void
+    {
+        app(AuditLogger::class)->log($action, $text, $customer, null, 'client');
+    }
+
+    /** Same, but only the first time (e.g. opening a page). */
+    private function logOnce(Customer $customer, string $action, string $text): void
+    {
+        $seen = ActivityLog::where('action', $action)->where('subject_type', $customer->getMorphClass())->where('subject_id', $customer->id)->exists();
+        if (! $seen) {
+            $this->logStep($customer, $action, $text);
+        }
     }
 
     // ---- Existing clients: confirm the payment method on file; nothing charged today ----

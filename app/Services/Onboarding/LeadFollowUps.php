@@ -6,6 +6,7 @@ use App\Enums\CustomerStatus;
 use App\Http\Controllers\Onboarding\BookCallController;
 use App\Models\CallBooking;
 use App\Models\Customer;
+use App\Services\Audit\AuditLogger;
 use App\Services\Email\EmailSender;
 use App\Services\Settings\SettingsService;
 use App\Support\BusinessClock;
@@ -49,6 +50,7 @@ final class LeadFollowUps
                 // Not a change the client made: keep "updated_at" (when they last did something) as it is.
                 $c->timestamps = false;
                 $c->forceFill(['follow_up_step' => $step, 'follow_up_last_at' => now()])->save();
+                app(AuditLogger::class)->log('onboarding.follow_up_sent', "Follow-up email {$step} of ".count(self::AFTER_HOURS)." sent to {$c->email}", $c, null, 'system');
                 $sent++;
             });
 

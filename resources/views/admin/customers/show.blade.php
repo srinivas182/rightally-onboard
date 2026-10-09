@@ -263,7 +263,7 @@
 <div class="tab-pane fade" id="activity" role="tabpanel"><div class="panel">
     @if ($activity->isEmpty())<div class="p-4 text-center text-slate">No activity yet.</div>@else
     <ul class="list-unstyled mb-0">@foreach ($activity as $a)
-        <li class="px-3 py-2 border-bottom"><div>{{ $a->description }}</div>
+        <li class="px-3 py-2 border-bottom"><div>@if ($a->is_email ?? false)<svg class="ic me-1 text-slate" aria-hidden="true"><use href="#i-mail"/></svg>@endif{{ $a->description }}</div>
             <div class="small text-slate">{{ $a->created_at->setTimezone($tz)->format('M j, Y g:i A') }} · {{ $a->admin?->name ?? ucfirst($a->actor_type) }}@if ($a->ip) · {{ $a->ip }}@endif</div></li>
     @endforeach</ul>@endif
 </div></div>

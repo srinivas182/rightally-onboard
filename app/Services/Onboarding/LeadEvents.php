@@ -4,6 +4,7 @@ namespace App\Services\Onboarding;
 
 use App\Jobs\SyncGhlContact;
 use App\Models\Customer;
+use App\Services\Audit\AuditLogger;
 use App\Services\Email\EmailSender;
 use App\Services\Integrations\GhlContacts;
 use App\Services\Integrations\TeamAlerts;
@@ -35,8 +36,12 @@ final class LeadEvents
         ];
 
         if ($this->alerts->enabled('new_lead')) {
-            foreach ($this->recipients() as $to) {
-                $this->email->toAddress('lead_alert', $to, 'RightAlly team', $values);
+            $to = $this->recipients();
+            foreach ($to as $address) {
+                $this->email->toAddress('lead_alert', $address, 'RightAlly team', $values);
+            }
+            if ($to) {
+                app(AuditLogger::class)->log('lead.alert_sent', 'New-lead email sent to '.implode(', ', $to), $customer, null, 'system');
             }
             // Slack too, if a Slack webhook is set (no extra email; the lead email above already went out).
             $this->alerts->send('new_lead', "New lead: {$customer->company_name}", "{$values['lead_name']}, {$values['lead_email']}, {$values['lead_phone']} · coupon {$values['coupon_code']} · {$values['lead_source']}", $values['admin_link'], email: false);
