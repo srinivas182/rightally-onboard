@@ -63,6 +63,7 @@ Route::middleware(['auth:admin', 'admin.2fa'])->group(function () {
     Route::get('account', [AccountController::class, 'show'])->name('account');
     Route::put('account/password', [AccountController::class, 'updatePassword'])->name('account.password');
     Route::post('account/recovery-codes', [AccountController::class, 'regenerateRecoveryCodes'])->name('account.recovery-codes');
+    Route::post('account/authenticator-off', [AccountController::class, 'authenticatorOff'])->middleware('throttle:5,1')->name('account.authenticator-off');
 
     Route::middleware('can:menu.admins')->group(function () {
         Route::get('admins', [AdminUserController::class, 'index'])->name('admins.index');

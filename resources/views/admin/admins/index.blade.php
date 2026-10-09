@@ -40,7 +40,7 @@
                                             <li><form method="post" action="{{ route('admin.admins.resend', $a) }}">@csrf<button class="dropdown-item">Resend invitation</button></form></li>
                                         @endif
                                         @if ($a->hasTwoFactorEnabled())
-                                            <li><form method="post" action="{{ route('admin.admins.reset-2fa', $a) }}">@csrf<button class="dropdown-item" data-confirm="Reset two-factor for {{ $a->name }}? They’ll set it up again at next sign-in.">Reset two-factor</button></form></li>
+                                            <li><form method="post" action="{{ route('admin.admins.reset-2fa', $a) }}">@csrf<button class="dropdown-item" data-confirm="Reset two-factor for {{ $a->name }}? Their authenticator app is removed; they’ll get sign-in codes by email until they set up a new one.">Reset two-factor</button></form></li>
                                         @endif
                                         <li><hr class="dropdown-divider"></li>
                                         <li><form method="post" action="{{ route('admin.admins.toggle', $a) }}">@csrf
@@ -55,7 +55,7 @@
                 @endforeach
                 </tbody>
             </table></div>
-            <div class="p-3 small text-slate border-top">Every admin must set up two-factor authentication at first sign-in. Invitations expire after 72 hours.</div>
+            <div class="p-3 small text-slate border-top">Every sign-in needs a 6-digit code: from the admin’s authenticator app, or by email if they haven’t set one up. “Reset two-factor” removes an admin’s authenticator app (e.g. a lost phone); they then get codes by email and can set up a new app under My account. Invitations expire after 72 hours.</div>
         </div>
     </div>
 

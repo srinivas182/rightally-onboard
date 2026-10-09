@@ -93,7 +93,7 @@ class AdminUserController extends Controller
         $admin->forceFill(['two_factor_secret' => null, 'two_factor_recovery_codes' => null, 'two_factor_confirmed_at' => null])->save();
         $this->audit->log('admin.2fa_reset', "Reset two-factor for {$admin->email}", $admin);
 
-        return back()->with('success', "{$admin->name} will set up two-factor again at next sign-in.");
+        return back()->with('success', "{$admin->name}’s authenticator app is removed. They’ll get sign-in codes by email until they set up a new one under My account.");
     }
 
     /** You can't lock yourself out, and only super admins manage super admins. */

@@ -57,4 +57,15 @@ class AccountController extends Controller
 
         return redirect()->route('admin.two-factor.recovery')->with('recovery_codes', $codes['plain']);
     }
+
+    /** Turns off the authenticator app; sign-in codes then come by email. Needs the current password. */
+    public function authenticatorOff(Request $request): RedirectResponse
+    {
+        $request->validate(['off_password' => ['required', 'current_password:admin']], ['off_password.current_password' => 'That password is incorrect.']);
+        $admin = $request->user('admin');
+        $admin->forceFill(['two_factor_secret' => null, 'two_factor_recovery_codes' => null, 'two_factor_confirmed_at' => null])->save();
+        app(AuditLogger::class)->log('admin.2fa_disabled', "{$admin->email} turned off their authenticator app (codes by email now)", $admin);
+
+        return back()->with('success', 'Authenticator app turned off. Your sign-in codes will now come by email.');
+    }
 }

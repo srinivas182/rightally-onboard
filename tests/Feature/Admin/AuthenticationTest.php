@@ -168,4 +168,21 @@ class AuthenticationTest extends TestCase
             ->assertStatus(429);
         $this->assertGuest('admin');
     }
+
+    public function test_my_account_works_without_an_authenticator_and_it_can_be_turned_off(): void
+    {
+        $this->seed(EmailTemplateSeeder::class);
+        $plain = Admin::factory()->superAdmin()->create();
+        $this->actingAs($plain, 'admin')->get('/admin/account')->assertOk()->assertSee('Codes by email')->assertSee('Set up authenticator app');
+
+        $admin = Admin::factory()->superAdmin()->withTwoFactor()->create();
+        $this->actingAs($admin, 'admin')->get('/admin/account')->assertOk()->assertSee('Authenticator app on');
+        $this->post('/admin/account/authenticator-off', ['off_password' => 'wrong'])->assertSessionHasErrors('off_password');
+        $this->post('/admin/account/authenticator-off', ['off_password' => 'password'])->assertSessionHas('success');
+        $this->assertFalse($admin->fresh()->hasTwoFactorEnabled());
+
+        // Next sign-in: code by email.
+        auth('admin')->logout();
+        $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password'])->assertRedirect('/admin/two-factor/challenge?method=email');
+    }
 }
