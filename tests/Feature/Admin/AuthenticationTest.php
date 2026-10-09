@@ -185,4 +185,19 @@ class AuthenticationTest extends TestCase
         auth('admin')->logout();
         $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password'])->assertRedirect('/admin/two-factor/challenge?method=email');
     }
+
+    public function test_keep_me_signed_in_survives_the_code_step(): void
+    {
+        $this->seed(EmailTemplateSeeder::class);
+        $admin = Admin::factory()->superAdmin()->create();
+        $this->post('/admin/login', ['email' => $admin->email, 'password' => 'password', 'remember' => '1']);
+        $code = null;
+        preg_match('/(\d{6})/', EmailLog::where('template_key', 'admin_login_code')->latest('id')->value('subject'), $m);
+        $res = $this->post('/admin/two-factor/challenge', ['email_code' => $m[1]])->assertRedirect('/admin');
+
+        $cookie = collect($res->headers->getCookies())->first(fn ($c) => str_starts_with($c->getName(), 'remember_admin_'));
+        $this->assertNotNull($cookie, 'remember-me cookie was not set');
+        $this->assertGreaterThan(now()->addDays(300)->getTimestamp(), $cookie->getExpiresTime());
+        $this->assertNotNull($admin->fresh()->remember_token);
+    }
 }
